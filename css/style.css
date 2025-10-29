@@ -113,11 +113,10 @@ body {
 }
 
 .hero-text {
-  margin-top: 1px;
+  margin-top: 2px;
   font-size: 1.6rem;
   color: #333;
   line-height: 1.5;
-  max-width: 600px;
   margin-left: -120px;
 }
 
@@ -172,7 +171,6 @@ body {
   z-index: 1;
   opacity: 0.95;
 }
-
 @media (max-width: 991px) {
   .custom-nav {
     display: none;

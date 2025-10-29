@@ -45,7 +45,7 @@
             <a class="nav-link active rounded-5" href="index.php" role="tab">Home</a>
           </li>
           <li class="nav-item" role="presentation">
-            <a class="nav-link rounded-5" href="tentang.php" role="tab">Tentang</a>
+            <a class="nav-link rounded-5" href="view/tentang.php" role="tab">Tentang</a>
           </li>
         </ul>
         <ul class="nav flex-column d-lg-none w-100 text-start">
@@ -53,7 +53,7 @@
             <a class="nav-link active" href="index.php">Home</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="tentang.php">Tentang</a>
+            <a class="nav-link" href="view/tentang.php">Tentang</a>
           </li>
         </ul>
       </div>
