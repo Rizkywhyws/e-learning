@@ -4,14 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>E-School Login</title>
-  <link rel="stylesheet" href="../cssAdmin/login.css" />
+  <link rel="stylesheet" href="css/login.css" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="login-container" id="page-content">
     <div class="login-left">
       <div class="login-box">
-        <img src="../../assets/logo-elearning.png" alt="E-School Logo" class="logo" />
+        <img src="../assets/logo-elearning.png" alt="E-School Logo" class="logo" />
         <h2>Login</h2>
         <form id="loginForm" novalidate>
           <div class="input-group">
@@ -35,10 +35,10 @@
       </div>
     </div>
     <div class="login-right">
-      <img src="../../assets/studybg.png" alt="Login Illustration" />
+      <img src="../assets/studybg.png" alt="Login Illustration" />
     </div>
   </div>
-
+</body>
   <script>
     const form = document.getElementById("loginForm");
     const email = document.getElementById("email");
@@ -52,7 +52,7 @@
     btnBack.addEventListener("click", () => {
       page.classList.add("slide-out");
       setTimeout(() => {
-        window.location.href = "../../index.php";
+        window.location.href = "../index.php";
       }, 600);
     });
 
@@ -90,5 +90,4 @@
       });
     });
   </script>
-</body>
 </html>
