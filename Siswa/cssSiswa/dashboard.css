@@ -1,0 +1,329 @@
+/* === RESET & BASE === */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  background: #f4f6fb;
+}
+
+/* === HEADER === */
+header {
+  text-align: center;
+  padding: 20px;
+}
+.logo {
+  width: 190px;
+}
+
+/* === MENU === */
+.menu-row {
+  display: flex;
+  gap: 12px;
+  background: #d5ebff;
+  border: 2px solid #2e7dff;
+  padding: 10px 25px;
+  border-radius: 40px;
+  width: fit-content;
+  margin: -20px auto 20px;
+}
+
+.dropbtn {
+  background: transparent;
+  border: none;
+  color: #2e7dff;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dropdown {
+  position: relative;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background: white;
+  min-width: 180px;
+  padding: 8px 0;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  z-index: 50;
+}
+
+.dropdown-content a {
+  padding: 10px 15px;
+  text-decoration: none;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dropdown-content a:hover {
+  background: #e6f0ff;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+/* === WELCOME BOX === */
+.welcome-box {
+  background: #bcd4ff;
+  padding: 35px;
+  width: 90%;
+  margin: auto;
+  border-radius: 12px;
+  text-align: center;
+}
+
+/* === SEARCH BAR === */
+.search-bar {
+  margin: 15px;
+  text-align: center;
+  margin-top: -28px;
+}
+
+.search-bar input {
+  width: 45%;
+  padding: 12px 20px;
+  border-radius: 30px;
+  border: 2px solid #ccc;
+}
+
+.search-bar button {
+  padding: 12px 20px;
+  border-radius: 30px;
+  background: #2e7dff;
+  color: white;
+  border: none;
+  margin-left: 5px;
+}
+
+/* === MAIN GRID === */
+.main-grid {
+  width: 90%;
+  margin: auto;
+  display: grid;
+  grid-template-areas:
+    "jadwal kalender"
+    "timeline selanjutnya"
+    "timeline-sekarang timeline-sekarang"
+    "charts charts";
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+/* === BOX STYLE === */
+.box {
+  background: white;
+  border: 2px solid #d7e4ff;
+  border-radius: 12px;
+  padding: 18px;
+}
+
+/* === AREA PLACEMENT === */
+.jadwal { grid-area: jadwal; }
+.kalender { grid-area: kalender; }
+.timeline { grid-area: timeline; }
+.selanjutnya { grid-area: selanjutnya; }
+.charts { grid-area: charts; }
+.timeline-sekarang { grid-area: timeline-sekarang; }
+
+/* === TABLE JADWAL === */
+.table-jadwal {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+
+.table-jadwal th {
+  background: #cfe0ff;
+  padding: 10px;
+}
+
+.table-jadwal td {
+  padding: 8px;
+  border-bottom: 2px solid #e0ebff;
+}
+
+/* === CALENDAR === */
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.calendar-header button {
+  background: #2e7dff;
+  color: white;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.calendar-table {
+  width: 100%;
+  text-align: center;
+}
+
+.calendar-table td {
+  padding: 8px;
+  border-radius: 5px;
+}
+
+.calendar-table td.today {
+  background: #2e7dff;
+  color: white;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* === TIMELINE & SEKARANG === */
+.timeline-sekarang-container {
+  display: flex;
+  gap: 20px;
+}
+
+.timeline-sekarang-container .box {
+  flex: 1;
+}
+
+.sekarang {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.sekarang-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.absen-area {
+  text-align: center;
+}
+
+.absen-area .x {
+  color: red;
+  font-size: 40px;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.absen-btn {
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 6px 15px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.absen-btn:hover {
+  background: #f0f0f0;
+}
+
+.info-area {
+  text-align: right;
+}
+
+.info-area h2 {
+  font-size: 20px;
+  color: #1e40af;
+}
+
+.status {
+  font-size: 13px;
+  color: #666;
+}
+
+/* === PROGRESS BARS (untuk progress item) === */
+.progress-item {
+  margin: 8px 0;
+}
+.bar {
+  width: 100%;
+  height: 8px;
+  background: #e5edff;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.bar span {
+  height: 100%;
+  background: #3b82f6;
+  display: block;
+}
+
+/* === CHARTS SECTION === */
+/* === CHARTS SECTION (FIXED LAYOUT) === */
+/* =============================
+   FIX LAYOUT CHARTS (FINAL)
+   ============================= */
+
+.charts {
+  grid-column: 1 / -1 !important;      /* Wajib: charts memenuhi satu baris penuh */
+  display: grid !important;
+  grid-template-columns: 300px 1fr 300px !important;
+  gap: 20px !important;
+  align-items: start !important;
+}
+
+/* Kolom kiri */
+.charts .progress {
+  justify-self: start !important;
+  width: 150% !important;
+  height: 353px;
+}
+
+/* Kolom tengah */
+.charts .chart1 {
+  justify-self: center !important;
+  width: 70% !important;
+  display: flex !important;
+  flex-direction: column;
+  align-items: center !important;   /* Tengah horizontal */
+  justify-content: start !important;
+  text-align: center !important;
+}
+
+/* Kolom kanan */
+.charts .chart2 {
+  justify-self: end !important;
+  width: 150% !important;
+  display: flex !important;
+  flex-direction: column;
+  align-items: center !important;   /* Tengah horizontal */
+  justify-content: start !important;
+  text-align: center !important;
+}
+
+/* BAR CHART */
+.charts .chart1 canvas {
+  width: 100% !important;
+  height: 260px !important;
+}
+
+/* PIE CHART */
+.charts .chart2 canvas {
+  width: 280px !important;
+  height: 260px !important;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .charts {
+    grid-template-columns: 1fr !important;
+  }
+}
