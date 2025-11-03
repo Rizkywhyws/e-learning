@@ -1,0 +1,251 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  background: #f4f6fb;
+}
+
+/* ----------------------------------
+   HEADER LOGO
+----------------------------------- */
+header {
+  padding: 20px;
+  text-align: center;
+}
+.logo {
+  width: 200px;
+}
+
+/* ----------------------------------
+   DROPDOWN MENU
+----------------------------------- */
+.menu-row {
+  display: flex;
+  gap: 10px;
+  background: #d5ebff;
+  border: 2px solid #2e7dff;
+  padding: 10px 25px;
+  border-radius: 40px;
+  width: fit-content;
+  margin: -20px auto 20px;
+}
+
+.dropdown {
+  position: relative;
+}
+
+.dropbtn {
+  background: transparent;
+  border: none;
+  color: #2e7dff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  gap: 6px; /* antara icon - teks - panah */
+}
+
+.dropbtn:hover {
+  background: rgba(46, 125, 255, 0.15);
+}
+
+.dropdown-arrow {
+  font-size: 12px;
+}
+
+/* Dropdown content */
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background: white;
+  border-radius: 10px;
+  min-width: 160px;
+  margin-top: 8px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+  z-index: 999;
+}
+
+.dropdown-content a {
+  padding: 12px;
+  display: block;
+  text-decoration: none;
+  color: #333;
+}
+
+.dropdown-content a:hover {
+  background: #e7f0ff;
+}
+
+/* ----------------------------------
+   WELCOME BOX
+----------------------------------- */
+.welcome-box {
+  background: #bcd4ff;
+  padding: 35px;
+  border-radius: 12px;
+  text-align: center;
+  width: 90%;
+  margin: auto;
+}
+
+.welcome-box h2 {
+  font-weight: 700;
+}
+
+/* ----------------------------------
+   SEARCH BAR
+----------------------------------- */
+.search-bar {
+  text-align: center;
+  margin: -20px 0;
+}
+
+.search-bar input {
+  width: 50%;
+  padding: 12px 20px;
+  border-radius: 30px;
+  border: 2px solid #ccc;
+}
+
+.search-bar button {
+  padding: 12px 20px;
+  border-radius: 30px;
+  border: none;
+  background: #2e7dff;
+  color: white;
+  margin-left: 5px;
+}
+
+/* ----------------------------------
+   GRAFIK + CARD
+----------------------------------- */
+.grafik-section {
+  width: 90%;
+  margin: 50px auto 50px;
+}
+
+.grafik-row {
+  display: grid;
+  grid-template-columns: 250px 250px auto;
+  gap: 20px;
+  margin-top: 10px;
+}
+
+.card-box {
+  background: #dde7f7;       /* warna biru muda */
+  border: 2px solid #cddfff;
+  border-radius: 12px;
+  height: 220px;             /* tinggi card (sesuai tampilan contoh) */
+  position: relative;        /* penting untuk posisi label */
+}
+
+/* Label di atas card */
+.card-label {
+  position: absolute;
+  top: -12px;         /* naik sedikit */
+  left: 38px;         /* nempel kiri */
+  
+  background: white;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #1f2d3d;
+  border: 2px solid #cddfff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+
+.chart-box {
+  background: white;
+  border: 2px solid #cddfff;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.chart-box img {
+  width: 100%;
+  border-radius: 8px;
+}
+
+/* ----------------------------------
+   TABEL
+----------------------------------- */
+.tabel-section {
+  width: 90%;
+  margin: auto;
+}
+
+.data-table {
+  width: 100%;
+  background: #f5f9ff;
+  border-radius: 10px;
+  border-collapse: collapse;
+  border: 3px solid #bdd4ff;
+  overflow: hidden;
+  font-size: 14px;
+}
+
+/* HEADER */
+.data-table thead {
+  background: #bcd4ff;
+}
+
+.data-table th {
+  padding: 16px;
+  text-align: center;
+  font-weight: 700;
+  border-right: 2px solid #9bbdf0;
+}
+
+.data-table th:last-child {
+  border-right: none;
+}
+
+/* CELL */
+.data-table td {
+  padding: 15px;
+  text-align: center;
+  background: #eef4ff;
+  border-right: 2px solid #c6dafe;
+  border-bottom: 2px solid #c6dafe;
+}
+
+.data-table td:last-child {
+  border-right: none;
+}
+
+/* ROW TANPA DATA */
+.no-data-row {
+  background: #f8fbff;
+  padding: 20px !important;
+  font-style: italic;
+  color: #6c7a91;
+  border-right: none !important;
+  border-bottom: none !important;
+}
+
+@media (max-width: 900px) {
+  .grafik-row {
+    grid-template-columns: 1fr;   /* jadi 1 kolom */
+  }
+
+  .card-box {
+    height: 180px;  /* lebih kecil biar rapi */
+  }
+
+  .chart-box {
+    height: 200px;
+  }
+
+  .card-label {
+    left: 20px;    /* biar tetap rapi di mobile */
+  }
+}
