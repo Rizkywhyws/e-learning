@@ -14,9 +14,9 @@
 <body>
 
   <!-- HEADER -->
+   <div class="sticky-header">
   <header>
     <img src="../assets/logo-elearning.png" class="logo" alt="E-School">
-  </header>
 
   <!-- MENU -->
   <div class="menu-row">
@@ -68,7 +68,8 @@
     <input type="text" placeholder="Search...">
     <button><i class="fa-solid fa-magnifying-glass"></i></button>
   </div>
-
+  </div>
+  </header>
   <!-- GRAFIK SECTION -->
   <section class="grafik-section">
     <h3>Grafik Pembelajaran</h3>
