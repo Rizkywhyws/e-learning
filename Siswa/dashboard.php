@@ -15,9 +15,10 @@
 <body>
 
   <!-- HEADER -->
+<div class="sticky-header">
   <header>
     <img src="../assets/logo-elearning.png" class="logo" alt="E-School">
-  </header>
+ 
 
   <!-- MENU ROW -->
   <div class="menu-row">
@@ -57,21 +58,21 @@
         <a href="#"><i class="fa-solid fa-pen-to-square"></i> Quiz</a>
       </div>
     </div>
-
-  </div>
+</div>
 
   <!-- WELCOME BOX -->
   <section class="welcome-box">
     <h2>Halo! Selamat Datang, Marta</h2>
     <p>Jadwal Pelajaran selanjutnya Matematika</p>
   </section>
-
+  
   <!-- SEARCH -->
   <div class="search-bar">
     <input type="text" placeholder="Search...">
     <button><i class="fa-solid fa-magnifying-glass"></i></button>
   </div>
-
+  </header>
+</div>
   <!-- GRID WRAPPER -->
   <section class="main-grid">
 
