@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="css/dashboard.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -19,11 +20,9 @@
 
   <!-- MENU -->
   <div class="menu-row">
-
     <div class="dropdown">
       <button class="dropbtn">
-        <i class="fa-solid fa-database"></i>
-        Data Master
+        <i class="fa-solid fa-database"></i> Data Master
         <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
       </button>
       <div class="dropdown-content">
@@ -33,59 +32,29 @@
     </div>
 
     <div class="dropdown">
-  <button class="dropbtn">
-    <i class="fa-solid fa-clipboard-check"></i>
-    Presensi Siswa
-    <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
-  </button>
-
-  <div class="dropdown-content">
-
-    <a href="#">
-      <i class="fa-solid fa-list-check"></i> Lihat Presensi
-    </a>
-
-    <a href="#">
-      <i class="fa-solid fa-pen-clip"></i> Buat Presensi
-    </a>
-
-  </div>
-</div>
-
+      <button class="dropbtn">
+        <i class="fa-solid fa-clipboard-check"></i> Presensi Siswa
+        <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
+      </button>
+      <div class="dropdown-content">
+        <a href="#"><i class="fa-solid fa-list-check"></i> Lihat Presensi</a>
+        <a href="#"><i class="fa-solid fa-pen-clip"></i> Buat Presensi</a>
+      </div>
+    </div>
 
     <div class="dropdown">
-  <button class="dropbtn">
-    <i class="fa-solid fa-school"></i>
-    Pengelolaan Pembelajaran
-    <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
-  </button>
-
-  <div class="dropdown-content">
-
-    <a href="#">
-      <i class="fa-solid fa-book"></i> Tambah Materi
-    </a>
-
-    <a href="#">
-      <i class="fa-solid fa-file-circle-plus"></i> Tambah Tugas
-    </a>
-
-    <a href="#">
-      <i class="fa-solid fa-pen-to-square"></i> Koreksi Tugas
-    </a>
-
-    <a href="#">
-      <i class="fa-solid fa-circle-question"></i> Buat Quiz
-    </a>
-
-    <a href="#">
-      <i class="fa-solid fa-clipboard-check"></i> Koreksi Quiz
-    </a>
-
-  </div>
-</div>
-
-
+      <button class="dropbtn">
+        <i class="fa-solid fa-school"></i> Pengelolaan Pembelajaran
+        <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
+      </button>
+      <div class="dropdown-content">
+        <a href="#"><i class="fa-solid fa-book"></i> Tambah Materi</a>
+        <a href="#"><i class="fa-solid fa-file-circle-plus"></i> Tambah Tugas</a>
+        <a href="#"><i class="fa-solid fa-pen-to-square"></i> Koreksi Tugas</a>
+        <a href="#"><i class="fa-solid fa-circle-question"></i> Buat Quiz</a>
+        <a href="#"><i class="fa-solid fa-clipboard-check"></i> Koreksi Quiz</a>
+      </div>
+    </div>
   </div>
 
   <!-- WELCOME -->
@@ -104,30 +73,50 @@
   <section class="grafik-section">
     <h3>Grafik Pembelajaran</h3>
 
-    <div class="grafik-row">
-      
-      <!-- CARD 1 -->
-      <div class="card-box">
-        <div class="card-label">Tugas belum dinilai</div>
+    <div class="grafik-container">
+      <!-- KIRI -->
+      <div class="left-panel">
+        <div class="card-row">
+          <div class="card-box">
+            <div class="card-label">Tugas Belum Dinilai</div>
+          </div>
+          <div class="card-box">
+            <div class="card-label">Quiz Belum Dinilai</div>
+          </div>
+        </div>
+
+        <!-- Kalender -->
+        <div class="calendar-box" id="calendar">
+          <div class="calendar-header">
+          <button id="prev-month">‹</button>
+          <h4 id="calendar-title"></h4>
+          <button id="next-month">›</button>
+        </div>
+          <div class="calendar-days">
+            <div class="day-name">Min</div>
+            <div class="day-name">Sen</div>
+            <div class="day-name">Sel</div>
+            <div class="day-name">Rab</div>
+            <div class="day-name">Kam</div>
+            <div class="day-name">Jum</div>
+            <div class="day-name">Sab</div>
+          </div>
+          <div class="calendar-dates" id="calendar-dates"></div>
+        </div>
       </div>
 
-      <!-- CARD 2 -->
-      <div class="card-box">
-        <div class="card-label">Quiz belum dinilai</div>
+      <!-- KANAN -->
+      <div class="right-panel">
+        <div class="chart-box">
+          <canvas id="lineChart"></canvas>
+        </div>
       </div>
-
-      <!-- GRAFIK -->
-      <div class="chart-box">
-        <img src="chart-placeholder.png" alt="Grafik">
-      </div>
-
     </div>
   </section>
 
   <!-- TABEL -->
   <section class="tabel-section">
     <h3>Baru Saja Mengumpulkan</h3>
-
     <table class="data-table">
       <thead>
         <tr>
@@ -138,40 +127,116 @@
           <th>Keterangan Pengumpulan</th>
         </tr>
       </thead>
-
       <tbody>
         <tr>
           <td colspan="5" class="no-data-row">Belum ada data</td>
         </tr>
       </tbody>
     </table>
-</section>
+  </section>
 
-
-</body>
-
-<!-- SCRIPT DROPDOWN -->
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  const buttons = document.querySelectorAll(".dropbtn");
-
-  buttons.forEach(btn => {
-    btn.addEventListener("click", function (e) {
-      e.stopPropagation();
-      const menu = this.nextElementSibling;
-
-      document.querySelectorAll(".dropdown-content").forEach(content => {
-        if (content !== menu) content.style.display = "none";
+  <!-- SCRIPT DROPDOWN -->
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const buttons = document.querySelectorAll(".dropbtn");
+    buttons.forEach(btn => {
+      btn.addEventListener("click", e => {
+        e.stopPropagation();
+        const menu = btn.nextElementSibling;
+        document.querySelectorAll(".dropdown-content").forEach(dc => {
+          if (dc !== menu) dc.style.display = "none";
+        });
+        menu.style.display = menu.style.display === "block" ? "none" : "block";
       });
-
-      menu.style.display = menu.style.display === "block" ? "none" : "block";
+    });
+    document.addEventListener("click", () => {
+      document.querySelectorAll(".dropdown-content").forEach(dc => dc.style.display = "none");
     });
   });
+  </script>
 
-  document.addEventListener("click", function () {
-    document.querySelectorAll(".dropdown-content").forEach(dc => dc.style.display = "none");
+  <!-- SCRIPT CHART -->
+  <script>
+  const ctx = document.getElementById("lineChart").getContext("2d");
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"],
+      datasets: [{
+        label: "Nilai Rata-rata",
+        data: [80, 85, 90, 88, 92],
+        backgroundColor: "rgba(46, 125, 255, 0.6)",
+        borderColor: "#2e7dff",
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
   });
-});
+  </script>
+
+  <!-- SCRIPT KALENDER OTOMATIS -->
+  <script>
+  let currentMonth = new Date().getMonth();
+  let currentYear = new Date().getFullYear();
+
+  function generateCalendar(year, month) {
+    const title = document.getElementById("calendar-title");
+    const dates = document.getElementById("calendar-dates");
+
+    const monthNames = [
+      "Januari","Februari","Maret","April","Mei","Juni",
+      "Juli","Agustus","September","Oktober","November","Desember"
+    ];
+
+    title.textContent = `${monthNames[month]} ${year}`;
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const lastDate = new Date(year, month + 1, 0).getDate();
+
+    let html = "";
+    for (let i = 0; i < firstDay; i++) html += `<div class='empty'></div>`;
+
+    const today = new Date();
+
+    for (let d = 1; d <= lastDate; d++) {
+      const isToday =
+        d === today.getDate() &&
+        month === today.getMonth() &&
+        year === today.getFullYear();
+      html += `<div class='date ${isToday ? "today" : ""}'>${d}</div>`;
+    }
+
+    dates.innerHTML = html;
+  }
+
+  document.getElementById("prev-month").addEventListener("click", () => {
+    currentMonth--;
+    if (currentMonth < 0) {
+      currentMonth = 11;
+      currentYear--;
+    }
+    generateCalendar(currentYear, currentMonth);
+  });
+
+  document.getElementById("next-month").addEventListener("click", () => {
+    currentMonth++;
+    if (currentMonth > 11) {
+      currentMonth = 0;
+      currentYear++;
+    }
+    generateCalendar(currentYear, currentMonth);
+  });
+
+  generateCalendar(currentYear, currentMonth);
 </script>
 
+</body>
 </html>
