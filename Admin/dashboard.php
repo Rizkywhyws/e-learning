@@ -8,6 +8,12 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     exit;
 }
 ?>
+<?php
+$countGuru = $conn->query("SELECT COUNT(*) AS total FROM dataGuru")->fetch_assoc()['total'];
+$countSiswa = $conn->query("SELECT COUNT(*) AS total FROM dataSiswa")->fetch_assoc()['total'];
+$countMapel = $conn->query("SELECT COUNT(*) AS total FROM mapel")->fetch_assoc()['total'];
+$countJadwal = $conn->query("SELECT COUNT(*) AS total FROM jadwalmapel")->fetch_assoc()['total'];
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -34,7 +40,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         <i class="fa-solid fa-database"></i> Data Master
       </button>
       <div class="dropdown-content">
-        <a href="guru.php"><i class="fa-solid fa-chalkboard-user"></i> Kelola Guru</a>
+        <a href="kelolaguru.php"><i class="fa-solid fa-chalkboard-user"></i> Kelola Guru</a>
         <a href="siswa.php"><i class="fa-solid fa-user-graduate"></i> Kelola Siswa</a>
       </div>
     </div>
@@ -61,24 +67,25 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
       <button><i class="fa-solid fa-magnifying-glass"></i></button>
     </div>
 
+
     <section class="dashboard">
       <h3><i class="fa-solid fa-chart-line"></i> Dashboard</h3>
       <div class="card-container">
         <div class="card guru">
           <h4><i class="fa-solid fa-chalkboard-user"></i> Guru</h4>
-          <p>15</p>
+          <p><?= $countGuru ?></p>
         </div>
         <div class="card siswa">
           <h4><i class="fa-solid fa-user-graduate"></i> Siswa</h4>
-          <p>200</p>
+          <p><?= $countSiswa ?></p>
         </div>
         <div class="card mapel">
           <h4><i class="fa-solid fa-book"></i> Mapel</h4>
-          <p>12</p>
+          <p><?= $countMapel ?></p>
         </div>
         <div class="card jadwal">
           <h4><i class="fa-solid fa-calendar-days"></i> Jadwal</h4>
-          <p>12</p>
+          <p><?= $countJadwal ?></p>
         </div>
       </div>
     </section>
@@ -104,16 +111,21 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
       </tr>
     </thead>
     <tbody>
-      <tr><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td></tr>
+      <?php
+    $resultGuru = $conn->query("SELECT NIP, nama, noTelp FROM dataGuru ORDER BY nama ASC");
+
+  if ($resultGuru->num_rows > 0) {
+      while($row = $resultGuru->fetch_assoc()) {
+          echo "<tr>
+                  <td>".$row['NIP']."</td>
+                  <td>".$row['nama']."</td>
+                  <td>".$row['noTelp']."</td>
+                </tr>";
+      }
+  } else {
+      echo "<tr><td colspan='3'>Tidak ada data guru</td></tr>";
+  }
+  ?>
     </tbody>
   </table>
 
