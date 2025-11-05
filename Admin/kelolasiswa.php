@@ -37,7 +37,7 @@ $data = $conn->query("
   <div class="dropdown">
     <button class="dropbtn"><i class="fa-solid fa-school"></i> Pembelajaran</button>
     <div class="dropdown-content">
-      <a href="mapel.php"><i class="fa-solid fa-book"></i> Kelola Mapel</a>
+      <a href="kelolamapel.php"><i class="fa-solid fa-book"></i> Kelola Mapel</a>
       <a href="jadwal.php"><i class="fa-solid fa-calendar-days"></i> Kelola Jadwal</a>
     </div>
   </div>
@@ -156,10 +156,16 @@ $data = $conn->query("
         <input type="password" id="password" name="password">
       </div>
 
-      <div class="form-actions">
-        <button class="btn green" type="submit"><i class="fa-solid fa-floppy-disk"></i> Submit</button>
-        <button type="button" id="cancelBtn" class="btn">Cancel</button>
-      </div>
+      <div class="form-panel">
+        <div class="button-row">
+            <button class="submit">
+            <i class="fa-solid fa-floppy-disk"></i> Submit
+            </button>
+            <button class="cancel">
+            <i class="fa-solid fa-xmark"></i> Cancel
+            </button>
+        </div>
+        </div>
 
     </form>
   </section>

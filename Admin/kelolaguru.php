@@ -43,7 +43,7 @@ $data = $conn->query("
         <i class="fa-solid fa-school"></i> Pembelajaran
       </button>
       <div class="dropdown-content">
-        <a href="mapel.php"><i class="fa-solid fa-book"></i> Kelola Mapel</a>
+        <a href="kelolamapel.php"><i class="fa-solid fa-book"></i> Kelola Mapel</a>
         <a href="jadwal.php"><i class="fa-solid fa-calendar-days"></i> Kelola Jadwal</a>
       </div>
     </div>
