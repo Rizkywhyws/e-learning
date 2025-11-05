@@ -41,7 +41,7 @@ $countJadwal = $conn->query("SELECT COUNT(*) AS total FROM jadwalmapel")->fetch_
       </button>
       <div class="dropdown-content">
         <a href="kelolaguru.php"><i class="fa-solid fa-chalkboard-user"></i> Kelola Guru</a>
-        <a href="siswa.php"><i class="fa-solid fa-user-graduate"></i> Kelola Siswa</a>
+        <a href="kelolasiswa.php"><i class="fa-solid fa-user-graduate"></i> Kelola Siswa</a>
       </div>
     </div>
 
