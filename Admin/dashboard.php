@@ -50,7 +50,7 @@ $countJadwal = $conn->query("SELECT COUNT(*) AS total FROM jadwalmapel")->fetch_
         <i class="fa-solid fa-school"></i> Pembelajaran
       </button>
       <div class="dropdown-content">
-        <a href="mapel.php"><i class="fa-solid fa-book"></i> Kelola Mapel</a>
+        <a href="kelolamapel.php"><i class="fa-solid fa-book"></i> Kelola Mapel</a>
         <a href="jadwal.php"><i class="fa-solid fa-calendar-days"></i> Kelola Jadwal</a>
       </div>
     </div>
@@ -141,13 +141,23 @@ $countJadwal = $conn->query("SELECT COUNT(*) AS total FROM jadwalmapel")->fetch_
       </tr>
     </thead>
     <tbody>
-      <tr><td></td><td></td><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td><td></td><td></td></tr>
+     <?php
+    $resultSiswa = $conn->query("SELECT nama, NIS, NISN, kelas, jurusan FROM dataSiswa ORDER BY nama ASC");
+
+    if ($resultSiswa->num_rows > 0) {
+        while($row = $resultSiswa->fetch_assoc()) {
+            echo "<tr>
+                    <td>".$row['nama']."</td>
+                    <td>".$row['NIS']."</td>
+                    <td>".$row['NISN']."</td>
+                    <td>".$row['kelas']."</td>
+                    <td>".$row['jurusan']."</td>
+                  </tr>";
+        }
+    } else {
+        echo "<tr><td colspan='5'>Tidak ada data siswa</td></tr>";
+    }
+    ?>
     </tbody>
   </table>
 
