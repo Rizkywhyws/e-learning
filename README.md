@@ -1,4 +1,5 @@
 Aplikasi Sistem Informasi E-learning SMK Berbasis Web
+
 Developer : 
 Rizky Wahyu Wangsa Syaelendra (E31240058)
 Bintang Tharisa Syafira (E31240143)
@@ -8,6 +9,7 @@ Julianda Marselyna (E31240410)
 Pembagian Tugas :
 
 👤 Rizky 
+
 Design :
 - Beranda Home 
 - Beranda Tentang 
@@ -24,6 +26,7 @@ Coding :
 - Admin Tambah / Kelola Jadwal Mengajar
 
 👤Bintang
+
 Design :
 - Dashboard Guru 
 - Profil Guru 
@@ -40,6 +43,7 @@ Coding :
 - Presensi Siswa 
 
 👤Marta
+
 Design :
 - Dashboard Siswa 
 - Mapel 
@@ -56,6 +60,7 @@ Coding :
 - Rekap Nilai
 
 👤Selly
+
 Design :
 - Upload Materi
 - Buat Tugas 
