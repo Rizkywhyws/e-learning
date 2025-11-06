@@ -21,7 +21,6 @@
 
   <!-- MENU -->
   <nav class="menu-row">
-
     <div class="dropdown">
       <button class="dropbtn">
         <i class="fa-solid fa-database"></i> Data Master
@@ -57,7 +56,6 @@
         <a href="#"><i class="fa-solid fa-clipboard-check"></i> Koreksi Quiz</a>
       </div>
     </div>
-
   </nav>
 
   <!-- WELCOME -->
@@ -76,28 +74,27 @@
   <section id="presensi-siswa">
     <h3 class="presensi-header">Presensi Siswa</h3>
 
-  <div class="attendance-cards">
-    <div class="card card-x">
-      <h3>Kelas X</h3>
-      <button><i class="fa-solid fa-plus"></i> Tambah Presensi</button>
-    </div>
+    <div class="attendance-cards">
+      <div class="card card-x">
+        <h3>Kelas X</h3>
+        <button><i class="fa-solid fa-plus"></i> Tambah Presensi</button>
+      </div>
 
-    <div class="card card-xi">
-      <h3>Kelas XI</h3>
-      <button><i class="fa-solid fa-plus"></i> Tambah Presensi</button>
-    </div>
+      <div class="card card-xi">
+        <h3>Kelas XI</h3>
+        <button><i class="fa-solid fa-plus"></i> Tambah Presensi</button>
+      </div>
 
-    <div class="card card-xii">
-      <h3>Kelas XII</h3>
-      <button><i class="fa-solid fa-plus"></i> Tambah Presensi</button>
+      <div class="card card-xii">
+        <h3>Kelas XII</h3>
+        <button><i class="fa-solid fa-plus"></i> Tambah Presensi</button>
+      </div>
     </div>
-  </div>
   </section>
 
   <!-- MODAL TAMBAH PRESENSI -->
   <div id="presensiModal" class="modal">
     <div class="modal-content">
-
       <div class="modal-header">
         <h2>Tambah Presensi</h2>
       </div>
@@ -131,9 +128,99 @@
     </div>
   </div>
 
+  <!-- BAGIAN REKAP PRESENSI -->
+  <section id="rekap-presensi" class="rekap-presensi">
+    <div class="rekap-header">
+      <h3>Rekap Presensi</h3>
+      <div class="date-picker">
+        <label for="tanggal">Tanggal:</label>
+        <input type="date" id="tanggal" name="tanggal">
+      </div>
+    </div>
+
+    <div class="rekap-tabel">
+      <h3>Kelas X</h3>
+      <table>
+        <tr>
+          <th>No</th>
+          <th>Nama</th>
+          <th>NIS</th>
+          <th>Kelas</th>
+          <th>Tanggal</th>
+          <th>Waktu Presensi</th>
+          <th>Status Presensi</th>
+        </tr>
+        <?php
+          for ($i = 1; $i <= 5; $i++) {
+            echo "<tr>
+                    <td>$i</td>
+                    <td>Nama Siswa $i</td>
+                    <td>12345$i</td>
+                    <td>X DKV 1</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                  </tr>";
+          }
+        ?>
+      </table>
+
+      <h3>Kelas XI</h3>
+      <table>
+        <tr>
+          <th>No</th>
+          <th>Nama</th>
+          <th>NIS</th>
+          <th>Kelas</th>
+          <th>Tanggal</th>
+          <th>Waktu Presensi</th>
+          <th>Status Presensi</th>
+        </tr>
+        <?php
+          for ($i = 1; $i <= 5; $i++) {
+            echo "<tr>
+                    <td>$i</td>
+                    <td>Nama Siswa $i</td>
+                    <td>22345$i</td>
+                    <td>XI DKV 1</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                  </tr>";
+          }
+        ?>
+      </table>
+
+      <h3>Kelas XII</h3>
+      <table>
+        <tr>
+          <th>No</th>
+          <th>Nama</th>
+          <th>NIS</th>
+          <th>Kelas</th>
+          <th>Tanggal</th>
+          <th>Waktu Presensi</th>
+          <th>Status Presensi</th>
+        </tr>
+        <?php
+          for ($i = 1; $i <= 5; $i++) {
+            echo "<tr>
+                    <td>$i</td>
+                    <td>Nama Siswa $i</td>
+                    <td>32345$i</td>
+                    <td>XII DKV 1</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                  </tr>";
+          }
+        ?>
+      </table>
+    </div>
+  </section>
+
   <!-- SCRIPT DROPDOWN & MODAL -->
   <script>
-    // Dropdown
     document.addEventListener("DOMContentLoaded", function () {
       const buttons = document.querySelectorAll(".dropbtn");
       buttons.forEach(btn => {
@@ -170,97 +257,5 @@
       if (event.target === modal) modal.style.display = "none";
     });
   </script>
-
-  <!-- BAGIAN REKAP PRESENSI -->
-  <section id="rekap-presensi" class="rekap-presensi">
-    <div class="rekap-header">
-      <h3>Rekap Presensi</h3>
-      <div class="date-picker">
-        <label for="tanggal">Tanggal:</label>
-        <input type="date" id="tanggal" name="tanggal">
-      </div>
-    </div>
-
-  <div class="rekap-tabel">
-    <h3>Kelas X</h3>
-    <table>
-      <tr>
-        <th>No</th>
-        <th>Nama</th>
-        <th>NIS</th>
-        <th>Kelas</th>
-        <th>Tanggal</th>
-        <th>Waktu Presensi</th>
-        <th>Status Presensi</th>
-      </tr>
-      <?php
-        // contoh data statis dulu (nanti bisa diganti dari database)
-        for ($i = 1; $i <= 5; $i++) {
-          echo "<tr>
-                  <td>$i</td>
-                  <td>Nama Siswa $i</td>
-                  <td>12345$i</td>
-                  <td>X DKV 1</td>
-                  <td>-</td>
-                  <td>-</td>
-                  <td>-</td>
-                </tr>";
-        }
-      ?>
-    </table>
-
-    <h3>Kelas XI</h3>
-    <table>
-      <tr>
-        <th>No</th>
-        <th>Nama</th>
-        <th>NIS</th>
-        <th>Kelas</th>
-        <th>Tanggal</th>
-        <th>Waktu Presensi</th>
-        <th>Status Presensi</th>
-      </tr>
-      <?php
-        for ($i = 1; $i <= 5; $i++) {
-          echo "<tr>
-                  <td>$i</td>
-                  <td>Nama Siswa $i</td>
-                  <td>22345$i</td>
-                  <td>XI DKV 1</td>
-                  <td>-</td>
-                  <td>-</td>
-                  <td>-</td>
-                </tr>";
-        }
-      ?>
-    </table>
-
-    <h3>Kelas XII</h3>
-    <table>
-      <tr>
-        <th>No</th>
-        <th>Nama</th>
-        <th>NIS</th>
-        <th>Kelas</th>
-        <th>Tanggal</th>
-        <th>Waktu Presensi</th>
-        <th>Status Presensi</th>
-      </tr>
-      <?php
-        for ($i = 1; $i <= 5; $i++) {
-          echo "<tr>
-                  <td>$i</td>
-                  <td>Nama Siswa $i</td>
-                  <td>32345$i</td>
-                  <td>XII DKV 1</td>
-                  <td>-</td>
-                  <td>-</td>
-                  <td>-</td>
-                </tr>";
-        }
-      ?>
-    </table>
-  </div>
-</section>
 </body>
 </html>
