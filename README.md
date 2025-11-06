@@ -1,8 +1,9 @@
 Aplikasi Sistem Informasi E-learning SMK Berbasis Web
-Developer : Rizky Wahyu Wangsa Syaelendra (E31240058)
-            Bintang Tharisa Syafira (E31240143)
-            Martarina Rachmi Nafilah (E31240377)
-            Julianda Marselyna (E31240410)
+Developer : 
+Rizky Wahyu Wangsa Syaelendra (E31240058)
+Bintang Tharisa Syafira (E31240143)
+Martarina Rachmi Nafilah (E31240377)
+Julianda Marselyna (E31240410)
 
 Pembagian Tugas :
 
