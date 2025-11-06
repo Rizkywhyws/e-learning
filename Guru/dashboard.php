@@ -42,19 +42,9 @@
       </div>
     </div>
 
-    <div class="dropdown">
       <button class="dropbtn">
-        <i class="fa-solid fa-school"></i> Pengelolaan Pembelajaran
-        <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
+        <i class="fa-solid fa-school"></i> <a href="pengelolaanPembelajaran.php">Pengelolaan Pembelajaran</a>
       </button>
-      <div class="dropdown-content">
-        <a href="#"><i class="fa-solid fa-book"></i> Tambah Materi</a>
-        <a href="#"><i class="fa-solid fa-file-circle-plus"></i> Tambah Tugas</a>
-        <a href="#"><i class="fa-solid fa-pen-to-square"></i> Koreksi Tugas</a>
-        <a href="#"><i class="fa-solid fa-circle-question"></i> Buat Quiz</a>
-        <a href="#"><i class="fa-solid fa-clipboard-check"></i> Koreksi Quiz</a>
-      </div>
-    </div>
   </div>
 
   <!-- WELCOME -->
