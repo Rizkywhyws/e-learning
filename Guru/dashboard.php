@@ -43,7 +43,8 @@
     </div>
 
       <button class="dropbtn">
-        <i class="fa-solid fa-school"></i> <a href="pengelolaanPembelajaran.php">Pengelolaan Pembelajaran</a>
+        <i class="fa-solid fa-school"></i> 
+        <a href="pengelolaanPembelajaran.php" style="text-decoration: none; color: #2e7dff;">Pengelolaan Pembelajaran</a>
       </button>
   </div>
   </div>
