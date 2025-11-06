@@ -27,6 +27,7 @@ $countJadwal = $conn->query("SELECT COUNT(*) AS total FROM jadwalmapel")->fetch_
 <body>
 
   <!-- HEADER HANYA LOGO -->
+<div class="sticky-header">
   <header>
     <div class="logo">
       <img src="../assets/logo-elearning.png" alt="E-School Logo">
@@ -51,15 +52,15 @@ $countJadwal = $conn->query("SELECT COUNT(*) AS total FROM jadwalmapel")->fetch_
       </button>
       <div class="dropdown-content">
         <a href="kelolamapel.php"><i class="fa-solid fa-book"></i> Kelola Mapel</a>
-        <a href="jadwal.php"><i class="fa-solid fa-calendar-days"></i> Kelola Jadwal</a>
+        <a href="kelolajadwal.php"><i class="fa-solid fa-calendar-days"></i> Kelola Jadwal</a>
       </div>
     </div>
   </div>
+</div>
 
   <main>
     <section class="welcome-box">
       <h2>Halo! Selamat Datang, <span>Rizky</span></h2>
-      <p>Jadwal mengajar selanjutnya ada di kelas <b>XII AKL 2</b></p>
     </section>
 
     <div class="search-bar">
@@ -170,13 +171,19 @@ $countJadwal = $conn->query("SELECT COUNT(*) AS total FROM jadwalmapel")->fetch_
       </tr>
     </thead>
     <tbody>
-      <tr><td></td><td></td></tr>
-      <tr><td></td><td></td></tr>
-      <tr><td></td><td></td></tr>
-      <tr><td></td><td></td></tr>
-      <tr><td></td><td></td></tr>
-      <tr><td></td><td></td></tr>
-      <tr><td></td><td></td></tr>
+ <?php
+        $resultMapel = $conn->query("SELECT kodeMapel, namaMapel FROM mapel ORDER BY namaMapel ASC");
+        if ($resultMapel->num_rows > 0) {
+            while($row = $resultMapel->fetch_assoc()) {
+                echo "<tr>
+                        <td>".$row['kodeMapel']."</td>
+                        <td>".$row['namaMapel']."</td>
+                      </tr>";
+            }
+        } else {
+            echo "<tr><td colspan='2'>Tidak ada data mapel</td></tr>";
+        }
+        ?>
     </tbody>
   </table>
 
