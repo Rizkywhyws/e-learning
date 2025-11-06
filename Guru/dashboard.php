@@ -46,6 +46,8 @@
         <i class="fa-solid fa-school"></i> <a href="pengelolaanPembelajaran.php">Pengelolaan Pembelajaran</a>
       </button>
   </div>
+  </div>
+  </header>
 
   <!-- WELCOME -->
   <section class="welcome-box">
@@ -58,8 +60,6 @@
     <input type="text" placeholder="Search...">
     <button><i class="fa-solid fa-magnifying-glass"></i></button>
   </div>
-  </div>
-  </header>
   <!-- GRAFIK SECTION -->
   <section class="grafik-section">
     <h3>Grafik Pembelajaran</h3>
