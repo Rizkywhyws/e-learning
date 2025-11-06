@@ -1,111 +1,73 @@
-<?php
-// pengelolaanPembelajaran.php
+<?php 
 session_start();
 $halaman = isset($_GET['page']) ? $_GET['page'] : '';
 ?>
-<?php
-// Periksa apakah parameter 'page' ada di URL
-if (isset($_GET['page'])) {
-    $page = $_GET['page'];
-
-    // Periksa apakah file yang dipilih ada, jika ada, include file tersebut
-    if (file_exists($page)) {
-        include($page); // Memasukkan file 'buatTugas.php' atau file lain yang sesuai
-    } else {
-        echo "<p>Halaman tidak ditemukan.</p>"; // Pesan error jika file tidak ditemukan
-    }
-} else {
-    // Tampilan default jika tidak ada parameter page (misalnya bisa menunjukkan dashboard utama atau halaman lainnya)
-}
-?>
-
 
 <!DOCTYPE html>
 <html lang="id">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Pengelolaan Pembelajaran</title>
-        
-        <!-- ====== Tambahkan Google Fonts ====== -->
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-        <!-- ====== Hubungkan file CSS utama ====== -->
-        <link rel="stylesheet" href="CSS/style_guru.css">
-        
-        <style>
-            /* Terapkan font ke seluruh elemen */
-            * {
-                font-family: "Poppins", sans-serif;
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-            }
-            </style>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pengelolaan Pembelajaran</title>
+
+  <!-- Font dan Icon -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- Gunakan style dari dashboard agar tampilannya seragam -->
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/style_guru.css">
 </head>
 <body>
 
-<header>
-   <img src="../assets/logo-elearning.png" alt="Logo E-School" style="width: 180px; height: auto;">
-
-
-<nav>
-    <div class="bgDropdown">
-        <div class="dropdown">
-            <button class="dropbtn">▼ Data Master</button>
-            <div class="dropdown-content">
-                <a href="#">Data Guru</a>
-                <a href="#">Data Siswa</a>
-            </div>
+<!-- HEADER (sama seperti dashboard) -->
+<div class="sticky-header">
+  <header>
+    <img src="../assets/logo-elearning.png" class="logo" alt="E-School">
+    
+    <div class="menu-row">
+      <div class="dropdown">
+        <button class="dropbtn">
+          <i class="fa-solid fa-database"></i> Data Master
+          <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
+        </button>
+        <div class="dropdown-content">
+          <a href="#"><i class="fa-solid fa-user-tie"></i> Kelola Guru</a>
+          <a href="#"><i class="fa-solid fa-user-graduate"></i> Kelola Siswa</a>
         </div>
+      </div>
 
-        <div class="dropdown">
-            <button class="dropbtn">▼ Presensi Siswa</button>
-            <div class="dropdown-content">
-                <a href="#">Rekap Presensi</a>
-                <a href="#">Laporan</a>
-            </div>
+      <div class="dropdown">
+        <button class="dropbtn">
+          <i class="fa-solid fa-clipboard-check"></i> Presensi Siswa
+          <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
+        </button>
+        <div class="dropdown-content">
+          <a href="#"><i class="fa-solid fa-list-check"></i> Lihat Presensi</a>
+          <a href="#"><i class="fa-solid fa-pen-clip"></i> Buat Presensi</a>
         </div>
+      </div>
 
-        <div class="dropdown">
-            <button class="dropbtn">▼ Pengelolaan Pembelajaran</button>
-            <div class="dropdown-content">
-                <a href="#">Materi</a>
-                <a href="#">Tugas</a>
-                <a href="#">Quiz</a>
-            </div>
-        </div>
+      <button class="dropbtn">
+        <i class="fa-solid fa-school"></i>
+        <a href="pengelolaanPembelajaran.php" style="text-decoration: none; color: #2e7dff;">Pengelolaan Pembelajaran</a>
+      </button>
     </div>
-</nav>
-</header>
-
-<div class="welcome-box">
-    <?php
-    // --- Ambil data dari database (nanti sesuaikan query-nya) ---
-    // contoh variable default sementara:
-    $namaGuru = "Marta"; // nanti diganti hasil dari database
-    $pelajaranSelanjutnya = "Matematika"; // nanti diganti hasil dari database
-
-    // contoh konsep ambil dari database (belum aktif):
-    /*
-    include 'koneksi.php';
-    $idGuru = $_SESSION['id_guru'];
-    $query = mysqli_query($koneksi, "SELECT nama_guru FROM guru WHERE id_guru='$idGuru'");
-    $dataGuru = mysqli_fetch_assoc($query);
-    $namaGuru = $dataGuru['nama_guru'];
-
-    $jadwal = mysqli_query($koneksi, "SELECT nama_mapel FROM jadwal WHERE id_guru='$idGuru' ORDER BY waktu_mulai ASC LIMIT 1");
-    $dataJadwal = mysqli_fetch_assoc($jadwal);
-    $pelajaranSelanjutnya = $dataJadwal['nama_mapel'];
-    */
-    ?>
-    <h2>Halo! Selamat Datang, <?= htmlspecialchars($namaGuru) ?></h2>
-    <p>Jadwal Pelajaran selanjutnya <?= htmlspecialchars($pelajaranSelanjutnya) ?></p>
+  </header>
 </div>
 
-<div class="search-box">
-    <input type="text" placeholder="Search...">
-</div>
+<!-- WELCOME BOX -->
+<section class="welcome-box">
+  <?php 
+  $namaGuru = "Marta"; 
+  $pelajaranSelanjutnya = "Matematika";
+  ?>
+  <h2>Halo! Selamat Datang, <?= htmlspecialchars($namaGuru) ?></h2>
+  <p>Jadwal pelajaran selanjutnya: <b><?= htmlspecialchars($pelajaranSelanjutnya) ?></b></p>
+</section>
 
+
+<!-- MENU TOMBOL -->
 
 <div class="btn-container">
     <a href="?page=tambahMateri"><button class="btn">Tambah Materi</button></a>
@@ -139,15 +101,26 @@ if (isset($_GET['page'])) {
     <?php } ?>
 </div>
 
-</body>
 
+<!-- SCRIPT DROPDOWN -->
 <script>
-window.addEventListener('scroll', function() {
-  const header = document.querySelector('header');
-  if (window.scrollY > 20) header.classList.add('scrolled');
-  else header.classList.remove('scrolled');
+document.addEventListener("DOMContentLoaded", () => {
+  const buttons = document.querySelectorAll(".dropbtn");
+  buttons.forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      const menu = btn.nextElementSibling;
+      document.querySelectorAll(".dropdown-content").forEach(dc => {
+        if (dc !== menu) dc.style.display = "none";
+      });
+      menu.style.display = menu.style.display === "block" ? "none" : "block";
+    });
+  });
+  document.addEventListener("click", () => {
+    document.querySelectorAll(".dropdown-content").forEach(dc => dc.style.display = "none");
+  });
 });
 </script>
 
-
+</body>
 </html>
