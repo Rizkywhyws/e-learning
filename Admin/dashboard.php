@@ -1,3 +1,13 @@
+<?php
+session_start();
+require_once '../config/db.php'; // Path relatif dari folder admin
+
+// Cek apakah user sudah login
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+    header('Location: ../login.php');
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
