@@ -3,6 +3,22 @@
 session_start();
 $halaman = isset($_GET['page']) ? $_GET['page'] : '';
 ?>
+<?php
+// Periksa apakah parameter 'page' ada di URL
+if (isset($_GET['page'])) {
+    $page = $_GET['page'];
+
+    // Periksa apakah file yang dipilih ada, jika ada, include file tersebut
+    if (file_exists($page)) {
+        include($page); // Memasukkan file 'buatTugas.php' atau file lain yang sesuai
+    } else {
+        echo "<p>Halaman tidak ditemukan.</p>"; // Pesan error jika file tidak ditemukan
+    }
+} else {
+    // Tampilan default jika tidak ada parameter page (misalnya bisa menunjukkan dashboard utama atau halaman lainnya)
+}
+?>
+
 
 <!DOCTYPE html>
 <html lang="id">
@@ -29,8 +45,8 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
 <body>
 
 <header>
-    <img src="CSS/logo.png" alt="Logo E-School">
-    <h1>E-School</h1>
+   <img src="../assets/logo-elearning.png" alt="Logo E-School" style="width: 180px; height: auto;">
+
 
 <nav>
     <div class="bgDropdown">
