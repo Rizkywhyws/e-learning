@@ -320,6 +320,12 @@ header {
   width: 280px !important;
   height: 260px !important;
 }
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: #f4f6fb; /* agar menutupi elemen di bawah */
+}
 
 /* RESPONSIVE */
 @media (max-width: 900px) {
