@@ -59,6 +59,8 @@
       </div>
     </div>
 </div>
+  </header>
+</div>
 
   <!-- WELCOME BOX -->
   <section class="welcome-box">
@@ -71,8 +73,6 @@
     <input type="text" placeholder="Search...">
     <button><i class="fa-solid fa-magnifying-glass"></i></button>
   </div>
-  </header>
-</div>
   <!-- GRID WRAPPER -->
   <section class="main-grid">
 
