@@ -1,3 +1,75 @@
+<?php
+require_once '../config/session.php';
+require_once '../config/db.php';
+
+checkLogin();
+checkRole(['siswa']);
+
+$namaSiswa = $_SESSION['nama'] ?? 'Siswa';
+$kelasSiswa = $_SESSION['kelas'] ?? null;
+$mapelSelanjutnya = 'Belum ada jadwal';
+
+if ($kelasSiswa) {
+    $hariIni = date('l');
+    $jamSekarang = date('H:i:s');
+
+    $mapHari = [
+        'Sunday' => 'Minggu',
+        'Monday' => 'Senin',
+        'Tuesday' => 'Selasa',
+        'Wednesday' => 'Rabu',
+        'Thursday' => 'Kamis',
+        'Friday' => 'Jumat',
+        'Saturday' => 'Sabtu'
+    ];
+    $hariIndo = $mapHari[$hariIni];
+
+    // 🔹 Cek jadwal hari ini yang jamnya belum lewat
+    $sql = "
+        SELECT m.namaMapel, jm.jamMulai 
+        FROM jadwalmapel jm
+        JOIN mapel m ON jm.kodeMapel = m.kodeMapel
+        WHERE jm.kelas = ? 
+          AND jm.hari = ? 
+          AND jm.jamMulai > ?
+        ORDER BY jm.jamMulai ASC
+        LIMIT 1
+    ";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("sss", $kelasSiswa, $hariIndo, $jamSekarang);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($row = $result->fetch_assoc()) {
+        $mapelSelanjutnya = $row['namaMapel'] . " — " . date("H:i", strtotime($row['jamMulai']));
+    } else {
+        // 🔸 Jika tidak ada lagi pelajaran hari ini, ambil hari berikutnya
+        $urutanHari = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'];
+        $index = array_search($hariIndo, $urutanHari);
+        $hariBerikutnya = $urutanHari[($index + 1) % 7];
+
+        $sql2 = "
+            SELECT m.namaMapel, jm.jamMulai 
+            FROM jadwalmapel jm
+            JOIN mapel m ON jm.kodeMapel = m.kodeMapel
+            WHERE jm.kelas = ? 
+              AND jm.hari = ?
+            ORDER BY jm.jamMulai ASC
+            LIMIT 1
+        ";
+        $stmt2 = $conn->prepare($sql2);
+        $stmt2->bind_param("ss", $kelasSiswa, $hariBerikutnya);
+        $stmt2->execute();
+        $result2 = $stmt2->get_result();
+
+        if ($row2 = $result2->fetch_assoc()) {
+            $mapelSelanjutnya = $row2['namaMapel'] . " — " . date("H:i", strtotime($row2['jamMulai'])) . " (" . $hariBerikutnya . ")";
+        }
+    }
+}
+?>
+
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -58,14 +130,20 @@
         <a href="#"><i class="fa-solid fa-pen-to-square"></i> Quiz</a>
       </div>
     </div>
+    <div class="dropdown">
+      <button class="dropbtn">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <a href="../Auth/logout.php" onclick="return confirm('Yakin ingin logout?')"style="text-decoration:none; color:#2e7dff;"> Logout</a>
+      </button>
+    </div>
 </div>
   </header>
 </div>
 
   <!-- WELCOME BOX -->
   <section class="welcome-box">
-    <h2>Halo! Selamat Datang, Marta</h2>
-    <p>Jadwal Pelajaran selanjutnya Matematika</p>
+  <h2>Halo! Selamat Datang, <?= htmlspecialchars($namaSiswa) ?></h2>
+  <p>Jadwal Pelajaran selanjutnya <b><?= htmlspecialchars($mapelSelanjutnya) ?></b></p>
   </section>
   
   <!-- SEARCH -->
