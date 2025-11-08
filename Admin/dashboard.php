@@ -55,6 +55,10 @@ $countJadwal = $conn->query("SELECT COUNT(*) AS total FROM jadwalmapel")->fetch_
         <a href="kelolajadwal.php"><i class="fa-solid fa-calendar-days"></i> Kelola Jadwal</a>
       </div>
     </div>
+    <button class="dropbtn">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <a href="../Auth/logout.php" onclick="return confirm('Yakin ingin logout?')"style="text-decoration:none; color:#2e7dff;"> Logout</a>
+      </button>
   </div>
 </div>
 
