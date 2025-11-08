@@ -59,7 +59,7 @@
             satu platform terpadu.Silahkan login untuk memulai pembelajaran dan nikmati pengalaman belajar
             yang praktis dan menyenangkan
           </p>
-          <a href="/elearning-app/Auth/login.php" class="login-button mt-4" data-animate-link="fade">Login</a>
+          <a href="Auth/login.php" class="login-button mt-4" data-animate-link="fade">Login</a>
         </div>
         <div class="col-md-6 text-center position-relative">
           <div class="circle circle1">
