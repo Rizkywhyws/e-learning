@@ -42,15 +42,14 @@
 }
 
 .content {
-    width: 90%;
+    width: 100%;
+    max-width: 8500px; /* biar tabel bisa lebih lebar */
     margin: 20px auto;
     background: #f5f8ff;
-    padding: 20px;
+    padding: 40px;
     border-radius: 10px;
     box-shadow: 0 0 5px rgba(0,0,0,0.05);
-    position: relative;
-    z-index: 1;
-    margin-top: 10px;
 }
+
 
 
