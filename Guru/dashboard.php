@@ -1,3 +1,41 @@
+<?php
+require_once '../config/session.php';
+require_once '../config/db.php';
+
+// Pastikan user sudah login dan rolenya siswa
+checkLogin();
+checkRole(['guru']);
+?>
+<?php
+$namaGuru = $_SESSION['nama'] ?? 'Guru';
+$nipGuru  = $_SESSION['nipGuru'] ?? null;
+$kelasMengajar = 'Belum ada jadwal';
+
+// Ambil jadwal selanjutnya (misal hari ini)
+if ($nipGuru) {
+    $hariIni = date('l'); // contoh: Monday, Tuesday...
+    // ubah ke format Indonesia
+    $mapHari = [
+        'Sunday' => 'Minggu',
+        'Monday' => 'Senin',
+        'Tuesday' => 'Selasa',
+        'Wednesday' => 'Rabu',
+        'Thursday' => 'Kamis',
+        'Friday' => 'Jumat',
+        'Saturday' => 'Sabtu'
+    ];
+    $hariIndo = $mapHari[$hariIni];
+
+    $query = $conn->prepare("SELECT kelas, jamMulai, ruangan FROM jadwalmapel WHERE nipGuru = ? AND hari = ? LIMIT 1");
+    $query->bind_param("ss", $nipGuru, $hariIndo);
+    $query->execute();
+    $result = $query->get_result();
+
+    if ($row = $result->fetch_assoc()) {
+        $kelasMengajar = "{$row['kelas']} ({$row['ruangan']}) — {$row['jamMulai']}";
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -42,25 +80,22 @@
       </div>
     </div>
 
-    <div class="dropdown">
       <button class="dropbtn">
-        <i class="fa-solid fa-school"></i> Pengelolaan Pembelajaran
-        <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
+        <i class="fa-solid fa-school"></i> 
+        <a href="pengelolaanPembelajaran.php" style="text-decoration: none; color: #2e7dff;">Pengelolaan Pembelajaran</a>
       </button>
-      <div class="dropdown-content">
-        <a href="#"><i class="fa-solid fa-book"></i> Tambah Materi</a>
-        <a href="#"><i class="fa-solid fa-file-circle-plus"></i> Tambah Tugas</a>
-        <a href="#"><i class="fa-solid fa-pen-to-square"></i> Koreksi Tugas</a>
-        <a href="#"><i class="fa-solid fa-circle-question"></i> Buat Quiz</a>
-        <a href="#"><i class="fa-solid fa-clipboard-check"></i> Koreksi Quiz</a>
-      </div>
-    </div>
+      <button class="dropbtn">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <a href="../Auth/logout.php" onclick="return confirm('Yakin ingin logout?')"style="text-decoration:none; color:#2e7dff;"> Logout</a>
+      </button>
   </div>
+  </div>
+  </header>
 
   <!-- WELCOME -->
   <section class="welcome-box">
-    <h2>Halo! Selamat Datang, Bintang</h2>
-    <p>Jadwal mengajar selanjutnya ada di kelas <b>X DKV 2</b></p>
+  <h2>Halo! Selamat Datang, <?= htmlspecialchars($namaGuru) ?></h2>
+  <p>Jadwal mengajar selanjutnya ada di kelas <b><?= htmlspecialchars($kelasMengajar) ?></b></p>
   </section>
 
   <!-- SEARCH -->
@@ -68,8 +103,6 @@
     <input type="text" placeholder="Search...">
     <button><i class="fa-solid fa-magnifying-glass"></i></button>
   </div>
-  </div>
-  </header>
   <!-- GRAFIK SECTION -->
   <section class="grafik-section">
     <h3>Grafik Pembelajaran</h3>

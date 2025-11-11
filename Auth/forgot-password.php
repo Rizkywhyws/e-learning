@@ -16,7 +16,6 @@
         <h2>Login</h2>
         
         <?php
-        // Tampilkan pesan error jika ada
         session_start();
         if (isset($_SESSION['error'])) {
             echo '<div class="alert alert-error">' . $_SESSION['error'] . '</div>';
@@ -36,7 +35,7 @@
             <div class="error-message" id="password-error">Wajib diisi.</div>
           </div>
           <div class="options">
-            <a href="../Auth/forgot-password.php" class="forgot">Lupa Password?</a>
+            <a href="#" class="forgot" id="forgotBtn">Lupa Password?</a>
           </div>
           <button type="submit" class="btn-login">Login</button>
         </form>
@@ -48,6 +47,21 @@
       <img src="../assets/studybg.png" alt="Login Illustration" />
     </div>
   </div>
+
+<!-- ======== POPUP FORM LUPA PASSWORD (TANPA EMAIL) ======== -->
+<div class="modal" id="forgotModal">
+  <div class="modal-content">
+    <h3>Atur Ulang Password</h3>
+    <p>Masukkan email Anda dan buat password baru.</p>
+    <form id="forgotForm" method="POST" action="forgot-password-process.php">
+      <input type="email" name="email" placeholder="Masukkan email Anda" required>
+      <input type="password" name="new_password" placeholder="Password Baru" required>
+      <button type="submit">Ubah Password</button>
+      <button type="button" class="close-modal" id="closeModal">Batal</button>
+    </form>
+  </div>
+</div>
+
 
   <script>
     const form = document.getElementById("loginForm");
@@ -66,10 +80,9 @@
       }, 600);
     });
 
-    // Validasi manual (TANPA alert simulasi)
+    // Validasi manual
     form.addEventListener("submit", (e) => {
       let valid = true;
-
       [email, password].forEach(input => input.classList.remove("error"));
       [emailError, passwordError].forEach(msg => msg.classList.remove("active"));
 
@@ -79,24 +92,33 @@
         emailError.classList.add("active");
         valid = false;
       }
-
       if (password.value.trim() === "") {
         e.preventDefault();
         password.classList.add("error");
         passwordError.classList.add("active");
         valid = false;
       }
-
-      // Jika valid, form akan otomatis submit ke process_login.php
-      // TIDAK ADA alert() lagi di sini
     });
 
-    [email, password].forEach(input => {
-      input.addEventListener("input", () => {
-        input.classList.remove("error");
-        if (input.id === "email") emailError.classList.remove("active");
-        if (input.id === "password") passwordError.classList.remove("active");
-      });
+    // Popup lupa password
+    const forgotBtn = document.getElementById("forgotBtn");
+    const modal = document.getElementById("forgotModal");
+    const closeModal = document.getElementById("closeModal");
+
+    forgotBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      modal.classList.add("active");
+    });
+
+    closeModal.addEventListener("click", () => {
+      modal.classList.remove("active");
+    });
+
+    // Tutup modal saat klik luar area
+    window.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        modal.classList.remove("active");
+      }
     });
   </script>
 </body>

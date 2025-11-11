@@ -5,20 +5,42 @@
   font-family: "Poppins", sans-serif;
 }
 
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
 body {
-  background-color: #F1F5FC;
+  background-color: #f1f5fc;
   color: #333;
 }
 
-/* -----------------------------------
-   HEADER (hanya logo, tanpa navbar)
-------------------------------------*/
+/* ===================================
+   ✅ STICKY HEADER - INI YANG PENTING!
+====================================*/
+.sticky-header {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  background-color: #f1f5fc !important;
+  z-index: 9999 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ===================================
+   HEADER (logo di tengah)
+====================================*/
 header {
   display: flex;
   align-items: center;
-  padding: 15px 40px;
-  background-color: F1F5FC;
   justify-content: center;
+  padding: 15px 40px;
+  background-color: #f1f5fc;
+  margin: 0;
 }
 
 .logo {
@@ -32,23 +54,31 @@ header {
   height: 80px;
 }
 
-/* -----------------------------------
-   DROPDOWN BAR DI BAWAH HEADER
-------------------------------------*/
+/* ===================================
+   MENU ROW (dropdown bar)
+====================================*/
 .menu-row {
-  display: inline-flex;
+  display: flex;
   gap: 10px;
   padding: 10px 20px;
-  background: #D5EBFF;
+  background: #d5ebff;
   border: 2px solid #2e7dff;
   border-radius: 40px;
-  margin: -10px auto 10px;
+  margin: 0 auto 10px;
   justify-content: center;
   align-items: center;
-  display: flex;
+  width: fit-content;
 }
 
-/* Each dropdown button */
+/* ===================================
+   DROPDOWN CONTAINER
+====================================*/
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* Dropdown button */
 .dropbtn {
   background: transparent;
   border: none;
@@ -75,12 +105,15 @@ header {
 .dropdown-content {
   display: none;
   position: absolute;
+  top: 100%;
+  left: 0;
   background-color: #ffffff;
   min-width: 180px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
   border-radius: 10px;
-  margin-top: 10px;
+  margin-top: 8px;
   overflow: hidden;
+  z-index: 10000;
 }
 
 .dropdown-content a {
@@ -100,26 +133,25 @@ header {
   background-color: #e8f0ff;
 }
 
-
-/* Center alignment */
-.menu-row {
-  width: fit-content;
-  margin-left: auto;
-  margin-right: auto;
+/* ===================================
+   ✅ MAIN CONTENT - BERI PADDING TOP!
+====================================*/
+main {
+  padding-top: 180px !important;
+  margin: 0;
 }
 
-/* -----------------------------------
+/* ===================================
    WELCOME BOX
-------------------------------------*/
+====================================*/
 .welcome-box {
-    background-color: #b5ccff;
-    text-align: center;
-    padding: 40px 20px;
-    border-radius: 20px;
-    margin: 20px auto;
-    margin-bottom: 10px; /* margin jarak bawah dan atas. klo mau bawah tok, berarti pake margin-bottom */
-    width:90%;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.299);
+  background-color: #b5ccff;
+  text-align: center;
+  padding: 40px 20px;
+  border-radius: 20px;
+  margin: 20px auto 10px;
+  width: 90%;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.299);
 }
 
 .welcome-box h2 {
@@ -132,15 +164,16 @@ header {
 .welcome-box span {
   font-weight: 600;
 }
+
 .welcome-box p {
-  color: #000000;        
-  font-size: 18px;       
-  font-weight: 600;      
+  color: #000000;
+  font-size: 18px;
+  font-weight: 600;
 }
 
-/* -----------------------------------
+/* ===================================
    SEARCH BAR
-------------------------------------*/
+====================================*/
 .search-bar {
   text-align: center;
   margin-bottom: 20px;
@@ -170,9 +203,9 @@ header {
   margin-left: 5px;
 }
 
-/* -----------------------------------
+/* ===================================
    DASHBOARD
-------------------------------------*/
+====================================*/
 .dashboard {
   width: 80%;
   margin: auto;
@@ -187,9 +220,9 @@ header {
   text-align: center;
 }
 
-/* -----------------------------------
+/* ===================================
    CARD
-------------------------------------*/
+====================================*/
 .card-container {
   display: flex;
   justify-content: space-around;
@@ -203,7 +236,7 @@ header {
   border-radius: 12px;
   text-align: center;
   padding: 60px 90px;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
   transition: 0.2s;
   margin-bottom: 90px;
 }
@@ -224,16 +257,35 @@ header {
 }
 
 /* Warna border card */
-.card.guru { border: 6px solid #ff7b7b; }
-.card.siswa { border: 6px solid #ffd84c; }
-.card.mapel { border: 6px solid #66d977; }
-.card.jadwal { border: 6px solid #4db6ff; }
+.card.guru {
+  border: 6px solid #ff7b7b;
+}
+.card.siswa {
+  border: 6px solid #ffd84c;
+}
+.card.mapel {
+  border: 6px solid #66d977;
+}
+.card.jadwal {
+  border: 6px solid #4db6ff;
+}
 
+/* ===================================
+   DATA SECTION
+====================================*/
+.data-section {
+  padding-top: 20px;
+  margin: 0;
+}
+
+/* ===================================
+   DATA TABS
+====================================*/
 .data-tabs {
   display: flex;
   gap: 10px;
   padding: 10px 20px;
-  background: #D5EBFF;
+  background: #d5ebff;
   border: 2px solid #2e7dff;
   border-radius: 40px;
   margin: 20px auto;
@@ -242,9 +294,6 @@ header {
   width: fit-content;
 }
 
-/* -------------------------
-    BUTTON TABS
---------------------------*/
 .data-tabs button {
   background: transparent;
   border: none;
@@ -265,12 +314,12 @@ header {
   color: #ffffff;
 }
 
-/* -------------------------
-    TABLE
---------------------------*/
+/* ===================================
+   TABLE
+====================================*/
 .data-table {
   width: 90%;
-  margin: 15px auto;   /* ✅ bikin tabel ke tengah */
+  margin: 15px auto;
   border-collapse: collapse;
   background: #f5f9ff;
   border-radius: 10px;
@@ -278,32 +327,33 @@ header {
   border: 3px solid #2e7dff;
 }
 
-/* Header tabel */
 .data-table thead {
   background: #bcd4ff;
 }
 
 .data-table th {
-  padding: 14px;             /* lebih besar */
-  text-align: center;         /* center */
+  padding: 14px;
+  text-align: center;
   font-weight: 600;
   border-right: 2px solid #c4d6f6;
   color: #000;
 }
 
-/* Hilangkan border di kolom terakhir */
 .data-table th:last-child,
 .data-table td:last-child {
   border-right: none;
 }
 
-/* Cell data */
 .data-table td {
-  padding: 16px 14px;         /* diperbesar biar luas */
+  padding: 16px 14px;
   border-bottom: 2px solid #c4d6f6;
   border-right: 2px solid #c4d6f6;
+  text-align: center;
 }
 
+/* ===================================
+   UTILITY
+====================================*/
 .hidden {
-  display: none;
+  display: none !important;
 }
