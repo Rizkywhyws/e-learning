@@ -75,8 +75,8 @@ if ($nipGuru) {
         <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
       </button>
       <div class="dropdown-content">
-        <a href="#"><i class="fa-solid fa-list-check"></i> Lihat Presensi</a>
-        <a href="#"><i class="fa-solid fa-pen-clip"></i> Buat Presensi</a>
+        <a href="presensiSiswa.php"><i class="fa-solid fa-list-check"></i> Lihat Presensi</a>
+        <a href="presensiSiswa.php"><i class="fa-solid fa-pen-clip"></i> Buat Presensi</a>
       </div>
     </div>
 
