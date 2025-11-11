@@ -13,7 +13,7 @@ if (empty($email) || empty($password)) {
     exit;
 }
 
-// Query cari akun (tanpa batasi role dulu)
+// Query cari akun
 $query = "SELECT * FROM akun WHERE email = ? LIMIT 1";
 $stmt = mysqli_prepare($conn, $query);
 
@@ -37,33 +37,40 @@ if ($user = mysqli_fetch_assoc($result)) {
         $_SESSION['role'] = $user['role'];
         $_SESSION['logged_in'] = true;
 
-        // Ambil nama dari tabel yang sesuai berdasarkan role
-         if ($user['role'] === 'guru') {
+
+        // Ambil data tambahan berdasarkan role
+        if ($user['role'] === 'guru') {
             $qGuru = $conn->prepare("SELECT nama, nip FROM dataguru WHERE idAkun = ? LIMIT 1");
             $qGuru->bind_param("s", $user['idAkun']);
             $qGuru->execute();
             $guru = $qGuru->get_result()->fetch_assoc();
+
             $_SESSION['nama'] = $guru['nama'] ?? $user['email'];
-            $_SESSION['nip'] = $guru['nip'] ?? null; 
+
+            $_SESSION['nip'] = $guru['nip'] ?? null;
             $redirect = '../Guru/dashboard.php';
+
         } elseif ($user['role'] === 'siswa') {
             $qSiswa = $conn->prepare("SELECT nama FROM datasiswa WHERE idAkun = ? LIMIT 1");
             $qSiswa->bind_param("s", $user['idAkun']);
             $qSiswa->execute();
             $siswa = $qSiswa->get_result()->fetch_assoc();
+
             $_SESSION['nama'] = $siswa['nama'] ?? $user['email'];
             $redirect = '../Siswa/dashboard.php';
+
         } else { // admin
             $_SESSION['nama'] = 'Administrator';
             $redirect = '../Admin/dashboard.php';
         }
-         if ($user['isPasswordChanged'] == 0) {
-            // arahkan ke halaman ubah password opsional
+
+        // Cek apakah password masih default
+        if ($user['isPasswordChanged'] == 0) {
             header('Location: change-password.php');
             exit;
         }
 
-        // Redirect ke dashboard sesuai role
+        // Redirect ke dashboard
         header("Location: $redirect");
         exit;
 
