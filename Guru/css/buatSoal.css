@@ -62,7 +62,6 @@ textarea:focus, input:focus {
   background-color: #fff;
 }
 
-/* Pilihan jawaban */
 .jawaban-item {
   display: flex;
   align-items: center;
@@ -181,3 +180,14 @@ textarea:focus, input:focus {
   transform: translateY(-2px);
 }
 
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #90caf9;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #42a5f5;
+}
