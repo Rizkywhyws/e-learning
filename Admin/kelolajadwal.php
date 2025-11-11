@@ -4,7 +4,7 @@ require_once "../config/db.php";
 // Ambil data jadwal beserta nama mapel dan guru
 $data = $conn->query("
     SELECT 
-        j.idJadwal, 
+        j.idJadwalMapel, 
         j.kodeMapel, 
         m.namaMapel, 
         j.nipGuru, 
@@ -99,7 +99,7 @@ $data = $conn->query("
     <tbody>
       <?php while ($row = $data->fetch_assoc()): ?>
       <tr 
-        data-id="<?= $row['idJadwal'] ?>"
+        data-id="<?= $row['idJadwalMapel'] ?>"
         data-mapel="<?= $row['kodeMapel'] ?>"
         data-guru="<?= $row['nipGuru'] ?>"
         data-hari="<?= $row['hari'] ?>"

@@ -1,3 +1,6 @@
+/* =====================================================
+   GLOBAL RESET
+=====================================================*/
 * {
   margin: 0;
   padding: 0;
@@ -10,21 +13,15 @@ body {
   color: #333;
 }
 
-/* -----------------------------------
-   HEADER (hanya logo, tanpa navbar)
-------------------------------------*/
+/* =====================================================
+   HEADER
+=====================================================*/
 header {
   display: flex;
   align-items: center;
-  padding: 15px 40px;
-  background-color: F1F5FC;
   justify-content: center;
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  padding: 15px 40px;
+  background-color: #F1F5FC; /* ✅ Diperbaiki: pakai tanda # */
 }
 
 .logo img {
@@ -32,20 +29,19 @@ header {
   height: 80px;
 }
 
-/* -----------------------------------
-   DROPDOWN BAR DI BAWAH HEADER
-------------------------------------*/
+/* =====================================================
+   DROPDOWN BAR
+=====================================================*/
 .menu-row {
-  display: inline-flex;
+  display: flex;
   gap: 10px;
   padding: 10px 20px;
   background: #D5EBFF;
   border: 2px solid #2e7dff;
   border-radius: 40px;
-  margin: -10px auto 10px;
+  margin: 10px auto 20px;
   justify-content: center;
   align-items: center;
-  display: flex;
 }
 
 .dropbtn {
@@ -98,46 +94,35 @@ header {
   background-color: #e8f0ff;
 }
 
-.menu-row {
-  width: fit-content;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* -----------------------------------
+/* =====================================================
    WELCOME BOX
-------------------------------------*/
+=====================================================*/
 .welcome-box {
-    background-color: #b5ccff;
-    text-align: center;
-    padding: 40px 20px;
-    border-radius: 20px;
-    margin: 20px auto;
-    margin-bottom: 10px;
-    width:90%;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.299);
+  background-color: #b5ccff;
+  text-align: center;
+  padding: 40px 20px;
+  border-radius: 20px;
+  margin: 20px auto;
+  margin-bottom: 10px;
+  width: 90%;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
 }
 
 .welcome-box h2 {
-  color: #000000;
+  color: #000;
   font-size: 30px;
   font-weight: 700;
-  margin-top: -9px;
-}
-
-.welcome-box span {
-  font-weight: 600;
 }
 
 .welcome-box p {
-  color: #000000;
+  color: #000;
   font-size: 18px;
   font-weight: 600;
 }
 
-/* -----------------------------------
+/* =====================================================
    SEARCH BAR
-------------------------------------*/
+=====================================================*/
 .search-bar {
   text-align: center;
   margin-bottom: 20px;
@@ -148,7 +133,7 @@ header {
   width: 60%;
   padding: 14px 20px;
   border-radius: 25px;
-  border: 2px solid #000000;
+  border: 2px solid #000;
   outline: none;
   transition: 0.3s;
 }
@@ -168,59 +153,6 @@ header {
 }
 
 /* =====================================================
-   BUTTON (Add, Edit, Delete)
-=====================================================*/
-.action-buttons {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  margin: 20px auto;
-}
-
-.btn {
-  padding: 10px 18px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-  color: white;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: 0.25s;
-}
-
-.btn i {
-  font-size: 14px;
-}
-
-.btn.green {
-  background-color: #28a745;
-}
-.btn.green:hover {
-  background-color: #218838;
-}
-
-.btn.yellow {
-  background-color: #f0ad4e;
-}
-.btn.yellow:hover {
-  background-color: #ec971f;
-}
-
-.btn.red {
-  background-color: #d9534f;
-}
-.btn.red:hover {
-  background-color: #c9302c;
-}
-
-.btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* =====================================================
    TABLE
 =====================================================*/
 .data-table {
@@ -230,8 +162,9 @@ header {
   background: white;
   border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 3px 8px
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
 }
+
 .data-table thead {
   background-color: #2e7dff;
   color: white;
@@ -240,8 +173,8 @@ header {
 .data-table th,
 .data-table td {
   padding: 14px 16px;
-  border-bottom: 1px solid #dddddd;
-  text-align: center !important;
+  border-bottom: 1px solid #ddd;
+  text-align: center;
 }
 
 .data-table tbody tr:hover {
@@ -293,25 +226,7 @@ header {
   font-weight: 600;
 }
 
-.form-panel input {
-  padding: 12px;
-  border-radius: 10px;
-  border: 2px solid #aaa;
-  outline: none;
-  font-size: 15px;
-  transition: 0.3s;
-}
-
-.form-panel input:focus {
-  border-color: #2e7dff;
-}
-
-.form-actions {
-  margin-top: 18px;
-  display: flex;
-  justify-content: end;
-  gap: 12px;
-}
+.form-panel input,
 .form-panel select {
   padding: 12px;
   border-radius: 10px;
@@ -320,7 +235,15 @@ header {
   font-size: 15px;
   transition: 0.3s;
   background-color: white;
-  appearance: none; /* hilangkan style default browser */
+}
+
+.form-panel input:focus,
+.form-panel select:focus {
+  border-color: #2e7dff;
+}
+
+.form-panel select {
+  appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
   background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D'10'%20height%3D'10'%20viewBox%3D'0%200%2010%2010'%20xmlns%3D'http%3A//www.w3.org/2000/svg'%3E%3Cpolygon%20points%3D'0,0%2010,0%205,5'%20fill%3D'%232e7dff'/%3E%3C/svg%3E");
@@ -329,9 +252,75 @@ header {
   background-size: 12px;
 }
 
-.form-panel select:focus {
-  border-color: #2e7dff;
+/* =====================================================
+   BUTTONS
+=====================================================*/
+
+/* 🔹 Tombol Add / Edit / Delete di atas tabel */
+.action-buttons {
+  width: 95%;
+  margin: 15px auto;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
+
+.btn {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn.green { background-color: #28a745; }
+.btn.green:hover { background-color: #218838; }
+
+.btn.yellow { background-color: #ffc107; color: #222; }
+.btn.yellow:hover { background-color: #e0a800; }
+
+.btn.red { background-color: #dc3545; }
+.btn.red:hover { background-color: #c82333; }
+
+/* 🔹 Tombol Submit / Cancel di form */
+/* 🔹 Tombol Submit / Cancel di form */
+.button-row {
+  display: flex;
+  justify-content: flex-end; /* tombol di kanan */
+  gap: 12px;
+  margin-top: 25px;
+}
+
+button.submit,
+button.cancel {
+  font-size: 15px;
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-weight: 600;
+  color: white !important;
+  cursor: pointer;
+  transition: 0.3s;
+  border: none;
+}
+
+button.submit {
+  background-color: #28a745 !important;
+}
+
+button.submit:hover {
+  background-color: #218838 !important;
+}
+
+button.cancel {
+  background-color: #d9534f !important;
+}
+
+button.cancel:hover {
+  background-color: #c9302c !important;
+}
+
 /* =====================================================
    ANIMATION
 =====================================================*/
