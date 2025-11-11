@@ -1,175 +1,4 @@
-/* === style_guru.css === */
 
-
-/* Header dan logo */
-/* === style_guru.css === */
-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    z-index: 9999;
-    text-align: center;
-    background-color: #f3f7ff;
-    padding: 15px 0;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    transition: all 0.3s ease;
-}
-
-
-/* Reset dan dasar */
-body {
-    margin: 0;
-    font-family: 'Poppins', sans-serif;
-    background-color: #f3f7ff;
-    color: #222;
-    padding-top: 120px; /* Sesuaikan tinggi header */
-}
-
-
-header.scrolled {
-    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
-    background-color: #eaf0ff;
-}
-
-header img {
-    width: 80px;
-    vertical-align: middle;
-    margin-right: 8px;
-}
-
-header h1 {
-    display: inline-block;
-    color: #304c89;
-    font-weight: 600;
-    vertical-align: middle;
-    font-size: 32px;
-    margin: 0;
-}
-
-/* Navigasi dropdown */
-nav {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    background-color: transparent;
-    margin-top: 10px;
-    gap: 10px;
-}
-
-.dropdown {
-    position: relative;
-}
-
-.bgDropdown {
-      display: inline-flex;
-  gap: 10px;
-  padding: 10px 20px;
-  background: #D5EBFF;
-  border: 2px solid #ffffff;
-  border-radius: 40px;
-  margin: -10px auto 10px;
-  justify-content: center;
-  align-items: center;
-  display: flex;
-
-}
-
-.dropbtn {
-      background: transparent;
-  border: none;
-  font-size: 14px;
-  font-weight: 600;
-  color: #2e7dff;
-  padding: 8px 12px;
-  cursor: pointer;
-  border-radius: 30px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-
-}
-
-.dropbtn:hover {
-    background-color: #c6dbff;
-}
-
-.dropdown-content {
-    display: none;
-    position: absolute;
-    background-color: #fff;
-    min-width: 180px;
-    border-radius: 8px;
-    box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
-   /* z-index: 1;*/
-}
-
-.dropdown-content a {
-    color: #333;
-    padding: 10px 16px;
-    text-decoration: none;
-    display: block;
-    border-bottom: 1px solid #f1f1f1;
-}
-
-.dropdown-content a:hover {
-    background-color: #f0f6ff;
-}
-
-.dropdown:hover .dropdown-content {
-    display: block;
-}
-
-/* Welcome Section */
-.welcome-box {
-    position: relative;
-    background-color: #b5ccff;
-    text-align: center;
-    padding: 30px 20px;
-    border-radius: 20px;
-    margin-top: 30px;
-    margin-left: auto;
-    margin-right: auto;
-    margin-bottom: -30px; /* margin jarak bawah dan atas. klo mau bawah tok, berarti pake margin-bottom kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk*/
-    width: 90%;
-}
-
-.welcome-box h2 {
-    font-size: 28px;
-    margin: 0;
-    color: #111;
-}
-
-.welcome-box p {
-    font-size: 18px;
-    color: #222;
-    margin-top: 3px;
-    margin-bottom: 10px;
-}
-
-/* Search Box */
-.search-box {
-    display: flex;
-    justify-content: center;
-    margin-top: 8px;
-    margin-bottom: 40px; /* Search Box jarak bawah kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk */
-    position: relative;
-    z-index: 15;
-}
-
-.search-box input[type="text"] {
-    width: 60%;
-    padding: 12px 20px;
-    border: 2px solid #d0dcff;
-    border-radius: 40px;
-    font-size: 16px;
-    outline: none;
-}
-
-.search-box input[type="text"]:focus {
-    border-color: #4c6ef5;
-    box-shadow: 0 0 4px #a3baff;
-}
 
 /* Responsif */
 @media (max-width: 768px) {
@@ -213,15 +42,14 @@ nav {
 }
 
 .content {
-    width: 90%;
+    width: 100%;
+    max-width: 8500px; /* biar tabel bisa lebih lebar */
     margin: 20px auto;
     background: #f5f8ff;
-    padding: 20px;
+    padding: 40px;
     border-radius: 10px;
     box-shadow: 0 0 5px rgba(0,0,0,0.05);
-    position: relative;
-    z-index: 1;
-    margin-top: 10px;
 }
+
 
 

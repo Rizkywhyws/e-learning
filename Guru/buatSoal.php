@@ -13,11 +13,20 @@ if (isset($_POST['soal_list'])) {
 
     if ($dataSoal && is_array($dataSoal)) {
         foreach ($dataSoal as $soal) {
-            $idSoal = uniqid('SL');
+            // ID soal otomatis
+            $getLast = mysqli_query($conn, "SELECT idsoal FROM soalquiz ORDER BY idsoal DESC LIMIT 1");
+            $lastId = mysqli_fetch_assoc($getLast);
+            if ($lastId) {
+                $num = (int)substr($lastId['idsoal'], 1) + 1;
+                $idSoal = 'S' . str_pad($num, 4, '0', STR_PAD_LEFT);
+            } else {
+                $idSoal = 'S0001';
+            }
+
             $pertanyaan = mysqli_real_escape_string($conn, $soal['pertanyaan']);
             $type = mysqli_real_escape_string($conn, $soal['type']);
 
-            // Ambil opsi jawaban (kalau ada)
+            // Ambil opsi jawaban
             $opsi_a = isset($soal['jawaban'][0]) ? mysqli_real_escape_string($conn, $soal['jawaban'][0]) : '';
             $opsi_b = isset($soal['jawaban'][1]) ? mysqli_real_escape_string($conn, $soal['jawaban'][1]) : '';
             $opsi_c = isset($soal['jawaban'][2]) ? mysqli_real_escape_string($conn, $soal['jawaban'][2]) : '';
@@ -41,7 +50,6 @@ if (isset($_POST['soal_list'])) {
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -53,7 +61,7 @@ if (isset($_POST['soal_list'])) {
 <body>
 
 <div class="main-container">
-  <!-- KIRI -->
+  <!-- BAGIAN KIRI -->
   <div class="left-side">
     <h2>Buat Soal <?= ucfirst($type) ?></h2>
 
@@ -73,15 +81,13 @@ if (isset($_POST['soal_list'])) {
       <?php endif; ?>
     </div>
 
-    <input type="hidden" id="jawabanBenar">
-
     <div class="button-group">
       <button onclick="tambahSoal()">Tambah Soal</button>
       <button onclick="resetForm()">Reset</button>
     </div>
   </div>
 
-  <!-- KANAN -->
+  <!-- BAGIAN KANAN -->
   <div class="right-side">
     <h2>Daftar Soal</h2>
     <div id="list-soal"></div>
@@ -95,6 +101,7 @@ let selectedAnswers = [];
 let editIndex = -1;
 const quizType = "<?= $type ?>";
 
+// ✅ Fungsi checkbox
 function toggleCheck(el) {
   const all = Array.from(document.querySelectorAll('.check-box'));
   const index = all.indexOf(el);
@@ -106,48 +113,34 @@ function toggleCheck(el) {
   } else if (quizType === 'multiselect') {
     el.classList.toggle('checked');
     if (el.classList.contains('checked')) {
-      selectedAnswers.push(index);
+      if (!selectedAnswers.includes(index)) selectedAnswers.push(index);
     } else {
       selectedAnswers = selectedAnswers.filter(i => i !== index);
     }
   }
 }
 
+// ✅ Tambah soal
 function tambahSoal() {
   const pertanyaan = document.getElementById('pertanyaan').value.trim();
   const inputs = Array.from(document.querySelectorAll('.jawaban-item input'));
   const jawaban = inputs.map(i => i.value.trim());
   const jawabanBenar = selectedAnswers.join(',');
 
-  if (!pertanyaan) {
-    alert('Tulis pertanyaannya dulu!');
-    return;
-  }
-
+  if (!pertanyaan) return alert('Tulis pertanyaannya dulu!');
   if (quizType !== 'esai') {
-    if (jawaban.some(j => !j)) {
-      alert('Lengkapi semua opsi jawaban!');
-      return;
-    }
-    if (selectedAnswers.length === 0) {
-      alert('Pilih minimal satu jawaban benar!');
-      return;
-    }
+    if (jawaban.some(j => !j)) return alert('Lengkapi semua opsi jawaban!');
+    if (selectedAnswers.length === 0) return alert('Pilih minimal satu jawaban benar!');
   }
 
   const soalData = { pertanyaan, jawaban, jawabanBenar, type: quizType };
-
-  if (editIndex >= 0) {
-    daftarSoal[editIndex] = soalData;
-    editIndex = -1;
-  } else {
-    daftarSoal.push(soalData);
-  }
-
+  if (editIndex >= 0) daftarSoal[editIndex] = soalData; else daftarSoal.push(soalData);
+  editIndex = -1;
   renderSoal();
   resetForm();
 }
 
+// ✅ Render daftar soal
 function renderSoal() {
   const container = document.getElementById('list-soal');
   container.innerHTML = '';
@@ -155,7 +148,12 @@ function renderSoal() {
     let listJawaban = '';
     if (soal.type !== 'esai') {
       const benarArr = soal.jawabanBenar.split(',').map(n => parseInt(n));
-      listJawaban = `<ul>${soal.jawaban.map((j, idx) => <li>${j}${benarArr.includes(idx) ? ' ✅' : ''}</li>).join('')}</ul>`;
+      listJawaban = `
+        <ul>
+          ${soal.jawaban.map((j, idx) => `
+            <li>${String.fromCharCode(65 + idx)}. ${j} ${benarArr.includes(idx) ? '✅' : ''}</li>
+          `).join('')}
+        </ul>`;
     }
     const div = document.createElement('div');
     div.className = 'soal-item';
@@ -163,47 +161,45 @@ function renderSoal() {
       <p><b>${i + 1}.</b> ${soal.pertanyaan}</p>
       ${listJawaban}
       <button onclick="editSoal(${i})">Edit</button>
-      <button onclick="hapusSoal(${i})" class="hapus">Hapus</button>
-    `;
+      <button onclick="hapusSoal(${i})" class="hapus">Hapus</button>`;
     container.appendChild(div);
   });
 }
 
+// ✅ Edit soal
 function editSoal(index) {
   const soal = daftarSoal[index];
   document.getElementById('pertanyaan').value = soal.pertanyaan;
   const inputs = document.querySelectorAll('.jawaban-item input');
-  if (soal.type !== 'esai') {
-    soal.jawaban.forEach((j, i) => inputs[i].value = j);
-    selectedAnswers = soal.jawabanBenar.split(',').map(n => parseInt(n));
-    document.querySelectorAll('.check-box').forEach((cb, i) => {
-      cb.classList.toggle('checked', selectedAnswers.includes(i));
-    });
-  }
+  soal.jawaban.forEach((j, i) => inputs[i].value = j);
+  selectedAnswers = soal.jawabanBenar.split(',').map(n => parseInt(n));
+  document.querySelectorAll('.check-box').forEach((cb, i) => {
+    cb.classList.toggle('checked', selectedAnswers.includes(i));
+  });
   editIndex = index;
 }
 
+// ✅ Hapus soal
 function hapusSoal(index) {
   daftarSoal.splice(index, 1);
   renderSoal();
 }
 
+// ✅ Reset form
 function resetForm() {
   document.getElementById('pertanyaan').value = '';
   document.querySelectorAll('.jawaban-item input').forEach(i => i.value = '');
   document.querySelectorAll('.check-box').forEach(cb => cb.classList.remove('checked'));
   selectedAnswers = [];
+  editIndex = -1;
 }
 
+// ✅ Simpan ke database
 function simpanSemua() {
-  if (daftarSoal.length === 0) {
-    alert('Belum ada soal yang ditambahkan!');
-    return;
-  }
-
+  if (daftarSoal.length === 0) return alert('Belum ada soal yang ditambahkan!');
   const form = document.createElement('form');
   form.method = 'POST';
-  form.action = ''; // halaman ini sendiri
+  form.action = '';
   form.innerHTML = `<input type="hidden" name="soal_list" value='${JSON.stringify(daftarSoal)}'>
                     <input type="hidden" name="id_quiz" value="<?= $idQuiz ?>">`;
   document.body.appendChild(form);
