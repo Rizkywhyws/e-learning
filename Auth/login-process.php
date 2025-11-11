@@ -45,7 +45,11 @@ if ($user = mysqli_fetch_assoc($result)) {
             $guru = $qGuru->get_result()->fetch_assoc();
 
             $_SESSION['nama'] = $guru['nama'] ?? $user['email'];
+<<<<<<< HEAD
+            $_SESSION['nip'] = $guru['nip'] ?? null; 
+=======
             $_SESSION['nip'] = $guru['nip'] ?? null;
+>>>>>>> fbe3c239832893eb12fc3d511ed00018e0748291
             $redirect = '../Guru/dashboard.php';
 
         } elseif ($user['role'] === 'siswa') {
@@ -62,7 +66,11 @@ if ($user = mysqli_fetch_assoc($result)) {
             $redirect = '../Admin/dashboard.php';
         }
 
+<<<<<<< HEAD
+        // Jika password belum diubah (default)
+=======
         // Cek apakah password masih default
+>>>>>>> fbe3c239832893eb12fc3d511ed00018e0748291
         if ($user['isPasswordChanged'] == 0) {
             header('Location: change-password.php');
             exit;
