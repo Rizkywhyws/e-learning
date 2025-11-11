@@ -15,66 +15,93 @@ body {
   padding: 40px 50px;
   border-radius: 20px;
   box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  width: 450px;
+  width: 500px;
+  transition: all 0.3s ease-in-out;
+}
+
+.container:hover {
+  box-shadow: 0px 12px 35px rgba(0, 0, 0, 0.15);
 }
 
 h2 {
+  text-align: center;
   color: #1a237e;
   margin-bottom: 25px;
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 600;
-}
-
-.form-group {
-  margin-bottom: 25px;
 }
 
 label {
   display: block;
-  text-align: left;
+  margin-bottom: 6px;
   color: #283593;
-  margin-bottom: 5px;
   font-weight: 500;
 }
 
-select {
+/* Input, Select, dan Textarea diseragamkan */
+select,
+input[type="text"],
+input[type="datetime-local"],
+textarea {
   width: 100%;
-  padding: 12px;
+  padding: 12px 14px;
   border: 2px solid #90caf9;
   border-radius: 10px;
   margin-bottom: 15px;
   background-color: #f5f9ff;
-  font-size: 14px;
   outline: none;
-  transition: 0.3s;
+  font-size: 14px;
+  font-family: 'Poppins', sans-serif;
+  color: #333;
+  transition: all 0.3s ease;
 }
 
-select:focus {
+textarea {
+  resize: none;
+  min-height: 90px;
+  line-height: 1.5;
+}
+
+select:focus,
+input:focus,
+textarea:focus {
   border-color: #1e88e5;
   background-color: #fff;
+  box-shadow: 0 0 6px rgba(30, 136, 229, 0.3);
 }
 
+/* Bagian pilihan tipe quiz */
 .quiz-type {
-  display: flex;
-  justify-content: space-between;
+  margin-top: 25px;
+  text-align: center;
 }
 
-.quiz-type button {
-  flex: 1;
-  margin: 0 5px;
+.quiz-type h3 {
+  color: #1a237e;
+  margin-bottom: 15px;
+  font-size: 18px;
+}
+
+.type-options {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.type-btn {
   background: linear-gradient(135deg, #42a5f5, #1e88e5);
   color: white;
   border: none;
   border-radius: 12px;
-  padding: 12px 0;
-  font-size: 14px;
-  font-weight: 500;
+  padding: 12px 25px;
   cursor: pointer;
+  font-weight: 600;
   transition: 0.3s;
+  width: 140px;
 }
 
-.quiz-type button:hover {
-  transform: translateY(-2px);
+.type-btn:hover {
   background: linear-gradient(135deg, #1e88e5, #1565c0);
+  transform: translateY(-2px);
 }
