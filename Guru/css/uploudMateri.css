@@ -1,0 +1,118 @@
+/* Import font Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #e6f3ff, #d4ebff);
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.container {
+  width: 90%;
+  max-width: 850px;
+  background: #ffffff;
+  padding: 25px 30px 40px;
+  margin-top: 40px;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0, 90, 200, 0.15);
+  animation: fadeIn 0.6s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+h2 {
+  text-align: center;
+  color: #1e70c1;
+  font-weight: 600;
+  margin-bottom: 25px;
+}
+
+.form-group { margin-bottom: 15px; }
+label {
+  display: block;
+  font-weight: 600;
+  color: #004b85;
+  margin-bottom: 5px;
+}
+
+input[type="text"],
+input[type="url"],
+input[type="file"],
+select,
+textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #a8ccff;
+  border-radius: 10px;
+  background-color: #f8fbff;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+
+textarea { height: 90px; resize: none; }
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #1e70c1;
+  box-shadow: 0 0 6px rgba(30, 112, 193, 0.3);
+  background-color: #ffffff;
+}
+
+.button-group { text-align: center; margin: 20px 0; }
+button {
+  background-color: #cfe6ff;
+  border: 1px solid #1e70c1;
+  color: #004b85;
+  padding: 7px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin: 5px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.25s ease;
+}
+button:hover { background-color: #b5d8ff; transform: scale(1.03); }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 25px;
+  font-size: 14px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+th, td {
+  border: 1px solid #b8d8ff;
+  text-align: center;
+  padding: 10px;
+}
+th { background-color: #d6ecff; color: #004b85; font-weight: 600; }
+tr:nth-child(even) { background-color: #f7fbff; }
+tr:hover td { background-color: #edf6ff; }
+
+td button {
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 13px;
+}
+.edit-btn {
+  background-color: #1e70c1;
+  color: white;
+  margin-right: 5px;
+}
+.delete-btn {
+  background-color: #ffb3b3;
+  color: #222;
+}
+.save-container { text-align: center; margin-top: 20px; }
+.save-container button:hover { transform: scale(1.04); }
