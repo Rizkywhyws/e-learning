@@ -13,9 +13,10 @@ $data = $conn->query("
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kelola Siswa | E-School</title>
-  <link rel="stylesheet" href="css/kelolasiswa.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="css/kelolasiswa.css">
+  <link rel="stylesheet" href="css/kelolaguru.css">
 </head>
 <body>
 
@@ -156,16 +157,12 @@ $data = $conn->query("
         <input type="password" id="password" name="password">
       </div>
 
-      <div class="form-panel">
-        <div class="button-row">
-            <button class="submit">
-            <i class="fa-solid fa-floppy-disk"></i> Submit
-            </button>
-            <button class="cancel">
-            <i class="fa-solid fa-xmark"></i> Cancel
-            </button>
-        </div>
-        </div>
+        <div class="form-actions">
+                <button class="btn green" type="submit">
+                    <i class="fa-solid fa-floppy-disk"></i> Submit
+                </button>
+                <button type="button" id="cancelBtn" class="btn">Cancel</button>
+            </div>
 
     </form>
   </section>

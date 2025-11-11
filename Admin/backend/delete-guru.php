@@ -2,55 +2,51 @@
 require_once "../../config/db.php";
 header('Content-Type: application/json');
 
-$body = json_decode(file_get_contents('php://input'), true);
-
-if (!isset($body['nips']) || !is_array($body['nips'])) {
-    echo json_encode(['success'=>false,'error'=>'invalid']);
+// Ambil parameter dari URL atau form
+if (!isset($_GET['nip']) || empty($_GET['nip'])) {
+    echo json_encode(['success' => false, 'error' => 'NIP tidak diberikan']);
     exit;
 }
 
-$nips = $body['nips'];
-
-$conn->begin_transaction();
+$nip = intval($_GET['nip']); // pastikan tipe angka
 
 try {
+    $conn->begin_transaction();
 
-    // Ambil idAkun dulu
-    $in = implode(',', array_fill(0, count($nips), '?'));
-    $types = str_repeat('i', count($nips));
-
-    $stmt = $conn->prepare("SELECT idAkun FROM dataGuru WHERE NIP IN ($in)");
-    $stmt->bind_param($types, ...array_map('intval', $nips));
+    // 1️⃣ Ambil idAkun berdasarkan NIP
+    $stmt = $conn->prepare("SELECT idAkun FROM dataGuru WHERE NIP = ?");
+    $stmt->bind_param("i", $nip);
     $stmt->execute();
     $res = $stmt->get_result();
+    $idAkun = $res->fetch_assoc()['idAkun'] ?? null;
+    $stmt->close();
 
-    $akunIDs = [];
-    while ($r = $res->fetch_assoc()) {
-        if (!empty($r['idAkun'])) $akunIDs[] = $r['idAkun'];
+    // 2️⃣ Hapus data guru dulu
+    $stmt2 = $conn->prepare("DELETE FROM dataGuru WHERE NIP = ?");
+    $stmt2->bind_param("i", $nip);
+    $stmt2->execute();
+    $stmt2->close();
+
+    // 3️⃣ Baru hapus akun jika ada
+    if ($idAkun) {
+        $stmt3 = $conn->prepare("DELETE FROM akun WHERE idAkun = ?");
+        $stmt3->bind_param("s", $idAkun);
+        $stmt3->execute();
+        $stmt3->close();
     }
-
-    // Hapus akun terkait
-    if (count($akunIDs) > 0) {
-        $in2 = implode(',', array_fill(0, count($akunIDs), '?'));
-        $types2 = str_repeat('s', count($akunIDs));
-
-        $stmt2 = $conn->prepare("DELETE FROM akun WHERE idAkun IN ($in2)");
-        $stmt2->bind_param($types2, ...$akunIDs);
-        $stmt2->execute();
-    }
-
-    // Hapus guru
-    $stmt3 = $conn->prepare("DELETE FROM dataGuru WHERE NIP IN ($in)");
-    $stmt3->bind_param($types, ...array_map('intval', $nips));
-    $stmt3->execute();
 
     $conn->commit();
-    echo json_encode(['success' => true]);
+    echo json_encode([
+        'success' => true,
+        'deletedGuru' => 1,
+        'deletedAkun' => $idAkun ? 1 : 0
+    ]);
 
-} catch (Exception $e) {
+} catch (Throwable $e) {
     $conn->rollback();
-    echo json_encode(['success'=>false,'error'=>$e->getMessage()]);
+    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
 
+$conn->close();
 exit;
 ?>
