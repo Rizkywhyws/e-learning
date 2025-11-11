@@ -3,11 +3,16 @@ require_once "../config/db.php";
 
 // Ambil data mapel + guru pengampu (jika ada)
 $data = $conn->query("
-    SELECT m.kodeMapel, m.namaMapel, g.NIP, g.nama AS namaGuru
+    SELECT 
+        m.kodeMapel, 
+        m.namaMapel, 
+        g.NIP AS nipGuru, 
+        g.nama AS namaGuru
     FROM mapel m
     LEFT JOIN gurumapel gm ON m.kodeMapel = gm.kodeMapel
     LEFT JOIN dataGuru g ON gm.nipGuru = g.NIP
 ");
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -86,7 +91,7 @@ $data = $conn->query("
       <tr 
         data-kode="<?= $row['kodeMapel'] ?>"
         data-nama="<?= $row['namaMapel'] ?>"
-        data-guru="<?= $row['NIP'] ?>"
+        data-guru="<?= $row['nipGuru'] ?>"
       >
         <td><input type="checkbox" class="row-check"></td>
         <td><?= $row['kodeMapel'] ?></td>
