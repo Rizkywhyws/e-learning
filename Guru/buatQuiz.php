@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Buat Quiz</title>
-  <link rel="stylesheet" href="cssGuru/buatQuiz.css">
+  <link rel="stylesheet" href="css/buatQuiz.css">
 </head>
 <body>
 
