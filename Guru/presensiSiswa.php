@@ -1,3 +1,120 @@
+<?php
+include '../config/db.php'; // sesuaikan dengan lokasi file koneksi kamu
+
+// ====== BAGIAN UNTUK AMBIL WAKTU MAPEL (AJAX) ======
+if (isset($_GET['getWaktuMapel']) && isset($_GET['kelas'])) {
+  $kodeMapel = $_GET['getWaktuMapel'];
+  $kelas = $_GET['kelas'];
+  $nip = 123345; // nanti diganti $_SESSION['nip'] kalau login udah nyala
+
+  $query = mysqli_query($conn, "
+    SELECT hari, jamMulai, durasi 
+    FROM jadwalmapel 
+    WHERE kodeMapel='$kodeMapel' 
+    AND nipGuru='$nip'
+    AND kelas LIKE '%$kelas%'
+    LIMIT 1
+  ");
+
+  if ($row = mysqli_fetch_assoc($query)) {
+    $mulai = $row['jamMulai'];
+    $selesai = date('H:i', strtotime($mulai) + ($row['durasi'] * 60));
+    echo $row['hari'] . ', ' . $mulai . ' - ' . $selesai;
+  } else {
+    echo 'Jadwal tidak ditemukan';
+  }
+  exit;
+}
+
+// ===== BAGIAN AMBIL MAPEL BERDASARKAN KELAS (AJAX) =====
+if (isset($_GET['getMapelByKelas'])) {
+  $kelas = $_GET['getMapelByKelas'];
+  $nipGuru = 123345; // nanti bisa diganti $_SESSION['nip']
+
+  $query = mysqli_query($conn, "
+    SELECT DISTINCT m.kodeMapel, m.namaMapel 
+    FROM mapel m
+    JOIN jadwalmapel j ON m.kodeMapel = j.kodeMapel
+    WHERE j.kelas LIKE '%$kelas%' AND j.nipGuru = '$nipGuru'
+  ");
+
+  $options = "<option value='' disabled selected hidden>Pilih Mapel...</option>";
+  while ($row = mysqli_fetch_assoc($query)) {
+    $options .= "<option value='{$row['kodeMapel']}'>{$row['namaMapel']}</option>";
+  }
+
+  echo $options;
+  exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $idBuatPresensi = "PR" . rand(1000, 9999);
+  $keterangan = $_POST['keterangan'];
+  $mapel = $_POST['mapel'];
+  $toleransi = $_POST['toleransi'];
+  $kelas = $_POST['kelas'];
+  $nipGuru = 123345;
+  $idLokasi = 'LKSSMK4'; // lokasi SMKN 4 Jember
+
+  // 🔹 Ambil data jadwal dari tabel jadwalmapel sesuai mapel, guru, dan kelas
+  $qJadwal = mysqli_query($conn, "
+    SELECT idJadwal, jamMulai, durasi 
+    FROM jadwalmapel 
+    WHERE kodeMapel='$mapel' 
+    AND nipGuru='$nipGuru'
+    AND kelas LIKE '%$kelas%'
+    LIMIT 1
+  ");
+  $jadwal = mysqli_fetch_assoc($qJadwal);
+
+  // 🔹 Validasi kalau jadwal tidak ditemukan
+  if (!$jadwal) {
+    echo "<script>alert('Jadwal tidak ditemukan untuk mapel dan kelas ini!');</script>";
+    exit;
+  }
+
+    // 🔹 Cek apakah keterangan sudah ada di tabel buatpresensi untuk hari ini, kelas, dan mapel yang sama
+  $cekKeterangan = mysqli_query($conn, "
+    SELECT bp.idBuatPresensi 
+    FROM buatpresensi bp
+    JOIN jadwalmapel j ON bp.idJadwalMapel = j.idJadwal
+    WHERE bp.keterangan = '$keterangan'
+    AND j.kelas = '$kelas'
+    AND j.kodeMapel = '$mapel'
+    AND DATE(bp.waktuDibuat) = CURDATE()
+  ");
+
+  if (mysqli_num_rows($cekKeterangan) > 0) {
+    echo "<script>
+            alert('Presensi dengan keterangan ini sudah dibuat untuk kelas dan mapel ini hari ini!');
+            window.location='presensiSiswa.php';
+          </script>";
+    exit;
+  }
+  
+  // 🔹 Ambil detail jadwal
+  $idJadwalMapel = $jadwal['idJadwal'];
+  $jamMulai = $jadwal['jamMulai'];
+  $durasi = $jadwal['durasi'];
+
+  // 🔹 Hitung waktu mulai dan waktu tutup otomatis berdasarkan jam dan durasi
+  $waktuMulai = date('Y-m-d ') . $jamMulai; // tanggal hari ini + jam mulai
+  $waktuDitutup = date('Y-m-d H:i:s', strtotime("$waktuMulai +$durasi minutes"));
+
+  // 🔹 Simpan ke tabel buatpresensi
+  $sql = "INSERT INTO buatpresensi 
+          (idBuatPresensi, NIP, idJadwalMapel, waktuDibuat, waktuDitutup, toleransiWaktu, keterangan, idLokasi)
+          VALUES 
+          ('$idBuatPresensi', '$nipGuru', '$idJadwalMapel', '$waktuMulai', '$waktuDitutup', '$toleransi', '$keterangan', '$idLokasi')";
+
+  if (mysqli_query($conn, $sql)) {
+    echo "<script>alert('Presensi berhasil ditambahkan!'); window.location='presensiSiswa.php';</script>";
+  } else {
+    echo "<script>alert('Gagal menambahkan presensi: " . mysqli_error($conn) . "');</script>";
+  }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -77,56 +194,70 @@
     <div class="attendance-cards">
       <div class="card card-x">
         <h3>Kelas X</h3>
-        <button><i class="fa-solid fa-plus"></i> Tambah Presensi</button>
+        <button data-kelas="X"><i class="fa-solid fa-plus"></i> Tambah Presensi</button>
       </div>
 
       <div class="card card-xi">
         <h3>Kelas XI</h3>
-        <button><i class="fa-solid fa-plus"></i> Tambah Presensi</button>
+        <button data-kelas="XI"><i class="fa-solid fa-plus"></i> Tambah Presensi</button>
       </div>
 
       <div class="card card-xii">
         <h3>Kelas XII</h3>
-        <button><i class="fa-solid fa-plus"></i> Tambah Presensi</button>
+        <button data-kelas="XII"><i class="fa-solid fa-plus"></i> Tambah Presensi</button>
       </div>
     </div>
   </section>
 
-  <!-- MODAL TAMBAH PRESENSI -->
-  <div id="presensiModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Tambah Presensi</h2>
-      </div>
+<!-- MODAL TAMBAH PRESENSI -->
+<div id="presensiModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Tambah Presensi</h2>
+    </div>
 
+    <form method="POST">
       <label for="keterangan">Keterangan</label>
-      <input type="text" id="keterangan" placeholder="Masukkan Keterangan...">
+      <input type="text" name="keterangan" id="keterangan" placeholder="Masukkan Keterangan..." required>
 
-      <label for="mapel">Mapel</label>
-      <select id="mapel">
-        <option value="">Pilih Mapel...</option>
-        <option value="matematika">Matematika</option>
-        <option value="b.indonesia">Bahasa Indonesia</option>
-        <option value="desain">Desain Grafis</option>
-      </select>
+    <label for="kelas">Kelas</label>
+    <select name="kelas" id="kelas" required>
+      <option value="" disabled selected>Pilih Kelas...</option>
+      <?php
+        $kelasQuery = mysqli_query($conn, "SELECT DISTINCT kelas FROM jadwalmapel ORDER BY kelas ASC");
+        while ($k = mysqli_fetch_assoc($kelasQuery)) {
+          echo "<option value='{$k['kelas']}'>{$k['kelas']}</option>";
+        }
+      ?>
+    </select>
+
+    <label for="mapel">Mapel</label>
+    <select name="mapel" id="mapel" required>
+      <option value="" disabled selected>Pilih Mapel...</option>
+      <?php
+        $mapelQuery = mysqli_query($conn, "SELECT * FROM mapel");
+        while ($m = mysqli_fetch_assoc($mapelQuery)) {
+          echo "<option value='{$m['kodeMapel']}'>{$m['namaMapel']}</option>";
+        }
+      ?>
+    </select>
 
       <label for="waktuMapel">Waktu Mapel</label>
-      <input type="text" id="waktuMapel" placeholder="Waktu Mapel..." readonly>
+      <input type="text" name="waktuMapel" id="waktuMapel" placeholder="Waktu Mapel..." readonly required>
 
       <label for="toleransi">Waktu Toleransi</label>
-      <input type="text" id="toleransi" placeholder="Masukkan Waktu Toleransi...">
-
-      <label for="kelas">Kelas</label>
-      <select id="kelas">
-        <option value="">Pilih Kelas...</option>
-      </select>
+      <div style="display: flex; align-items: center; gap: 5px;">
+        <input type="number" name="toleransi" id="toleransi" placeholder="Masukkan Waktu Toleransi..." required style="flex:1;">
+        <span>menit</span>
+      </div>
 
       <div class="button-container">
-        <button id="btnBatal" class="btn-secondary">Batal</button>
-        <button id="btnTambah" class="btn-primary">Tambah</button>
+        <button type="button" id="btnBatal" class="btn-secondary">Batal</button>
+        <button type="submit" class="btn-primary">Tambah</button>
       </div>
-    </div>
+    </form>
   </div>
+</div>
 
   <!-- BAGIAN REKAP PRESENSI -->
   <section id="rekap-presensi" class="rekap-presensi">
@@ -220,42 +351,126 @@
   </section>
 
   <!-- SCRIPT DROPDOWN & MODAL -->
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const buttons = document.querySelectorAll(".dropbtn");
-      buttons.forEach(btn => {
-        btn.addEventListener("click", function (e) {
-          e.stopPropagation();
-          const menu = this.nextElementSibling;
-          document.querySelectorAll(".dropdown-content").forEach(content => {
-            if (content !== menu) content.style.display = "none";
-          });
-          menu.style.display = menu.style.display === "block" ? "none" : "block";
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  // === DROPDOWN MENU ATAS ===
+  const buttons = document.querySelectorAll(".dropbtn");
+  buttons.forEach(btn => {
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      const menu = this.nextElementSibling;
+      document.querySelectorAll(".dropdown-content").forEach(dc => {
+        if (dc !== menu) dc.style.display = "none";
+      });
+      menu.style.display = menu.style.display === "block" ? "none" : "block";
+    });
+  });
+  document.addEventListener("click", () => {
+    document.querySelectorAll(".dropdown-content").forEach(dc => dc.style.display = "none");
+  });
+
+  // === MODAL TAMBAH PRESENSI ===
+  const modal = document.getElementById("presensiModal");
+  const tombolTambah = document.querySelectorAll(".card button");
+  const tombolBatal = document.getElementById("btnBatal");
+  const selectKelas = document.getElementById("kelas");
+  const mapelSelect = document.getElementById("mapel");
+  const waktuInput = document.getElementById("waktuMapel");
+
+  // === BUKA MODAL + LOAD MAPEL & KELAS ===
+  tombolTambah.forEach(btn => {
+    btn.addEventListener("click", () => {
+      modal.style.display = "flex";
+      tombolTambah.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      const kelasDipilih = btn.getAttribute("data-kelas");
+
+      // 🔹 ambil daftar mapel dari PHP
+      fetch(`presensiSiswa.php?getMapelByKelas=${kelasDipilih}`)
+        .then(res => res.text())
+        .then(data => {
+          mapelSelect.innerHTML = `<option value="" disabled selected hidden>Pilih Mapel...</option>` + data;
+          waktuInput.value = ""; // reset waktu saat ganti kelas
+        })
+        .catch(() => {
+          mapelSelect.innerHTML = "<option value='' disabled>Gagal memuat mapel...</option>";
         });
-      });
-      document.addEventListener("click", () => {
-        document.querySelectorAll(".dropdown-content").forEach(dc => dc.style.display = "none");
-      });
-    });
 
-    // Modal
-    const modal = document.getElementById("presensiModal");
-    const tombolTambah = document.querySelectorAll(".card button");
-    const tombolBatal = document.getElementById("btnBatal");
-
-    tombolTambah.forEach(btn => {
-      btn.addEventListener("click", () => {
-        modal.style.display = "flex";
-      });
+      // 🔹 isi dropdown kelas
+      const kelasList = {
+        "X": ["X-1", "X-2"],
+        "XI": ["XI-1", "XI-2"],
+        "XII": ["XII-1", "XII-2"]
+      };
+      if (kelasList[kelasDipilih]) {
+        selectKelas.innerHTML = `
+          <option value="" disabled selected hidden>Pilih Kelas...</option>
+          ${kelasList[kelasDipilih].map(k => `<option value="${k}">${k.replace('-', ' DKV ')}</option>`).join('')}
+        `;
+      }
     });
+  });
 
-    tombolBatal.addEventListener("click", () => {
-      modal.style.display = "none";
-    });
+  // === TOMBOL BATAL ===
+  tombolBatal.addEventListener("click", () => {
+    modal.style.display = "none";
+    modal.querySelector("form").reset(); // 🔥 reset semua input form
+  });
 
-    window.addEventListener("click", (event) => {
-      if (event.target === modal) modal.style.display = "none";
-    });
-  </script>
+  //GA RESET KALAU PENCET LUAR FORM
+  window.addEventListener("click", (event) => {
+    if (event.target === modal) modal.style.display = "none";
+  });
+
+  // LEK MAU LANGSUNG RESET KALAU DIPENCET LUAR FORM
+//   window.addEventListener("click", (event) => {
+//   if (event.target === modal) {
+//     modal.style.display = "none";
+//     modal.querySelector("form").reset(); // reset juga kalau modal ditutup dari luar
+//   }
+// });
+
+  // === UPDATE WAKTU MAPEL SAAT MAPEL DIGANTI ===
+  mapelSelect.addEventListener("change", function() {
+    const kodeMapel = this.value;
+    const kelasDipilih = selectKelas.value || document.querySelector(".card button.active")?.getAttribute("data-kelas");
+
+    if (kodeMapel && kelasDipilih) {
+      const kelasFinal = kelasDipilih
+        .replace(/\s*DKV\s*/i, '-')
+        .replace(/\s+/g, '-')
+        .trim();
+
+      fetch(`presensiSiswa.php?getWaktuMapel=${kodeMapel}&kelas=${kelasFinal}`)
+        .then(res => res.text())
+        .then(data => waktuInput.value = data)
+        .catch(() => waktuInput.value = "Gagal memuat jadwal");
+    } else {
+      waktuInput.value = "";
+    }
+  });
+
+  // === AUTO UPDATE WAKTU MAPEL SAAT KELAS BERUBAH ===
+  selectKelas.addEventListener("change", function() {
+    const kelasDipilih = this.value;
+    const kodeMapel = mapelSelect.value;
+
+    if (kodeMapel && kelasDipilih) {
+      const kelasFinal = kelasDipilih
+        .replace(/\s*DKV\s*/i, '-')
+        .replace(/\s+/g, '-')
+        .trim();
+
+      fetch(`presensiSiswa.php?getWaktuMapel=${kodeMapel}&kelas=${kelasFinal}`)
+        .then(res => res.text())
+        .then(data => waktuInput.value = data)
+        .catch(() => waktuInput.value = "Gagal memuat jadwal");
+    } else {
+      waktuInput.value = "";
+    }
+  });
+});
+</script>
 </body>
 </html>
