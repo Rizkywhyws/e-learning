@@ -39,11 +39,12 @@ if ($user = mysqli_fetch_assoc($result)) {
 
         // Ambil nama dari tabel yang sesuai berdasarkan role
         if ($user['role'] === 'guru') {
-            $qGuru = $conn->prepare("SELECT nama FROM dataguru WHERE idAkun = ? LIMIT 1");
+            $qGuru = $conn->prepare("SELECT nama, nip FROM dataguru WHERE idAkun = ? LIMIT 1");
             $qGuru->bind_param("s", $user['idAkun']);
             $qGuru->execute();
             $guru = $qGuru->get_result()->fetch_assoc();
             $_SESSION['nama'] = $guru['nama'] ?? $user['email'];
+            $_SESSION['nip'] = $guru['nip'] ?? null; 
             $redirect = '../Guru/dashboard.php';
         } elseif ($user['role'] === 'siswa') {
             $qSiswa = $conn->prepare("SELECT nama FROM datasiswa WHERE idAkun = ? LIMIT 1");

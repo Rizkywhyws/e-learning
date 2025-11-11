@@ -1,11 +1,12 @@
 <?php
+session_start();
 include '../config/db.php'; // sesuaikan dengan lokasi file koneksi kamu
 
 // ====== BAGIAN UNTUK AMBIL WAKTU MAPEL (AJAX) ======
 if (isset($_GET['getWaktuMapel']) && isset($_GET['kelas'])) {
   $kodeMapel = $_GET['getWaktuMapel'];
   $kelas = $_GET['kelas'];
-  $nip = 123345; // nanti diganti $_SESSION['nip'] kalau login udah nyala
+  $nip = $_SESSION['nip'];
 
   $query = mysqli_query($conn, "
     SELECT hari, jamMulai, durasi 
@@ -29,7 +30,7 @@ if (isset($_GET['getWaktuMapel']) && isset($_GET['kelas'])) {
 // ===== BAGIAN AMBIL MAPEL BERDASARKAN KELAS (AJAX) =====
 if (isset($_GET['getMapelByKelas'])) {
   $kelas = $_GET['getMapelByKelas'];
-  $nipGuru = 123345; // nanti bisa diganti $_SESSION['nip']
+  $nipGuru = $_SESSION['nip'];
 
   $query = mysqli_query($conn, "
     SELECT DISTINCT m.kodeMapel, m.namaMapel 
@@ -53,12 +54,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $mapel = $_POST['mapel'];
   $toleransi = $_POST['toleransi'];
   $kelas = $_POST['kelas'];
-  $nipGuru = 123345;
+  $nipGuru = $_SESSION['nip'];
   $idLokasi = 'LKSSMK4'; // lokasi SMKN 4 Jember
 
   // 🔹 Ambil data jadwal dari tabel jadwalmapel sesuai mapel, guru, dan kelas
   $qJadwal = mysqli_query($conn, "
-    SELECT idJadwal, jamMulai, durasi 
+    SELECT idJadwalMapel, jamMulai, durasi 
     FROM jadwalmapel 
     WHERE kodeMapel='$mapel' 
     AND nipGuru='$nipGuru'
@@ -77,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $cekKeterangan = mysqli_query($conn, "
     SELECT bp.idBuatPresensi 
     FROM buatpresensi bp
-    JOIN jadwalmapel j ON bp.idJadwalMapel = j.idJadwal
+    JOIN jadwalmapel j ON bp.idJadwalMapel = j.idJadwalMapel
     WHERE bp.keterangan = '$keterangan'
     AND j.kelas = '$kelas'
     AND j.kodeMapel = '$mapel'
@@ -93,19 +94,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
   
   // 🔹 Ambil detail jadwal
-  $idJadwalMapel = $jadwal['idJadwal'];
+  $idJadwalMapel = $jadwal['idJadwalMapel'];
   $jamMulai = $jadwal['jamMulai'];
   $durasi = $jadwal['durasi'];
 
-  // 🔹 Hitung waktu mulai dan waktu tutup otomatis berdasarkan jam dan durasi
-  $waktuMulai = date('Y-m-d ') . $jamMulai; // tanggal hari ini + jam mulai
-  $waktuDitutup = date('Y-m-d H:i:s', strtotime("$waktuMulai +$durasi minutes"));
+  $tanggalDipilih = $_POST['tanggal'] ?? date('Y-m-d'); // fallback ke hari ini
+
+  // Waktu saat presensi dibuat (sekarang)
+  $waktuDibuat = date('Y-m-d H:i:s');
+
+  // Gabungkan tanggal yang dipilih dengan jam mulai
+  $waktuDimulai = $tanggalDipilih . ' ' . $jadwal['jamMulai'];
+
+  // Hitung waktu tutup dari durasi
+  $waktuDitutup = date('Y-m-d H:i:s', strtotime("+{$jadwal['durasi']} minutes", strtotime($waktuDimulai)));
+
 
   // 🔹 Simpan ke tabel buatpresensi
   $sql = "INSERT INTO buatpresensi 
-          (idBuatPresensi, NIP, idJadwalMapel, waktuDibuat, waktuDitutup, toleransiWaktu, keterangan, idLokasi)
+          (idBuatPresensi, NIP, idJadwalMapel, waktuDibuat, waktuDimulai, waktuDitutup, toleransiWaktu, keterangan, idLokasi)
           VALUES 
-          ('$idBuatPresensi', '$nipGuru', '$idJadwalMapel', '$waktuMulai', '$waktuDitutup', '$toleransi', '$keterangan', '$idLokasi')";
+          ('$idBuatPresensi', '$nipGuru', '$idJadwalMapel', '$waktuDibuat', '$waktuDimulai', '$waktuDitutup', '$toleransi', '$keterangan', '$idLokasi')";
 
   if (mysqli_query($conn, $sql)) {
     echo "<script>alert('Presensi berhasil ditambahkan!'); window.location='presensiSiswa.php';</script>";
@@ -230,6 +239,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
       ?>
     </select>
+
+    <label for="waktuDimulai">Pilih Tanggal...</label>
+    <input type="date" name="tanggal" required>
 
     <label for="mapel">Mapel</label>
     <select name="mapel" id="mapel" required>
