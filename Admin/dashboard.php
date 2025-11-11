@@ -4,7 +4,7 @@ require_once '../config/db.php'; // Path relatif dari folder admin
 
 // Cek apakah user sudah login
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-    header('Location: ../login.php');
+    header('Location: ../Auth/login.php');
     exit;
 }
 ?>
