@@ -1,107 +1,142 @@
+/* Import font Poppins */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
 
-body {
-  font-family: 'Poppins', sans-serif;
-  background: linear-gradient(135deg, #b3e5fc, #e3f2fd);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
-}
-
-.container {
-  background-color: #fff;
-  padding: 40px 50px;
-  border-radius: 20px;
-  box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.1);
-  width: 500px;
-  transition: all 0.3s ease-in-out;
-}
-
-.container:hover {
-  box-shadow: 0px 12px 35px rgba(0, 0, 0, 0.15);
-}
-
-h2 {
+/* ====== HEADER (jika dipakai) ====== */
+.header-top {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: linear-gradient(135deg, #007bff, #00bfff);
+  color: white;
   text-align: center;
-  color: #1a237e;
+  padding: 15px 0;
+  font-size: 1.3em;
+  font-weight: bold;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* ====== BODY ====== */
+body {
+  background: #f0f6ff;
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  padding-top: 90px; /* supaya form gak ketutup header */
+}
+
+/* ====== FORM CONTAINER ====== */
+.form-container {
+  max-width: 600px;
+  background: #ffffff;
+  padding: 25px 30px 35px;
+  margin: 0 auto 60px auto;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.15);
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.form-container h2 {
+  text-align: center;
   margin-bottom: 25px;
-  font-size: 24px;
+  color: #004b85;
   font-weight: 600;
 }
 
+/* ====== LABEL ====== */
 label {
   display: block;
-  margin-bottom: 6px;
-  color: #283593;
-  font-weight: 500;
+  margin-top: 15px;
+  font-weight: 600;
+  color: #004b85;
 }
 
-/* Input, Select, dan Textarea diseragamkan */
-select,
+/* ====== INPUT, SELECT, TEXTAREA ====== */
 input[type="text"],
 input[type="datetime-local"],
+select,
 textarea {
   width: 100%;
-  padding: 12px 14px;
-  border: 2px solid #90caf9;
+  padding: 10px 12px;
   border-radius: 10px;
-  margin-bottom: 15px;
-  background-color: #f5f9ff;
-  outline: none;
+  border: 1.8px solid #6fb3ff; /* biru lembut */
+  background-color: #f1f8ff; /* biru muda */
+  margin-top: 8px;
+  box-sizing: border-box;
   font-size: 14px;
-  font-family: 'Poppins', sans-serif;
-  color: #333;
+  color: #004b85;
   transition: all 0.3s ease;
+  box-shadow: 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #1e70c1;
+  background-color: #ffffff;
+  box-shadow: 0 0 8px rgba(30, 112, 193, 0.3);
 }
 
 textarea {
-  resize: none;
+  resize: vertical;
   min-height: 90px;
-  line-height: 1.5;
 }
 
-select:focus,
-input:focus,
-textarea:focus {
-  border-color: #1e88e5;
-  background-color: #fff;
-  box-shadow: 0 0 6px rgba(30, 136, 229, 0.3);
-}
-
-/* Bagian pilihan tipe quiz */
-.quiz-type {
+/* ====== UPLOAD BOX ====== */
+.upload-box {
   margin-top: 25px;
-  text-align: center;
 }
 
-.quiz-type h3 {
-  color: #1a237e;
-  margin-bottom: 15px;
-  font-size: 18px;
-}
-
+/* ====== TOMBOL JENIS QUIZ ====== */
 .type-options {
   display: flex;
-  justify-content: space-around;
   flex-wrap: wrap;
   gap: 10px;
+  margin-top: 15px;
+  justify-content: center;
 }
 
-.type-btn {
-  background: linear-gradient(135deg, #42a5f5, #1e88e5);
+.type-options .save-btn {
+  background: linear-gradient(135deg, #007bff, #00bfff);
   color: white;
   border: none;
-  border-radius: 12px;
-  padding: 12px 25px;
+  padding: 10px 18px;
+  border-radius: 10px;
   cursor: pointer;
   font-weight: 600;
-  transition: 0.3s;
-  width: 140px;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
 }
 
-.type-btn:hover {
-  background: linear-gradient(135deg, #1e88e5, #1565c0);
-  transform: translateY(-2px);
+.type-options .save-btn:hover {
+  background: linear-gradient(135deg, #409ddb, #00bfff);
+  transform: scale(1.05);
+}
+
+/* ====== SAVE BUTTON UTAMA (kalau dipakai di bawah) ====== */
+.save-btn-main {
+  display: block;
+  background: linear-gradient(135deg, #007bff, #00bfff);
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  margin: 25px auto 0;
+  transition: 0.3s;
+}
+
+.save-btn-main:hover {
+  background: linear-gradient(135deg, #0056b3, #00aaff);
+  transform: scale(1.05);
 }
