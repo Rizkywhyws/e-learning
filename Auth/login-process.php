@@ -46,7 +46,6 @@ if ($user = mysqli_fetch_assoc($result)) {
             $guru = $qGuru->get_result()->fetch_assoc();
 
             $_SESSION['nama'] = $guru['nama'] ?? $user['email'];
-
             $_SESSION['nip'] = $guru['nip'] ?? null;
             $redirect = '../Guru/dashboard.php';
 
@@ -64,7 +63,7 @@ if ($user = mysqli_fetch_assoc($result)) {
             $redirect = '../Admin/dashboard.php';
         }
 
-        // Cek apakah password masih default
+
         if ($user['isPasswordChanged'] == 0) {
             header('Location: change-password.php');
             exit;
