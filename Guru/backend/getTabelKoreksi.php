@@ -17,13 +17,13 @@ $qKelas = mysqli_query($conn, "
 $dKelas = mysqli_fetch_assoc($qKelas);
 $kelas = $dKelas ? $dKelas['kelas'] : '';
 
-// Ambil data siswa dan status tugas
+// Ambil data siswa dan status tugas (baris 25) WHEN p.idPengumpulan IS NULL AND NOW() > t.deadline THEN 'Terlambat'
 $q = mysqli_query($conn, "
 SELECT 
     s.NIS, s.nama, p.filePath, p.submittedAt, p.nilai,
     CASE
-        WHEN p.idPengumpulan IS NULL AND NOW() > t.deadline THEN 'Terlambat'
-        WHEN p.idPengumpulan IS NULL THEN 'Belum Dikumpulkan'
+       
+        WHEN p.idPengumpulan IS NULL THEN 'Kosong'
         ELSE 'Terkumpul'
     END AS status
 FROM datasiswa s
@@ -66,7 +66,7 @@ echo "
 $no = 1;
 while ($r = mysqli_fetch_assoc($q)) {
     $file = $r['filePath'] ? "<a href='{$r['filePath']}' target='_blank' class='file-link'>Lihat File</a>" : "-";
-    $disabled = $r['status'] == 'Belum Dikumpulkan' ? 'disabled' : '';
+    $disabled = $r['status'] == 'Kosong' ? 'disabled' : '';
     echo "
     <tr>
         <td>$no</td>
