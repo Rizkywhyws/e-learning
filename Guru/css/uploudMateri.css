@@ -1,0 +1,189 @@
+/* === Font & Base === */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #e9f2ff, #cfe4ff);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 40px 0;
+}
+
+/* === Container === */
+.container {
+  width: 90%;
+  max-width: 880px;
+  background: #fff;
+  padding: 30px 35px 40px;
+  border-radius: 20px;
+  box-shadow: 0 5px 15px rgba(0, 90, 180, 0.15);
+  animation: fadeIn 0.6s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* === Title === */
+h2 {
+  text-align: center;
+  color: #1e70c1;
+  font-weight: 600;
+  margin-bottom: 25px;
+  font-size: 24px;
+}
+
+/* === Form Groups === */
+.form-group {
+  margin-bottom: 16px;
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  color: #004b85;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+input[type="text"],
+input[type="url"],
+input[type="file"],
+select,
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #bcd9ff;
+  border-radius: 10px;
+  background-color: #f9fbff;
+  font-size: 14px;
+  transition: all 0.25s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #1e70c1;
+  box-shadow: 0 0 6px rgba(30, 112, 193, 0.3);
+  background-color: #fff;
+}
+
+textarea {
+  height: 90px;
+  resize: none;
+}
+
+/* === Buttons === */
+.button-group {
+  text-align: center;
+  margin: 25px 0 15px;
+}
+
+button {
+  background-color: #1e70c1;
+  color: #fff;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.25s ease;
+}
+
+button:hover {
+  background-color: #155a99;
+  transform: scale(1.03);
+}
+
+/* === Table === */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  font-size: 14px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+}
+
+th, td {
+  border: 1px solid #d4e7ff;
+  text-align: center;
+  padding: 10px;
+}
+
+th {
+  background-color: #e7f2ff;
+  color: #004b85;
+  font-weight: 600;
+}
+
+tr:nth-child(even) {
+  background-color: #f8fbff;
+}
+
+tr:hover td {
+  background-color: #eef6ff;
+}
+
+/* === Action Buttons in Table === */
+td button {
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.25s ease;
+}
+
+.edit-btn {
+  background-color: #1e70c1;
+  color: white;
+  margin-right: 5px;
+}
+
+.edit-btn:hover {
+  background-color: #155a99;
+}
+
+.delete-btn {
+  background-color: #ff4d4d;
+  color: white;
+}
+
+.delete-btn:hover {
+  background-color: #e60000;
+}
+
+/* === Responsive === */
+@media (max-width: 768px) {
+  .container {
+    width: 95%;
+    padding: 20px;
+  }
+
+  table {
+    font-size: 12px;
+  }
+
+  th, td {
+    padding: 8px;
+  }
+
+  button {
+    padding: 7px 14px;
+    font-size: 13px;
+  }
+}
