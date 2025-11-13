@@ -1,6 +1,7 @@
 <?php
 session_start();
-include '../config/db.php';
+// Pastikan file db.php mengembalikan objek koneksi MySQLi ($conn)
+include '../config/db.php'; 
 
 // ===== CEK LOGIN =====
 if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'siswa') {
@@ -9,29 +10,98 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'siswa') {
 }
 
 // AMBIL DATA DARI SESSION
-$idAkun   = $_SESSION['user_id'];
+$idAkun     = $_SESSION['user_id'];
 $namaSiswa = $_SESSION['nama'];
-$email    = $_SESSION['email'];
+$email     = $_SESSION['email'];
+$namaMapel = "XII DKV 1";
 
-// ===== AMBIL DATA PRESENSI BERJALAN =====
-$queryPresensi = $conn->prepare("
-    SELECT * FROM presensisiswa 
-    WHERE NIS = ? 
-    ORDER BY waktuPresensi DESC LIMIT 1
+// Inisialisasi variabel siswa
+$nisSiswa = null;
+$kelasSiswa = null;
+$jurusanSiswa = null;
+
+// ===== 1. AMBIL DATA LENGKAP SISWA (NIS, KELAS, JURUSAN) - MENGGUNAKAN MYSQLi =====
+$querySiswa = $conn->prepare("
+    SELECT NIS, kelas, jurusan 
+    FROM datasiswa 
+    WHERE idAkun = ? 
 ");
+// bind_param() digunakan untuk MySQLi: 's' = string
+$querySiswa->bind_param('s', $idAkun); 
+$querySiswa->execute();
 
-$queryPresensi->bind_param("s", $idAkun);
-$queryPresensi->execute();
-$presensi = $queryPresensi->get_result()->fetch_assoc();
+// Mengambil hasil menggunakan metode MySQLi (get_result()->fetch_assoc())
+$dataSiswa = $querySiswa->get_result()->fetch_assoc(); 
+$querySiswa->close();
 
-// Cek apakah presensi masih berjalan
+if ($dataSiswa) {
+    $nisSiswa = $dataSiswa['NIS'];
+    $kelasSiswa = $dataSiswa['kelas']; 
+    $jurusanSiswa = $dataSiswa['jurusan']; 
+} else {
+    // Penanganan jika data siswa tidak ditemukan (seharusnya tidak terjadi)
+}
+
+
+// Inisialisasi variabel presensi
+$presensi = null;
 $presensiAktif = false;
-if ($presensi) {
-    $waktuAkhir = strtotime($presensi['waktu_akhir']);
-    $waktuSekarang = time();
-    $presensiAktif = ($waktuSekarang <= $waktuAkhir);
+$statusPresensiSiswa = '-'; // Default status
+
+// Pastikan kelasSiswa sudah terambil sebelum menjalankan query presensi
+if ($kelasSiswa) {
+    // ===== 2. AMBIL DATA PRESENSI BERJALAN BERDASARKAN KELAS SISWA - MENGGUNAKAN MYSQLi =====
+    $queryPresensi = $conn->prepare("
+        SELECT 
+            bp.*, 
+            jm.kelas, 
+            m.namaMapel,
+            dg.nama AS namaGuru
+        FROM 
+            buatpresensi bp
+        JOIN
+            jadwalmapel jm ON bp.idJadwalMapel = jm.idJadwalMapel
+        JOIN
+            mapel m ON jm.kodeMapel = m.kodeMapel
+        JOIN
+            dataguru dg ON bp.NIP = dg.NIP
+        WHERE 
+            jm.kelas = ? /* <-- Placeholder tanda tanya */
+            AND NOW() >= bp.waktuDibuat 
+            AND NOW() <= bp.waktuDitutup
+        ORDER BY 
+            bp.waktuDibuat DESC 
+        LIMIT 1
+    ");
+
+    // bind_param() digunakan untuk MySQLi: 's' = string
+    $queryPresensi->bind_param('s', $kelasSiswa);
+    $queryPresensi->execute();
+    $presensi = $queryPresensi->get_result()->fetch_assoc();
+    $queryPresensi->close();
+    
+    if ($presensi) {
+        $presensiAktif = true;
+
+        // ===== 3. AMBIL STATUS PRESENSI SISWA - MENGGUNAKAN MYSQLi =====
+        $queryStatus = $conn->prepare("
+            SELECT status FROM presensisiswa 
+            WHERE idBuatPresensi = ? AND NIS = ? /* <-- Dua placeholder tanda tanya */
+        ");
+        
+        // bind_param() untuk MySQLi: 'si' = string (idBuatPresensi) dan integer (NIS)
+        $queryStatus->bind_param('si', $presensi['idBuatPresensi'], $nisSiswa);
+        $queryStatus->execute();
+        
+        $resultStatus = $queryStatus->get_result();
+        
+        // Ambil status presensi (jika ada, jika tidak, tetap '-')
+        $statusPresensiSiswa = $resultStatus->num_rows > 0 ? $resultStatus->fetch_assoc()['status'] : '-';
+        $queryStatus->close();
+    }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -39,34 +109,20 @@ if ($presensi) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Siswa | E-School</title>
 
-  <!-- FONT & ICON -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-  <!-- CSS -->
   <link rel="stylesheet" href="cssSiswa/presensi.css">
-  <style>
-    /* Disabled upload button style */
-    .upload-izin-btn.disabled {
-      color: #9e9e9e;
-      border-color: #e0e0e0;
-      background: #f5f5f5;
-      cursor: not-allowed;
-      pointer-events: none;
-      opacity: 0.6;
-    }
-  </style>
+  
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
 
-  <!-- HEADER -->
   <header>
     <img src="../assets/logo-elearning.png" class="logo" alt="E-School">
   </header>
 
-  <!-- MENU -->
   <div class="menu-row">
     <div class="dropdown">
       <button class="dropbtn"><i class="fa-solid fa-database"></i> Data Master <i class="fa-solid fa-chevron-down dropdown-arrow"></i></button>
@@ -93,19 +149,16 @@ if ($presensi) {
     </div>
   </div>
 
-  <!-- WELCOME -->
   <section class="welcome-box">
     <h2>Halo! Selamat Datang, <?= htmlspecialchars($namaSiswa) ?></h2>
-    <p>Jadwal Pelajaran selanjutnya <b>Matematika</b></p>
+    <p>Jadwal mapel selanjutnya adalah <b><?= htmlspecialchars($namaMapel) ?></b></p>
   </section>
 
-  <!-- SEARCH -->
   <div class="search-bar">
     <input type="text" placeholder="Search...">
     <button><i class="fa-solid fa-magnifying-glass"></i></button>
   </div>
 
-  <!-- KONTEN UTAMA -->
   <main class="content-container">
     <section class="presensi-section">
       <h1>Presensi</h1>
@@ -117,25 +170,38 @@ if ($presensi) {
           </div>
           <div class="card-content">
             <?php if ($presensi && $presensiAktif): ?>
-              <h3 class="mapel-title"><?= htmlspecialchars($presensi['mapel']) ?></h3>
-              <p class="description"><?= htmlspecialchars($presensi['deskripsi'] ?? '(tidak ada deskripsi)') ?></p>
+              <h3 class="mapel-title"><?= htmlspecialchars($presensi['namaMapel']) ?></h3>
+              <p class="description"><?= htmlspecialchars($presensi['keterangan'] ?? '(Tidak ada keterangan)') ?></p>
 
               <div class="presensi-details">
-                <p><strong>Presensi Mulai</strong> : <?= htmlspecialchars($presensi['waktu_mulai']) ?></p>
-                <p><strong>Presensi Akhir</strong> : <?= htmlspecialchars($presensi['waktu_akhir']) ?></p>
-                <p><strong>Lokasi Presensi</strong> : <?= htmlspecialchars($presensi['lokasi']) ?></p>
-                <p><strong>Guru Pengampu</strong> : <?= htmlspecialchars($presensi['guru']) ?></p>
+                <p><strong>Presensi Mulai</strong> : <?= htmlspecialchars($presensi['waktuDibuat']) ?></p>
+                <p><strong>Presensi Akhir</strong> : <?= htmlspecialchars($presensi['waktuDitutup']) ?></p>
+                <p><strong>ID Lokasi</strong> : <?= htmlspecialchars($presensi['idLokasi']) ?></p>
+                <p><strong>Guru Pengampu</strong> : <?= htmlspecialchars($presensi['namaGuru']) ?></p>
               </div>
 
               <div class="status-box">
-                <div class="belum-absen">
-                  <p>Anda belum melakukan presensi</p>
-                  <small>Klik untuk absen</small>
-                  <div class="x-icon-box"><i class="fa-solid fa-xmark"></i></div>
-                </div>
-                <a href="#" class="upload-izin-btn">
-                  <i class="fa-solid fa-cloud-arrow-up"></i> Unggah surat izin/sakit
-                </a>
+                <?php if ($statusPresensiSiswa === '-'): ?>
+                  <div class="belum-absen">
+                    <p>Anda belum melakukan presensi</p>
+                    <small>Klik untuk absen</small>
+                    <a href="proses_presensi.php?id=<?= urlencode($presensi['idBuatPresensi']) ?>" class="x-icon-box" title="Klik untuk Absen">
+                       <i class="fa-solid fa-xmark"></i>
+                    </a>
+                  </div>
+                  <a href="#" id="openModalBtn" class="upload-izin-btn">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Unggah surat izin/sakit
+                  </a>
+                <?php else: ?>
+                  <div class="sudah-absen">
+                    <p>Status Anda: **<?= htmlspecialchars(ucwords($statusPresensiSiswa)) ?>**</p>
+                    <small>Anda telah melakukan presensi pada waktu yang ditentukan.</small>
+                    <div class="v-icon-box"><i class="fa-solid fa-check"></i></div>
+                  </div>
+                   <div class="upload-izin-btn disabled">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Unggah surat izin/sakit
+                  </div>
+                <?php endif; ?>
               </div>
 
             <?php else: ?>
@@ -144,7 +210,7 @@ if ($presensi) {
               <div class="status-box">
                 <div class="sudah-absen">
                   <p>Tidak ada presensi</p>
-                  <small>Anda sudah menyelesaikan semua presensi</small>
+                  <small>Anda telah menyelesaikan semua presensi aktif.</small>
                   <div class="v-icon-box"><i class="fa-solid fa-check"></i></div>
                 </div>
                 <div class="upload-izin-btn disabled">
@@ -166,12 +232,11 @@ if ($presensi) {
       </div>
     </section>
 
-    <!-- REKAP PRESENSI -->
     <section class="rekap-presensi-section">
       <h1>Rekap Presensi</h1>
 
       <?php 
-        include '#'; 
+        // include '#'; // Pastikan file ini ada
       ?>
     </section>
 
@@ -184,6 +249,120 @@ if ($presensi) {
     </div>
   </main>
 
+  <div id="uploadModal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+            Upload surat izin/sakit
+        </div>
+        <form action="proses_upload_izin.php" method="POST" enctype="multipart/form-data">
+            <div class="modal-body">
+              <div class="modal-field">
+                  <strong>NIS</strong> <span class="colon">:</span>
+                  <span><?= htmlspecialchars($nisSiswa ?? '-') ?></span>
+                  <input type="hidden" name="nis" value="<?= htmlspecialchars($nisSiswa ?? '') ?>">
+              </div>
+              <div class="modal-field">
+                  <strong>Nama</strong> <span class="colon">:</span>
+                  <span><?= htmlspecialchars($namaSiswa) ?></span>
+              </div>
+              <div class="modal-field">
+                  <strong>Kelas</strong> <span class="colon">:</span>
+                  <span><?= htmlspecialchars($kelasSiswa ?? '-') ?></span>
+              </div>
+              <div class="modal-field">
+                  <strong>Jurusan</strong> <span class="colon">:</span>
+                  <span><?= htmlspecialchars($jurusanSiswa ?? '-') ?></span>
+              </div>
+              <div class="modal-field">
+                  <strong>Jenis Perizinan</strong> <span class="colon">:</span>
+                  <div class="radio-group">
+                      <label>
+                          <input type="radio" name="jenis_izin" value="sakit" required checked> Sakit
+                      </label>
+                      <label>
+                          <input type="radio" name="jenis_izin" value="izin"> Izin
+                      </label>
+                  </div>
+              </div>
+              
+              <div class="upload-box">
+                  <label id="fileLabel" class="upload-label" for="fileInput">Upload File (Max 2MB, PDF/JPG)</label>
+                  <input type="file" name="surat_izin" id="fileInput" class="upload-input" accept=".pdf,.jpg,.jpeg" required>
+                  <label for="fileInput" class="upload-icon-btn">
+                      <i class="fa-solid fa-cloud-arrow-up"></i>
+                  </label>
+              </div>
+              <small class="file-note">(Maksimal ukuran file 2MB, format PDF atau JPG)</small>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="modal-kirim-btn">Kirim</button>
+            </div>
+        </form>
+      </div>
+  </div>
+
+  
   <script src="js/chart-presensi.js"></script>
+  <script>
+    // FUNGSI JAVASCRIPT UNTUK MODAL dan Dropdown
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('uploadModal');
+        const openBtn = document.getElementById('openModalBtn');
+        const fileInput = document.getElementById('fileInput');
+        const fileLabel = document.getElementById('fileLabel');
+
+        // Buka Modal saat tombol diklik (hanya jika tombolnya aktif)
+        if (openBtn) {
+            openBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                modal.style.display = 'flex';
+            });
+        }
+
+        // Tutup Modal jika area overlay diklik
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Update Label saat file dipilih
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                fileLabel.textContent = this.files[0].name;
+            } else {
+                fileLabel.textContent = 'Upload File (Max 2MB, PDF/JPG)';
+            }
+        });
+
+        // Handle dropdowns
+        const dropdowns = document.querySelectorAll('.dropdown');
+        dropdowns.forEach(dropdown => {
+            const dropbtn = dropdown.querySelector('.dropbtn');
+            const dropdownContent = dropdown.querySelector('.dropdown-content');
+
+            dropbtn.addEventListener('click', function() {
+                // Tutup dropdown lain
+                document.querySelectorAll('.dropdown-content').forEach(content => {
+                    if (content !== dropdownContent) {
+                        content.style.display = 'none';
+                    }
+                });
+                // Toggle dropdown yang sedang dibuka
+                dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
+            });
+        });
+
+        // Tutup dropdown jika klik di luar
+        window.addEventListener('click', function(e) {
+            if (!e.target.matches('.dropbtn') && !e.target.matches('.dropbtn *')) {
+                document.querySelectorAll('.dropdown-content').forEach(content => {
+                    content.style.display = 'none';
+                });
+            }
+        });
+
+    });
+  </script>
 </body>
 </html>
