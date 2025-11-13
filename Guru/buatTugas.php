@@ -118,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['action'])) {
     $result = mysqli_query($conn, $sql);
 
     if ($result) {
-        echo "<script>alert('✅ Tugas berhasil disimpan!'); window.location='buatTugas.php';</script>";
+        echo "<script>alert('✅ Tugas berhasil disimpan!'); window.location='pengelolaanPembelajaran.php';</script>";
     } else {
         echo "<script>alert('❌ Gagal menyimpan tugas: " . mysqli_error($conn) . "');</script>";
     }
@@ -133,7 +133,7 @@ $mapelQuery = mysqli_query($conn, "
 ");
 ?>
 
-<link rel="stylesheet" href="css/buatTugas.css">
+<link rel="stylesheet" href="css/buatTugas.css?v=1.1">
 
 <div class="form-container">
     <h2>Tambah / Buat Tugas</h2>
