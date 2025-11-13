@@ -1,129 +1,129 @@
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Poppins", sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
 }
 
 body {
-  background: #f4f6fb;
+    background: #f4f6fb;
 }
 
 /* HEADER */
 header {
-  padding: 20px;
-  text-align: center;
+    padding: 20px;
+    text-align: center;
 }
 .logo {
-  width: 200px;
+    width: 200px;
 }
 
 /* MENU */
 .menu-row {
-  display: flex;
-  gap: 10px;
-  background: #d5ebff;
-  border: 2px solid #2e7dff;
-  padding: 10px 25px;
-  border-radius: 40px;
-  width: fit-content;
-  margin: -20px auto 20px;
+    display: flex;
+    gap: 10px;
+    background: #d5ebff;
+    border: 2px solid #2e7dff;
+    padding: 10px 25px;
+    border-radius: 40px;
+    width: fit-content;
+    margin: -20px auto 20px;
 }
 
 .dropdown {
-  position: relative;
+    position: relative;
 }
 .dropbtn {
-  background: transparent;
-  border: none;
-  color: #2e7dff;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+    background: transparent;
+    border: none;
+    color: #2e7dff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 .dropbtn:hover {
-  background: rgba(46, 125, 255, 0.15);
+    background: rgba(46, 125, 255, 0.15);
 }
 .dropdown-arrow {
-  font-size: 12px;
+    font-size: 12px;
 }
 .dropdown-content {
-  display: none;
-  position: absolute;
-  background: white;
-  border-radius: 10px;
-  min-width: 160px;
-  margin-top: 8px;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-  z-index: 999;
+    display: none;
+    position: absolute;
+    background: white;
+    border-radius: 10px;
+    min-width: 160px;
+    margin-top: 8px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    z-index: 999;
 }
 .dropdown-content a {
-  padding: 12px;
-  display: block;
-  text-decoration: none;
-  color: #333;
+    padding: 12px;
+    display: block;
+    text-decoration: none;
+    color: #333;
 }
 .dropdown-content a:hover {
-  background: #e7f0ff;
+    background: #e7f0ff;
 }
 
 /* WELCOME BOX */
 .welcome-box {
-  background: #bcd4ff;
-  padding: 20px 20px 40px 20px;
-  border-radius: 12px;
-  text-align: center;
-  width: 90%;
-  margin: auto;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background: #bcd4ff;
+    padding: 20px 20px 40px 20px;
+    border-radius: 12px;
+    text-align: center;
+    width: 90%;
+    margin: auto;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 .welcome-box h2 {
-  font-weight: 700;
-  font-size: 1.8em;
-  color: #1a1a1a;
-  margin-bottom: 5px;
+    font-weight: 700;
+    font-size: 1.8em;
+    color: #1a1a1a;
+    margin-bottom: 5px;
 }
 .welcome-box p {
-  font-size: 1em;
-  color: #333;
+    font-size: 1em;
+    color: #333;
 }
 
 /* SEARCH BAR */
 .search-bar {
-  text-align: center;
-  margin: -20px 0 30px 0;
+    text-align: center;
+    margin: -20px 0 30px 0;
 }
 .search-bar input {
-  width: 50%;
-  padding: 12px 20px;
-  border-radius: 30px;
-  border: 2px solid #ccc;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 50%;
+    padding: 12px 20px;
+    border-radius: 30px;
+    border: 2px solid #ccc;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 .search-bar button {
-  padding: 12px 20px;
-  border-radius: 30px;
-  border: none;
-  background: #2e7dff;
-  color: white;
-  margin-left: 5px;
-  cursor: pointer;
+    padding: 12px 20px;
+    border-radius: 30px;
+    border: none;
+    background: #2e7dff;
+    color: white;
+    margin-left: 5px;
+    cursor: pointer;
 }
 
 /* MAIN CONTENT LAYOUT */
 .content-container {
-  width: 100%;
-  max-width: none;
-  margin: 0 auto 30px;
+    width: 100%;
+    max-width: none;
+    margin: 0 auto 30px;
 }
 
 .presensi-section {
-  width: 90%;
-  margin: 0 auto;
+    width: 90%;
+    margin: 0 auto;
 }
 
 .presensi-section h1,
@@ -242,6 +242,7 @@ header {
     justify-content: center;
     align-items: center;
     margin: 0 auto;
+    text-decoration: none;
 }
 .belum-absen .x-icon-box i {
     color: white;
@@ -349,6 +350,10 @@ header {
 }
 
 /* LEGEND */
+.rekap-presensi-section + .legend-row {
+    margin-top: 20px; /* Menyesuaikan margin karena adanya REKAP PRESENSI */
+}
+
 .legend-row {
     background: white;
     border-radius: 12px;
@@ -385,6 +390,152 @@ header {
 .izin { background-color: #2196F3; }
 .tidak-ada { background-color: #CCCCCC; }
 
+
+/* ===================================== */
+/* MODAL STYLES (DIPINDAH DARI INLINE) */
+/* ===================================== */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none; /* Default hidden */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 500px;
+    overflow: hidden;
+}
+
+.modal-header {
+    background: #bcd4ff;
+    padding: 20px;
+    text-align: center;
+    font-size: 1.4em;
+    font-weight: 700;
+    color: #1a1a1a;
+    border-bottom: 1px solid #a8c1e8;
+}
+
+.modal-body {
+    padding: 30px;
+}
+
+.modal-field {
+    display: grid;
+    grid-template-columns: 120px 15px 1fr;
+    margin-bottom: 15px;
+    align-items: center;
+    font-size: 1em;
+    color: #333;
+    text-align: left;
+}
+
+.modal-field strong {
+    width: 120px;
+    font-weight: 600;
+    min-width: 100px;
+}
+
+.modal-field span {
+    flex-grow: 1;
+}
+
+.modal-field .colon {
+    margin-right: 15px;
+}
+
+.radio-group {
+    display: flex;
+    gap: 30px;
+    align-items: center;
+}
+
+.radio-group label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.radio-group input[type="radio"] {
+    margin-right: 8px;
+    accent-color: #2e7dff; /* Warna aksen untuk radio button */
+    transform: scale(1.2);
+}
+
+.upload-box {
+    margin-top: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background: #f9f9f9;
+}
+
+.upload-label {
+    flex-grow: 1;
+    padding: 5px 10px;
+    color: #666;
+    cursor: pointer; /* Menjadikan label dapat diklik */
+}
+
+.upload-input {
+    display: none;
+}
+
+.upload-icon-btn {
+    background: none;
+    border: none;
+    color: #2e7dff;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 5px 10px;
+}
+
+.modal-footer {
+    padding: 20px 30px;
+    background: #bcd4ff;
+    text-align: center;
+}
+
+.modal-kirim-btn {
+    width: 100%;
+    padding: 12px;
+    background: #2e7dff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.modal-kirim-btn:hover {
+    background: #1a60cc;
+}
+
+.file-note {
+    color: #999;
+    display: block;
+    text-align: right;
+    font-size: 0.8em;
+    margin-top: 5px;
+}
+
+
 /* RESPONSIVE */
 @media (max-width: 992px) {
     .main-content-flex {
@@ -395,6 +546,18 @@ header {
     }
     .status-box {
         flex-direction: column;
+    }
+    .modal-field {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .modal-field strong {
+        width: 100%;
+        margin-bottom: 5px;
+        min-width: unset;
+    }
+    .modal-field .colon {
+        display: none;
     }
 }
 
