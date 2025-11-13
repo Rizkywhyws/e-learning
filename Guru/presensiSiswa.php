@@ -1,11 +1,24 @@
 <?php
+session_start();
 include '../config/db.php'; // sesuaikan dengan lokasi file koneksi kamu
+
+// ===== CEK LOGIN =====
+if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'guru') {
+    header("Location: ../Auth/login.php");
+    exit;
+}
+
+// AMBIL DATA DARI SESSION
+$idAkun   = $_SESSION['user_id'];
+$namaGuru = $_SESSION['nama'];
+$email    = $_SESSION['email'];
+$kelasMengajar = "belum ada jadwal";
 
 // ====== BAGIAN UNTUK AMBIL WAKTU MAPEL (AJAX) ======
 if (isset($_GET['getWaktuMapel']) && isset($_GET['kelas'])) {
   $kodeMapel = $_GET['getWaktuMapel'];
   $kelas = $_GET['kelas'];
-  $nip = 123345; // nanti diganti $_SESSION['nip'] kalau login udah nyala
+  $nip = $_SESSION['nip'];
 
   $query = mysqli_query($conn, "
     SELECT hari, jamMulai, durasi 
@@ -29,7 +42,7 @@ if (isset($_GET['getWaktuMapel']) && isset($_GET['kelas'])) {
 // ===== BAGIAN AMBIL MAPEL BERDASARKAN KELAS (AJAX) =====
 if (isset($_GET['getMapelByKelas'])) {
   $kelas = $_GET['getMapelByKelas'];
-  $nipGuru = 123345; // nanti bisa diganti $_SESSION['nip']
+  $nipGuru = $_SESSION['nip'];
 
   $query = mysqli_query($conn, "
     SELECT DISTINCT m.kodeMapel, m.namaMapel 
@@ -53,12 +66,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $mapel = $_POST['mapel'];
   $toleransi = $_POST['toleransi'];
   $kelas = $_POST['kelas'];
-  $nipGuru = 123345;
+  $nipGuru = $_SESSION['nip'];
   $idLokasi = 'LKSSMK4'; // lokasi SMKN 4 Jember
+
+  // 🔹 TAMBAHKAN: Ambil nama mapel dari kodeMapel
+  $qNamaMapel = mysqli_query($conn, "SELECT namaMapel FROM mapel WHERE kodeMapel='$mapel' LIMIT 1");
+  $dataMapel = mysqli_fetch_assoc($qNamaMapel);
+  $namaMapel = $dataMapel['namaMapel'];
 
   // 🔹 Ambil data jadwal dari tabel jadwalmapel sesuai mapel, guru, dan kelas
   $qJadwal = mysqli_query($conn, "
-    SELECT idJadwal, jamMulai, durasi 
+    SELECT idJadwalMapel, jamMulai, durasi 
     FROM jadwalmapel 
     WHERE kodeMapel='$mapel' 
     AND nipGuru='$nipGuru'
@@ -73,42 +91,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
   }
 
-    // 🔹 Cek apakah keterangan sudah ada di tabel buatpresensi untuk hari ini, kelas, dan mapel yang sama
-  $cekKeterangan = mysqli_query($conn, "
-    SELECT bp.idBuatPresensi 
+  // 🔹 Ambil detail jadwal
+  $idJadwalMapel = $jadwal['idJadwalMapel'];
+  $jamMulai = $jadwal['jamMulai'];
+  $durasi = $jadwal['durasi'];
+
+  $tanggalDipilih = $_POST['tanggal'] ?? date('Y-m-d');
+
+  // ========== VALIDASI ANTI DUPLIKASI BERDASARKAN TANGGAL & WAKTU MAPEL ==========
+  $cekDuplikasi = mysqli_query($conn, "
+    SELECT bp.idBuatPresensi, bp.keterangan, j.jamMulai, m.namaMapel
     FROM buatpresensi bp
-    JOIN jadwalmapel j ON bp.idJadwalMapel = j.idJadwal
-    WHERE bp.keterangan = '$keterangan'
-    AND j.kelas = '$kelas'
-    AND j.kodeMapel = '$mapel'
-    AND DATE(bp.waktuDibuat) = CURDATE()
+    JOIN jadwalmapel j ON bp.idJadwalMapel = j.idJadwalMapel
+    JOIN mapel m ON j.kodeMapel = m.kodeMapel
+    WHERE j.idJadwalMapel = '$idJadwalMapel'
+    AND DATE(bp.waktuDimulai) = '$tanggalDipilih'
+    AND j.jamMulai = '$jamMulai'
   ");
 
-  if (mysqli_num_rows($cekKeterangan) > 0) {
+  if (mysqli_num_rows($cekDuplikasi) > 0) {
+    $dataDuplikat = mysqli_fetch_assoc($cekDuplikasi);
     echo "<script>
-            alert('Presensi dengan keterangan ini sudah dibuat untuk kelas dan mapel ini hari ini!');
+            alert('⚠️ Presensi sudah dibuat!\\n\\nKelas: $kelas\\nMapel: {$dataDuplikat['namaMapel']}\\nTanggal: $tanggalDipilih\\nWaktu: $jamMulai\\nKeterangan: {$dataDuplikat['keterangan']}\\n\\nSilakan pilih waktu atau kelas lain.');
             window.location='presensiSiswa.php';
           </script>";
     exit;
   }
-  
-  // 🔹 Ambil detail jadwal
-  $idJadwalMapel = $jadwal['idJadwal'];
-  $jamMulai = $jadwal['jamMulai'];
-  $durasi = $jadwal['durasi'];
+  // ============================================================================
 
-  // 🔹 Hitung waktu mulai dan waktu tutup otomatis berdasarkan jam dan durasi
-  $waktuMulai = date('Y-m-d ') . $jamMulai; // tanggal hari ini + jam mulai
-  $waktuDitutup = date('Y-m-d H:i:s', strtotime("$waktuMulai +$durasi minutes"));
+  // Waktu saat presensi dibuat (sekarang)
+  $waktuDibuat = date('Y-m-d H:i:s');
+
+  // Gabungkan tanggal yang dipilih dengan jam mulai
+  $waktuDimulai = $tanggalDipilih . ' ' . $jadwal['jamMulai'];
+
+  // Hitung waktu tutup dari durasi
+  $waktuDitutup = date('Y-m-d H:i:s', strtotime("+{$jadwal['durasi']} minutes", strtotime($waktuDimulai)));
 
   // 🔹 Simpan ke tabel buatpresensi
   $sql = "INSERT INTO buatpresensi 
-          (idBuatPresensi, NIP, idJadwalMapel, waktuDibuat, waktuDitutup, toleransiWaktu, keterangan, idLokasi)
+          (idBuatPresensi, NIP, idJadwalMapel, waktuDibuat, waktuDimulai, waktuDitutup, toleransiWaktu, keterangan, idLokasi)
           VALUES 
-          ('$idBuatPresensi', '$nipGuru', '$idJadwalMapel', '$waktuMulai', '$waktuDitutup', '$toleransi', '$keterangan', '$idLokasi')";
+          ('$idBuatPresensi', '$nipGuru', '$idJadwalMapel', '$waktuDibuat', '$waktuDimulai', '$waktuDitutup', '$toleransi', '$keterangan', '$idLokasi')";
 
   if (mysqli_query($conn, $sql)) {
-    echo "<script>alert('Presensi berhasil ditambahkan!'); window.location='presensiSiswa.php';</script>";
+    // 🔹 UBAH: Tampilkan nama mapel, bukan kode mapel
+    echo "<script>
+            alert('✅ Presensi berhasil ditambahkan!\\n\\nMapel: $namaMapel\\nKelas: $kelas\\nTanggal: $tanggalDipilih\\nWaktu: $jamMulai');
+            window.location='presensiSiswa.php';
+          </script>";
   } else {
     echo "<script>alert('Gagal menambahkan presensi: " . mysqli_error($conn) . "');</script>";
   }
@@ -122,21 +153,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Guru | E-School</title>
 
-  <!-- FONT & ICON -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-  <!-- CSS -->
   <link rel="stylesheet" href="css/presensiSiswa.css">
 </head>
 
 <body>
-  <!-- HEADER -->
   <header>
     <img src="../assets/logo-elearning.png" class="logo" alt="E-School">
   </header>
 
-  <!-- MENU -->
   <nav class="menu-row">
     <div class="dropdown">
       <button class="dropbtn">
@@ -144,7 +171,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
       </button>
       <div class="dropdown-content">
-        <a href="#"><i class="fa-solid fa-user-tie"></i> Dashboard</a>
+        <a href="dashboard.php"><i class="fa-solid fa-user-tie"></i> Dashboard</a>
         <a href="#"><i class="fa-solid fa-user-graduate"></i> Profil Saya</a>
       </div>
     </div>
@@ -173,21 +200,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <a href="#"><i class="fa-solid fa-clipboard-check"></i> Koreksi Quiz</a>
       </div>
     </div>
+      <button class="dropbtn">
+    <i class="fa-solid fa-right-from-bracket"></i>
+    <a href="../Auth/logout.php" onclick="return confirm('Yakin ingin logout?')"style="text-decoration:none; color:#2e7dff;"> Logout</a>
+  </button>
   </nav>
 
   <!-- WELCOME -->
   <section class="welcome-box">
-    <h2>Halo! Selamat Datang, Bintang</h2>
-    <p>Jadwal mengajar selanjutnya ada di kelas <b>X DKV 2</b></p>
+    <h2>Halo! Selamat Datang, <?= htmlspecialchars($namaGuru) ?></h2>
+    <p>Jadwal mengajar selanjutnya ada di kelas <b><?= htmlspecialchars($kelasMengajar) ?></b></p>
   </section>
 
-  <!-- SEARCH -->
   <div class="search-bar">
     <input type="text" placeholder="Search...">
     <button><i class="fa-solid fa-magnifying-glass"></i></button>
   </div>
 
-  <!-- BAGIAN PRESENSI -->
   <section id="presensi-siswa">
     <h3 class="presensi-header">Presensi Siswa</h3>
 
@@ -209,7 +238,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
   </section>
 
-<!-- MODAL TAMBAH PRESENSI -->
 <div id="presensiModal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
@@ -230,6 +258,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
       ?>
     </select>
+
+    <label for="waktuDimulai">Pilih Tanggal...</label>
+    <input type="date" name="tanggal" required>
 
     <label for="mapel">Mapel</label>
     <select name="mapel" id="mapel" required>
@@ -259,99 +290,128 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </div>
 </div>
 
-  <!-- BAGIAN REKAP PRESENSI -->
-  <section id="rekap-presensi" class="rekap-presensi">
-    <div class="rekap-header">
-      <h3>Rekap Presensi</h3>
-      <div class="date-picker">
-        <label for="tanggal">Tanggal:</label>
-        <input type="date" id="tanggal" name="tanggal">
-      </div>
-    </div>
+<section id="rekap-presensi" class="rekap-presensi">
+  <div class="rekap-header">
+    <h3>Rekap Presensi</h3>
+    <form method="GET" class="date-picker">
+      <label for="tanggal">Tanggal:</label>
+      <input type="date" id="tanggal" name="tanggal" value="<?= $_GET['tanggal'] ?? date('Y-m-d') ?>" onchange="this.form.submit()">
+      
+      <?php
+        // Pertahankan semua filter golongan saat ganti tanggal
+        if (isset($_GET['golongan_X'])) echo "<input type='hidden' name='golongan_X' value='{$_GET['golongan_X']}'>";
+        if (isset($_GET['golongan_XI'])) echo "<input type='hidden' name='golongan_XI' value='{$_GET['golongan_XI']}'>";
+        if (isset($_GET['golongan_XII'])) echo "<input type='hidden' name='golongan_XII' value='{$_GET['golongan_XII']}'>";
+      ?>
+      
+    </form>
+  </div>
 
-    <div class="rekap-tabel">
-      <h3>Kelas X</h3>
-      <table>
-        <tr>
-          <th>No</th>
-          <th>Nama</th>
-          <th>NIS</th>
-          <th>Kelas</th>
-          <th>Tanggal</th>
-          <th>Waktu Presensi</th>
-          <th>Status Presensi</th>
-        </tr>
-        <?php
-          for ($i = 1; $i <= 5; $i++) {
-            echo "<tr>
-                    <td>$i</td>
-                    <td>Nama Siswa $i</td>
-                    <td>12345$i</td>
-                    <td>X DKV 1</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td>-</td>
-                  </tr>";
+  <div class="rekap-tabel">
+    <?php
+      $tanggalDipilih = $_GET['tanggal'] ?? date('Y-m-d');
+      $tingkatan = ['X', 'XI', 'XII'];
+
+      foreach ($tingkatan as $tingkat) {
+        $golonganKey = 'golongan_' . $tingkat;
+        $golonganDipilih = $_GET[$golonganKey] ?? '';
+        
+        // Mulai section per kelas
+        echo "<div class='kelas-section'>";
+        
+        // Header dengan judul dan filter (Berubah: Golongan dipindah ke dalam kelas-header)
+        echo "<div class='kelas-header'>";
+        echo "<h3>Kelas $tingkat</h3>";
+        
+        // Form filter golongan
+        echo "<form method='GET' class='golongan-filter'>";
+        echo "<input type='hidden' name='tanggal' value='{$tanggalDipilih}'>";
+        
+        // Pertahankan filter golongan kelas lain
+        foreach ($tingkatan as $t) {
+          if ($t != $tingkat) {
+            $otherKey = 'golongan_' . $t;
+            if (isset($_GET[$otherKey])) {
+              echo "<input type='hidden' name='{$otherKey}' value='{$_GET[$otherKey]}'>";
+            }
           }
-        ?>
-      </table>
+        }
+        
+        echo "<label for='golongan_{$tingkat}'>Golongan:</label>";
+        echo "<select name='{$golonganKey}' id='golongan_{$tingkat}' onchange='this.form.submit()'>";
+        echo "<option value=''>Semua Kelas $tingkat</option>";
+        
+        // Ambil daftar kelas untuk tingkat ini
+        $kelasList = mysqli_query($conn, "SELECT DISTINCT kelas FROM datasiswa WHERE kelas LIKE '{$tingkat}%' ORDER BY kelas ASC");
+        while ($row = mysqli_fetch_assoc($kelasList)) {
+          $selected = $golonganDipilih === $row['kelas'] ? 'selected' : '';
+          echo "<option value='{$row['kelas']}' $selected>{$row['kelas']}</option>";
+        }
+        
+        echo "</select>";
+        echo "</form>";
+        echo "</div>"; // Tutup kelas-header
 
-      <h3>Kelas XI</h3>
-      <table>
-        <tr>
-          <th>No</th>
-          <th>Nama</th>
-          <th>NIS</th>
-          <th>Kelas</th>
-          <th>Tanggal</th>
-          <th>Waktu Presensi</th>
-          <th>Status Presensi</th>
-        </tr>
-        <?php
-          for ($i = 1; $i <= 5; $i++) {
+        // Tabel presensi
+        echo "<table>
+                <tr>
+                  <th>No</th>
+                  <th>Nama</th>
+                  <th>NIS</th>
+                  <th>Jurusan</th>
+                  <th>Kelas</th>
+                  <th>Tanggal</th>
+                  <th>Waktu Presensi</th>
+                  <th>Status</th>
+                </tr>";
+
+        // Query data
+        $query = "
+          SELECT 
+            d.nama, d.NIS, d.jurusan, d.kelas, 
+            DATE(p.waktuPresensi) AS tanggal, 
+            TIME(p.waktuPresensi) AS jam, 
+            p.status
+          FROM presensisiswa p
+          JOIN datasiswa d ON p.NIS = d.NIS
+          WHERE d.kelas LIKE '$tingkat%'
+            AND DATE(p.waktuPresensi) = '$tanggalDipilih'
+        ";
+
+        if (!empty($golonganDipilih)) {
+          $query .= " AND d.kelas = '$golonganDipilih'";
+        }
+
+        $query .= " ORDER BY d.nama ASC";
+        $result = mysqli_query($conn, $query);
+        $no = 1;
+
+        if (mysqli_num_rows($result) > 0) {
+          while ($row = mysqli_fetch_assoc($result)) {
             echo "<tr>
-                    <td>$i</td>
-                    <td>Nama Siswa $i</td>
-                    <td>22345$i</td>
-                    <td>XI DKV 1</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td>-</td>
+                    <td>{$no}</td>
+                    <td>{$row['nama']}</td>
+                    <td>{$row['NIS']}</td>
+                    <td>{$row['jurusan']}</td>
+                    <td>{$row['kelas']}</td>
+                    <td>{$row['tanggal']}</td>
+                    <td>{$row['jam']}</td>
+                    <td>{$row['status']}</td>
                   </tr>";
+            $no++;
           }
-        ?>
-      </table>
+        } else {
+          echo "<tr><td colspan='8'>Tidak ada data presensi untuk tanggal ini.</td></tr>";
+        }
+        
+        echo "</table>";
+        echo "</div>"; // Tutup kelas-section
+      }
+    ?>
+  </div>
+</section>
 
-      <h3>Kelas XII</h3>
-      <table>
-        <tr>
-          <th>No</th>
-          <th>Nama</th>
-          <th>NIS</th>
-          <th>Kelas</th>
-          <th>Tanggal</th>
-          <th>Waktu Presensi</th>
-          <th>Status Presensi</th>
-        </tr>
-        <?php
-          for ($i = 1; $i <= 5; $i++) {
-            echo "<tr>
-                    <td>$i</td>
-                    <td>Nama Siswa $i</td>
-                    <td>32345$i</td>
-                    <td>XII DKV 1</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td>-</td>
-                  </tr>";
-          }
-        ?>
-      </table>
-    </div>
-  </section>
-
-  <!-- SCRIPT DROPDOWN & MODAL -->
-<script>
+  <script>
 document.addEventListener("DOMContentLoaded", function () {
   // === DROPDOWN MENU ATAS ===
   const buttons = document.querySelectorAll(".dropbtn");
@@ -422,14 +482,6 @@ document.addEventListener("DOMContentLoaded", function () {
   window.addEventListener("click", (event) => {
     if (event.target === modal) modal.style.display = "none";
   });
-
-  // LEK MAU LANGSUNG RESET KALAU DIPENCET LUAR FORM
-//   window.addEventListener("click", (event) => {
-//   if (event.target === modal) {
-//     modal.style.display = "none";
-//     modal.querySelector("form").reset(); // reset juga kalau modal ditutup dari luar
-//   }
-// });
 
   // === UPDATE WAKTU MAPEL SAAT MAPEL DIGANTI ===
   mapelSelect.addEventListener("change", function() {
