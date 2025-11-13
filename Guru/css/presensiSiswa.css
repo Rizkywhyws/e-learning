@@ -249,18 +249,21 @@ header {
   .card { width: 80%; }
 }
 
-/* REKAP PRESENSI */
+/* ========== REKAP PRESENSI ========== */
 .rekap-presensi {
   background: #f4f6fb;
   width: 90%;
   margin: 30px auto;
+  padding-bottom: 30px;
 }
 
+/* PERUBAHAN: Hilangkan space-between karena tombol "Terapkan" dihapus */
 .rekap-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start; /* Ubah dari space-between */
   align-items: center;
   margin-bottom: 15px;
+  gap: 20px; /* Tambahkan jarak antara H3 dan date-picker */
 }
 
 .rekap-header h3 {
@@ -294,17 +297,66 @@ header {
   border-color: #2e7dff;
 }
 
-/* TABEL REKAP */
-.rekap-tabel h3 {
-  background: #dbe7ff;
-  color: #333;
-  padding: 8px 12px;
-  border-radius: 6px;
-  margin: 20px 0 8px;
-  font-weight: 600;
-  text-align: center;
+/* Hapus .btn-filter karena sudah tidak digunakan */
+
+/* SECTION PER KELAS */
+.kelas-section {
+  margin-bottom: 30px;
 }
 
+/* PERUBAHAN: Mengatur agar judul kelas dan filter golongan berdampingan */
+.kelas-header {
+  display: flex;
+  justify-content: space-between; /* Kembali ke space-between untuk judul dan filter golongan */
+  align-items: center;
+  background: #dbe7ff;
+  padding: 12px 15px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.kelas-header h3 {
+  margin: 0;
+  font-weight: 600;
+  color: #333;
+  font-size: 18px;
+}
+
+/* FILTER GOLONGAN */
+.golongan-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.golongan-filter label {
+  font-weight: 500;
+  color: #555;
+  font-size: 14px;
+}
+
+.golongan-filter select {
+  padding: 8px 12px;
+  border: 2px solid #d0d7ff;
+  border-radius: 8px;
+  background: #fff;
+  color: #333;
+  font-weight: 500;
+  cursor: pointer;
+  min-width: 180px;
+}
+
+.golongan-filter select:hover {
+  border-color: #2e7dff;
+}
+
+.golongan-filter select:focus {
+  outline: none;
+  border-color: #2e7dff;
+  box-shadow: 0 0 0 3px rgba(46, 125, 255, 0.1);
+}
+
+/* TABEL REKAP */
 .rekap-tabel table {
   width: 100%;
   border-collapse: collapse;
