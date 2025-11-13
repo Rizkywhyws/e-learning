@@ -10,12 +10,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $deskripsi = $_POST['deskripsi'];
   $waktuMulai = $_POST['waktuMulai'];
   $tipeQuiz = $_POST['tipeQuiz'];
+  $kelas = $_POST['kelas']; // ✅ ambil kelas dari dropdown
 
   // Generate ID quiz otomatis
   $idQuiz = "QZ" . rand(1000, 9999);
 
-  $query = "INSERT INTO quiz (idQuiz, kodeMapel, NIP, judul, deskripsi, waktuMulai)
-            VALUES ('$idQuiz', '$kodeMapel', '$NIP', '$judul', '$deskripsi', '$waktuMulai')";
+  $query = "INSERT INTO quiz (idQuiz, kodeMapel, NIP, judul, deskripsi, waktuMulai, kelas)
+            VALUES ('$idQuiz', '$kodeMapel', '$NIP', '$judul', '$deskripsi', '$waktuMulai', '$kelas')";
 
   if ($conn->query($query)) {
     echo "<script>
@@ -34,6 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <h2>Tambah / Buat Quiz</h2>
 
   <form action="" method="POST" enctype="multipart/form-data">
+    <!-- Pilih Mapel -->
     <label for="kodeMapel">Mata Pelajaran</label>
     <select id="kodeMapel" name="kodeMapel" required>
       <option value="">-- Pilih Mata Pelajaran --</option>
@@ -45,6 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       ?>
     </select>
 
+    <!-- Pilih Guru -->
     <label for="NIP">Guru Pengampu</label>
     <select id="NIP" name="NIP" required>
       <option value="">-- Pilih Guru --</option>
@@ -56,15 +59,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       ?>
     </select>
 
+    <!-- Pilih Kelas -->
+    <label for="kelas">Kelas</label>
+    <select id="kelas" name="kelas" required>
+      <option value="">-- Pilih Kelas --</option>
+      <?php
+        $kelasResult = $conn->query("SELECT DISTINCT kelas FROM datasiswa ORDER BY kelas ASC");
+        while ($row = $kelasResult->fetch_assoc()) {
+          echo "<option value='{$row['kelas']}'>{$row['kelas']}</option>";
+        }
+      ?>
+    </select>
+
+    <!-- Judul Quiz -->
     <label for="judul">Judul Quiz</label>
     <input type="text" id="judul" name="judul" placeholder="Masukkan judul quiz..." required>
 
+    <!-- Deskripsi -->
     <label for="deskripsi">Deskripsi Quiz</label>
     <textarea id="deskripsi" name="deskripsi" placeholder="Tuliskan deskripsi quiz..." required></textarea>
 
+    <!-- Waktu Mulai -->
     <label for="waktuMulai">Waktu Mulai</label>
     <input type="datetime-local" id="waktuMulai" name="waktuMulai" required>
 
+    <!-- Pilih Jenis Quiz -->
     <div class="upload-box">
       <label>Pilih Jenis Quiz</label><br>
       <div class="type-options">
@@ -77,29 +96,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <script>
-  // Ambil elemen input datetime
+  // Atur waktu minimal datetime-local
   const waktuMulaiInput = document.getElementById("waktuMulai");
 
-  // Fungsi untuk update min value sesuai waktu lokal sekarang
   function setMinDateTime() {
     const now = new Date();
-
-    // Koreksi zona waktu lokal (karena ISO pakai UTC)
     const tzOffset = now.getTimezoneOffset() * 60000;
     const localISOTime = new Date(now - tzOffset).toISOString().slice(0, 16);
-
-    // Set atribut min ke waktu saat ini
     waktuMulaiInput.min = localISOTime;
   }
 
-  // Jalankan saat halaman dibuka
   setMinDateTime();
 
-  // Cegah submit kalau waktu sudah lewat (kalau diubah manual)
   document.querySelector("form").addEventListener("submit", function (e) {
     const selected = new Date(waktuMulaiInput.value);
     const now = new Date();
-
     if (selected.getTime() < now.getTime()) {
       e.preventDefault();
       alert("Tanggal dan waktu tidak boleh di masa lalu!");
