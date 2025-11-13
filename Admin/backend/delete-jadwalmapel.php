@@ -3,7 +3,7 @@ require_once "../../config/db.php";
 
 if (isset($_GET['id'])) {
     $id = $_GET['id'];
-    $stmt = $conn->prepare("DELETE FROM jadwalmapel WHERE idJadwal = ?");
+    $stmt = $conn->prepare("DELETE FROM jadwalmapel WHERE idJadwalMapel = ?");
     $stmt->bind_param("s", $id);
 
     if ($stmt->execute()) {
@@ -12,5 +12,8 @@ if (isset($_GET['id'])) {
     } else {
         echo "Error: " . $stmt->error;
     }
+
+    $stmt->close();
+    $conn->close();
 }
 ?>

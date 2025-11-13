@@ -1,5 +1,8 @@
 <?php
-require_once "../../config/db.php"; // sesuaikan path ke file koneksi kamu
+require_once "../../config/db.php"; // pastikan path ini benar
+
+// Aktifkan laporan error untuk debugging
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     // Ambil data dari form
@@ -20,32 +23,38 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $check->store_result();
 
     if ($check->num_rows > 0) {
+        $check->close();
         echo "<script>alert('Kode Mapel sudah terdaftar!'); history.back();</script>";
         exit;
     }
-
     $check->close();
 
     // Simpan ke tabel mapel
     $stmt = $conn->prepare("INSERT INTO mapel (kodeMapel, namaMapel) VALUES (?, ?)");
     $stmt->bind_param("ss", $kodeMapel, $namaMapel);
+    $stmt->execute();
 
-    if ($stmt->execute()) {
-        // Jika ada guru pengampu, masukkan ke tabel gurumapel
-        if (!empty($nipGuru)) {
-            $stmt2 = $conn->prepare("INSERT INTO gurumapel (kodeMapel, nipGuru) VALUES (?, ?)");
-            $stmt2->bind_param("ss", $kodeMapel, $nipGuru);
-            $stmt2->execute();
-            $stmt2->close();
-        }
+    // Jika ada guru pengampu, masukkan ke tabel gurumapel
+    if (!empty($nipGuru)) {
+    // Buat ID otomatis
+    $result = $conn->query("SELECT MAX(id) AS last_id FROM gurumapel");
+    $row = $result->fetch_assoc();
+    $last_id = $row['last_id'];
 
-        echo "<script>alert('Mapel berhasil ditambahkan!'); window.location.href='../kelolamapel.php';</script>";
+    if ($last_id) {
+        $num = (int)substr($last_id, 2) + 1;
+        $new_id = 'GM' . str_pad($num, 3, '0', STR_PAD_LEFT);
     } else {
-        echo "<script>alert('Gagal menambahkan mapel.'); history.back();</script>";
+        $new_id = 'GM001';
     }
 
-    $stmt->close();
-    $conn->close();
+    // Insert data
+    $stmt2 = $conn->prepare("INSERT INTO gurumapel (id, kodeMapel, nipGuru) VALUES (?, ?, ?)");
+    $stmt2->bind_param("sss", $new_id, $kodeMapel, $nipGuru);
+    $stmt2->execute();
+    $stmt2->close();
+}
+    echo "<script>alert('Mapel berhasil ditambahkan!'); window.location.href='../kelolamapel.php';</script>";
 } else {
     header("Location: ../kelolamapel.php");
     exit;
