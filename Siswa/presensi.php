@@ -77,6 +77,26 @@ function generateIdPresensi($conn) {
 }
 
 // -----------------------------
+// Helper: Hitung jarak antara 2 koordinat (Haversine Formula)
+// Return: jarak dalam meter
+// -----------------------------
+function hitungJarak($lat1, $lon1, $lat2, $lon2) {
+    $earthRadius = 6371000; // Radius bumi dalam meter
+    
+    $dLat = deg2rad($lat2 - $lat1);
+    $dLon = deg2rad($lon2 - $lon1);
+    
+    $a = sin($dLat/2) * sin($dLat/2) +
+         cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+         sin($dLon/2) * sin($dLon/2);
+    
+    $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+    $jarak = $earthRadius * $c;
+    
+    return $jarak; // dalam meter
+}
+
+// -----------------------------
 //  HANDLE PRESENSI (tombol) & UPLOAD IZIN (form)
 //  Both are handled in this single file
 // -----------------------------
@@ -88,10 +108,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (isset($_POST['action']) && $_POST['action'] === 'do_presensi') {
         $idBuatPresensi = $_POST['idBuatPresensi'] ?? null;
         $nisForm = $_POST['nis'] ?? $nisSiswa;
+        $latitudeSiswa = $_POST['latitude'] ?? null;
+        $longitudeSiswa = $_POST['longitude'] ?? null;
 
         if (!$idBuatPresensi) {
             $statusType = 'error';
             $statusMsg = 'Data presensi tidak lengkap.';
+        } elseif (!$latitudeSiswa || !$longitudeSiswa) {
+            $statusType = 'error';
+            $statusMsg = 'Lokasi GPS tidak terdeteksi. Pastikan Anda mengizinkan akses lokasi.';
         } else {
             // Ambil data buatpresensi
             $q = $conn->prepare("
@@ -111,71 +136,99 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $statusType = 'error';
                 $statusMsg = 'Sesi presensi tidak ditemukan.';
             } else {
-                // Cek apakah user termasuk di kelas yang sesuai (safety)
-                if ($kelasSiswa && strpos($bp['kelas'], $kelasSiswa) === false && $bp['kelas'] !== $kelasSiswa) {
-                    // jika field kelas di buatpresensi mungkin berformat containing, kita cek contains
-                    // namun jika tidak cocok, tolak
-                    // (bergantung format data di tabel jadwalmapel / buatpresensi)
-                    // Kita tidak abort jika kelas kosong; tetap cek waktu
+                // Ambil data lokasi dari database
+                $idLokasiPresensi = $bp['idLokasi'] ?? null;
+                
+                if (!$idLokasiPresensi) {
                     $statusType = 'error';
-                    $statusMsg = 'Anda tidak terdaftar pada kelas sesi presensi ini.';
+                    $statusMsg = 'Lokasi presensi tidak ditemukan. Hubungi admin.';
                 } else {
-                    $now_ts = time();
-                    $mulai_ts = strtotime($bp['waktuDimulai']);
-                    $tutup_ts = strtotime($bp['waktuDitutup']);
-                    $toleransi_minutes = isset($bp['toleransiWaktu']) ? (int)$bp['toleransiWaktu'] : 0;
-                    $batas_toleransi_ts = $mulai_ts + ($toleransi_minutes * 60);
-
-                    // Jika sekarang sebelum waktuDimulai -> belum dibuka
-                    if ($now_ts < $mulai_ts) {
-                        $statusType = 'warning';
-                        $statusMsg = 'Presensi belum dibuka. Tunggu hingga waktu presensi dimulai.';
-                    }
-                    // Jika setelah waktuDitutup -> tidak bisa presensi (Alpa otomatis)
-                    elseif ($now_ts > $tutup_ts) {
+                    $qLok = $conn->prepare("SELECT * FROM lokasi WHERE idLokasi = ? LIMIT 1");
+                    $qLok->bind_param('s', $idLokasiPresensi);
+                    $qLok->execute();
+                    $lokasiData = $qLok->get_result()->fetch_assoc();
+                    $qLok->close();
+                    
+                    if (!$lokasiData) {
                         $statusType = 'error';
-                        $statusMsg = 'Presensi sudah ditutup. Anda dinyatakan Alpa untuk sesi ini.';
-                        // Note: kita tidak membuat record presensi ketika sudah lewat; siswa bisa mengunggah surat sebagai bukti
+                        $statusMsg = 'Data lokasi tidak valid. Hubungi admin.';
                     } else {
-                        // Dalam rentang waktuDimulai - waktuDitutup -> bisa presensi
-                        // Cek apakah sudah presensi
-                        $check = $conn->prepare("SELECT idPresensi FROM presensisiswa WHERE idBuatPresensi = ? AND NIS = ? LIMIT 1");
-                        $check->bind_param('ss', $idBuatPresensi, $nisForm);
-                        $check->execute();
-                        $resCheck = $check->get_result();
-                        $already = $resCheck->num_rows > 0;
-                        $check->close();
-
-                        if ($already) {
-                            $statusType = 'warning';
-                            $statusMsg = 'Anda sudah melakukan presensi pada sesi ini.';
+                        $latLokasi = $lokasiData['latitude'];
+                        $lonLokasi = $lokasiData['longitude'];
+                        $radiusLokasi = $lokasiData['radius']; // dalam meter
+                        
+                        // Hitung jarak antara lokasi siswa dan lokasi presensi
+                        $jarakSiswa = hitungJarak($latitudeSiswa, $longitudeSiswa, $latLokasi, $lonLokasi);
+                        
+                        // Validasi: apakah siswa berada dalam radius?
+                        if ($jarakSiswa > $radiusLokasi) {
+                            $statusType = 'error';
+                            $statusMsg = "Anda berada di luar area presensi. Jarak Anda: " . round($jarakSiswa) . "m (Maks: {$radiusLokasi}m)";
                         } else {
-                            // Tentukan status: Hadir atau Terlambat
-                            if ($now_ts <= $batas_toleransi_ts) {
-                                $statusPresensi = 'Hadir';
-                            } else {
-                                $statusPresensi = 'Terlambat';
-                            }
-
-                            $newIdPresensi = generateIdPresensi($conn);
-
-                            $ins = $conn->prepare("
-                                INSERT INTO presensisiswa (idPresensi, idBuatPresensi, NIS, status, waktuPresensi)
-                                VALUES (?, ?, ?, ?, NOW())
-                            ");
-                            $ins->bind_param('ssss', $newIdPresensi, $idBuatPresensi, $nisForm, $statusPresensi);
-
-                            if ($ins->execute()) {
-                                $statusType = 'success';
-                                $statusMsg = "Presensi berhasil: $statusPresensi";
-                                $ins->close();
-                            } else {
+                            // Cek apakah user termasuk di kelas yang sesuai (safety)
+                            if ($kelasSiswa && strpos($bp['kelas'], $kelasSiswa) === false && $bp['kelas'] !== $kelasSiswa) {
                                 $statusType = 'error';
-                                $statusMsg = 'Gagal menyimpan data presensi. (' . $conn->error . ')';
-                                $ins->close();
+                                $statusMsg = 'Anda tidak terdaftar pada kelas sesi presensi ini.';
+                            } else {
+                                $now_ts = time();
+                                $mulai_ts = strtotime($bp['waktuDimulai']);
+                                $tutup_ts = strtotime($bp['waktuDitutup']);
+                                $toleransi_minutes = isset($bp['toleransiWaktu']) ? (int)$bp['toleransiWaktu'] : 0;
+                                $batas_toleransi_ts = $mulai_ts + ($toleransi_minutes * 60);
+
+                                // Jika sekarang sebelum waktuDimulai -> belum dibuka
+                                if ($now_ts < $mulai_ts) {
+                                    $statusType = 'warning';
+                                    $statusMsg = 'Presensi belum dibuka. Tunggu hingga waktu presensi dimulai.';
+                                }
+                                // Jika setelah waktuDitutup -> tidak bisa presensi (Alpa otomatis)
+                                elseif ($now_ts > $tutup_ts) {
+                                    $statusType = 'error';
+                                    $statusMsg = 'Presensi sudah ditutup. Anda dinyatakan Alpa untuk sesi ini.';
+                                } else {
+                                    // Dalam rentang waktuDimulai - waktuDitutup -> bisa presensi
+                                    // Cek apakah sudah presensi
+                                    $check = $conn->prepare("SELECT idPresensi FROM presensisiswa WHERE idBuatPresensi = ? AND NIS = ? LIMIT 1");
+                                    $check->bind_param('ss', $idBuatPresensi, $nisForm);
+                                    $check->execute();
+                                    $resCheck = $check->get_result();
+                                    $already = $resCheck->num_rows > 0;
+                                    $check->close();
+
+                                    if ($already) {
+                                        $statusType = 'warning';
+                                        $statusMsg = 'Anda sudah melakukan presensi pada sesi ini.';
+                                    } else {
+                                        // Tentukan status: Hadir atau Terlambat
+                                        if ($now_ts <= $batas_toleransi_ts) {
+                                            $statusPresensi = 'Hadir';
+                                        } else {
+                                            $statusPresensi = 'Terlambat';
+                                        }
+
+                                        $newIdPresensi = generateIdPresensi($conn);
+
+                                        // SIMPAN idLokasi ke database
+                                        $ins = $conn->prepare("
+                                            INSERT INTO presensisiswa (idPresensi, idBuatPresensi, NIS, status, waktuPresensi, idLokasi)
+                                            VALUES (?, ?, ?, ?, NOW(), ?)
+                                        ");
+                                        $ins->bind_param('sssss', $newIdPresensi, $idBuatPresensi, $nisForm, $statusPresensi, $idLokasiPresensi);
+
+                                        if ($ins->execute()) {
+                                            $statusType = 'success';
+                                            $statusMsg = "Presensi berhasil: $statusPresensi (Jarak: " . round($jarakSiswa) . "m)";
+                                            $ins->close();
+                                        } else {
+                                            $statusType = 'error';
+                                            $statusMsg = 'Gagal menyimpan data presensi. (' . $conn->error . ')';
+                                            $ins->close();
+                                        }
+                                    }
+                                } // end else in-range
                             }
-                        }
-                    } // end else in-range
+                        } // end validasi radius
+                    }
                 }
             }
         }
@@ -193,7 +246,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         // Cari sesi buatpresensi aktif berdasarkan kelas siswa dan waktu sekarang (menggunakan waktuDimulai)
         if ($kelasSiswa) {
             $qAct = $conn->prepare("
-                SELECT bp.idBuatPresensi, bp.waktuDimulai, bp.waktuDitutup, bp.toleransiWaktu
+                SELECT bp.idBuatPresensi, bp.waktuDimulai, bp.waktuDitutup, bp.toleransiWaktu, bp.idLokasi
                 FROM buatpresensi bp
                 JOIN jadwalmapel jm ON bp.idJadwalMapel = jm.idJadwalMapel
                 WHERE jm.kelas = ?
@@ -209,6 +262,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $idBuatPresensiAktif = $activeRow['idBuatPresensi'] ?? null;
             $waktuDimulaiAktif = $activeRow['waktuDimulai'] ?? null;
             $waktuDitutupAktif = $activeRow['waktuDitutup'] ?? null;
+            $idLokasiAktif = $activeRow['idLokasi'] ?? null;
         }
 
         // Validasi dasar
@@ -272,13 +326,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                             ");
                             $queryAction->bind_param('ssss', $statusPresensi, $filePathDB, $idBuatPresensiAktif, $nisForm);
                         } else {
-                            // INSERT: buat idPresensi baru
+                            // INSERT: buat idPresensi baru (SIMPAN idLokasi juga)
                             $newIdPresensi = generateIdPresensi($conn);
                             $queryAction = $conn->prepare("
-                                INSERT INTO presensisiswa (idPresensi, idBuatPresensi, NIS, status, waktuPresensi, filePath)
-                                VALUES (?, ?, ?, ?, NOW(), ?)
+                                INSERT INTO presensisiswa (idPresensi, idBuatPresensi, NIS, status, waktuPresensi, filePath, idLokasi)
+                                VALUES (?, ?, ?, ?, NOW(), ?, ?)
                             ");
-                            $queryAction->bind_param('sssss', $newIdPresensi, $idBuatPresensiAktif, $nisForm, $statusPresensi, $filePathDB);
+                            $queryAction->bind_param('ssssss', $newIdPresensi, $idBuatPresensiAktif, $nisForm, $statusPresensi, $filePathDB, $idLokasiAktif);
                         }
 
                         if ($queryAction->execute()) {
@@ -389,6 +443,42 @@ if ($kelasSiswa) {
         $namaMapel = $next['namaMapel'];
     }
 }
+
+// -----------------------------
+// AMBIL DATA KEHADIRAN SISWA UNTUK CHART
+// -----------------------------
+$dataKehadiran = [
+    'hadir' => 0,
+    'terlambat' => 0,
+    'sakit' => 0,
+    'izin' => 0,
+    'alpa' => 0
+];
+
+if ($nisSiswa) {
+    // Hitung jumlah masing-masing status
+    $qChart = $conn->prepare("
+        SELECT 
+            LOWER(status) as status,
+            COUNT(*) as jumlah
+        FROM presensisiswa
+        WHERE NIS = ?
+        GROUP BY LOWER(status)
+    ");
+    $qChart->bind_param('s', $nisSiswa);
+    $qChart->execute();
+    $resultChart = $qChart->get_result();
+    
+    while ($row = $resultChart->fetch_assoc()) {
+        $stat = $row['status'];
+        $jml = $row['jumlah'];
+        
+        if (isset($dataKehadiran[$stat])) {
+            $dataKehadiran[$stat] = $jml;
+        }
+    }
+    $qChart->close();
+}
 ?>
 
 <!DOCTYPE html>
@@ -481,14 +571,16 @@ if ($kelasSiswa) {
                   <div class="belum-absen">
                     <?php if ($bisakahPresensi): ?>
                       <p>Anda belum melakukan presensi</p>
-                      <small>Klik untuk absen</small>
+                      <small>Klik untuk absen (Lokasi diperlukan)</small>
 
                       <!-- FORM PRESENSI: kirim POST ke file ini -->
-                      <form method="POST" style="display:inline;">
+                      <form method="POST" id="formPresensi" style="display:inline;">
                           <input type="hidden" name="action" value="do_presensi">
                           <input type="hidden" name="idBuatPresensi" value="<?= htmlspecialchars($presensi['idBuatPresensi']) ?>">
                           <input type="hidden" name="nis" value="<?= htmlspecialchars($nisSiswa) ?>">
-                          <button type="submit" class="x-icon-box" title="Klik untuk Absen">
+                          <input type="hidden" name="latitude" id="inputLatitude">
+                          <input type="hidden" name="longitude" id="inputLongitude">
+                          <button type="button" onclick="getLocationAndSubmit()" class="x-icon-box" title="Klik untuk Absen">
                              <i class="fa-solid fa-xmark"></i>
                           </button>
                       </form>
@@ -619,9 +711,129 @@ if ($kelasSiswa) {
   </div>
 
   
-  <script src="js/chart-presensi.js"></script>
   <script>
+    // ========================================
+    // CHART.JS - DATA KEHADIRAN
+    // ========================================
+    const dataKehadiran = {
+      hadir: <?= $dataKehadiran['hadir'] ?>,
+      terlambat: <?= $dataKehadiran['terlambat'] ?>,
+      sakit: <?= $dataKehadiran['sakit'] ?>,
+      izin: <?= $dataKehadiran['izin'] ?>,
+      alpa: <?= $dataKehadiran['alpa'] ?>
+    };
+
+    const ctx = document.getElementById('kehadiranChart').getContext('2d');
+    const kehadiranChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Hadir', 'Terlambat', 'Sakit', 'Izin', 'Alpa'],
+        datasets: [{
+          label: 'Jumlah',
+          data: [
+            dataKehadiran.hadir,
+            dataKehadiran.terlambat,
+            dataKehadiran.sakit,
+            dataKehadiran.izin,
+            dataKehadiran.alpa
+          ],
+          backgroundColor: [
+            '#4CAF50',  // Hadir - Hijau
+            '#FF9800',  // Terlambat - Orange
+            '#2196F3',  // Sakit - Biru
+            '#9C27B0',  // Izin - Ungu
+            '#F44336'   // Alpa - Merah
+          ],
+          borderColor: '#fff',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              padding: 15,
+              font: {
+                size: 12,
+                family: 'Poppins'
+              }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                let label = context.label || '';
+                if (label) {
+                  label += ': ';
+                }
+                label += context.parsed + ' kali';
+                return label;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // ========================================
+    // FUNGSI GPS LOCATION
+    // ========================================
+    function getLocationAndSubmit() {
+      if (!navigator.geolocation) {
+        alert('Browser Anda tidak mendukung GPS. Gunakan browser modern seperti Chrome atau Firefox.');
+        return;
+      }
+
+      // Tampilkan loading
+      const btn = event.target.closest('button');
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+      btn.disabled = true;
+
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          // Berhasil mendapatkan lokasi
+          document.getElementById('inputLatitude').value = position.coords.latitude;
+          document.getElementById('inputLongitude').value = position.coords.longitude;
+          
+          // Submit form
+          document.getElementById('formPresensi').submit();
+        },
+        function(error) {
+          // Gagal mendapatkan lokasi
+          btn.innerHTML = originalHTML;
+          btn.disabled = false;
+          
+          let errorMsg = '';
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMsg = 'Anda menolak akses lokasi. Silakan izinkan akses lokasi di pengaturan browser.';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMsg = 'Informasi lokasi tidak tersedia. Pastikan GPS/lokasi di perangkat Anda aktif.';
+              break;
+            case error.TIMEOUT:
+              errorMsg = 'Waktu permintaan lokasi habis. Coba lagi.';
+              break;
+            default:
+              errorMsg = 'Terjadi kesalahan saat mengambil lokasi. Coba lagi.';
+          }
+          alert(errorMsg);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    }
+
+    // ========================================
     // FUNGSI JAVASCRIPT UNTUK MODAL dan Dropdown
+    // ========================================
     document.addEventListener('DOMContentLoaded', function() {
         const modal = document.getElementById('uploadModal');
         const openBtn = document.getElementById('openModalBtn');
