@@ -1,5 +1,9 @@
 <?php
 session_start();
+
+// ===== SET TIMEZONE WIB INDONESIA =====
+date_default_timezone_set('Asia/Jakarta');
+
 include '../config/db.php'; // sesuaikan dengan lokasi file koneksi kamu
 
 // ===== CEK LOGIN =====
@@ -98,6 +102,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   $tanggalDipilih = $_POST['tanggal'] ?? date('Y-m-d');
 
+  // ===== VALIDASI: TANGGAL TIDAK BOLEH MUNDUR =====
+  $tanggalHariIni = date('Y-m-d');
+  if ($tanggalDipilih < $tanggalHariIni) {
+    echo "<script>
+            alert('⚠️ Tanggal tidak boleh mundur!\\n\\nTanggal yang dipilih: $tanggalDipilih\\nTanggal hari ini: $tanggalHariIni\\n\\nSilakan pilih tanggal hari ini atau masa depan.');
+            window.location='presensiSiswa.php';
+          </script>";
+    exit;
+  }
+
+  // ===== VALIDASI: JAM TIDAK BOLEH MUNDUR (UNTUK HARI INI) =====
+  $waktuSekarang = date('Y-m-d H:i:s');
+  $waktuDimulaiPresensi = $tanggalDipilih . ' ' . $jamMulai;
+  
+  // Jika tanggal yang dipilih adalah HARI INI, cek apakah jam mapel sudah lewat
+  if ($tanggalDipilih === $tanggalHariIni) {
+    if (strtotime($waktuDimulaiPresensi) < strtotime($waktuSekarang)) {
+      $jamSekarang = date('H:i:s');
+      echo "<script>
+              alert('⚠️ Waktu mapel sudah terlewat!\\n\\nMapel: $namaMapel\\nJam Mapel: $jamMulai\\nJam Sekarang: $jamSekarang\\n\\nAnda tidak bisa membuat presensi untuk waktu yang sudah lewat.\\n\\nSilakan pilih tanggal besok atau mapel lain.');
+              window.location='presensiSiswa.php';
+            </script>";
+      exit;
+    }
+  }
+
   // ========== VALIDASI ANTI DUPLIKASI BERDASARKAN TANGGAL & WAKTU MAPEL ==========
   $cekDuplikasi = mysqli_query($conn, "
     SELECT bp.idBuatPresensi, bp.keterangan, j.jamMulai, m.namaMapel
@@ -119,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
   // ============================================================================
 
-  // Waktu saat presensi dibuat (sekarang)
+  // Waktu saat presensi dibuat (sekarang) - TIMEZONE WIB
   $waktuDibuat = date('Y-m-d H:i:s');
 
   // Gabungkan tanggal yang dipilih dengan jam mulai
@@ -137,13 +167,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (mysqli_query($conn, $sql)) {
     // 🔹 UBAH: Tampilkan nama mapel, bukan kode mapel
     echo "<script>
-            alert('✅ Presensi berhasil ditambahkan!\\n\\nMapel: $namaMapel\\nKelas: $kelas\\nTanggal: $tanggalDipilih\\nWaktu: $jamMulai');
+            alert('✅ Presensi berhasil ditambahkan!\\n\\nMapel: $namaMapel\\nKelas: $kelas\\nTanggal: $tanggalDipilih\\nWaktu: $jamMulai\\n\\nDibuat pada: $waktuDibuat WIB');
             window.location='presensiSiswa.php';
           </script>";
   } else {
     echo "<script>alert('Gagal menambahkan presensi: " . mysqli_error($conn) . "');</script>";
   }
 }
+
+// ===== VARIABEL UNTUK TANGGAL MINIMUM (HARI INI) =====
+$tanggalMinimum = date('Y-m-d');
 ?>
 
 <!DOCTYPE html>
@@ -260,7 +293,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </select>
 
     <label for="waktuDimulai">Pilih Tanggal...</label>
-    <input type="date" name="tanggal" required>
+    <input type="date" name="tanggal" id="inputTanggal" min="<?= $tanggalMinimum ?>" value="<?= $tanggalMinimum ?>" required>
 
     <label for="mapel">Mapel</label>
     <select name="mapel" id="mapel" required>
@@ -278,7 +311,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <label for="toleransi">Waktu Toleransi</label>
       <div style="display: flex; align-items: center; gap: 5px;">
-        <input type="number" name="toleransi" id="toleransi" placeholder="Masukkan Waktu Toleransi..." required style="flex:1;">
+        <input type="number" name="toleransi" id="toleransi" placeholder="Masukkan Waktu Toleransi..." min="0" max="60" required style="flex:1;">
         <span>menit</span>
       </div>
 
@@ -429,6 +462,27 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".dropdown-content").forEach(dc => dc.style.display = "none");
   });
 
+  // === VALIDASI TANGGAL: TIDAK BISA MUNDUR ===
+  const inputTanggal = document.getElementById("inputTanggal");
+  const hariIni = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
+  // Set minimum date ke hari ini
+  inputTanggal.setAttribute('min', hariIni);
+  
+  // Validasi saat user mengubah tanggal
+  inputTanggal.addEventListener('change', function() {
+    const tanggalDipilih = this.value;
+    if (tanggalDipilih < hariIni) {
+      alert('⚠️ Tanggal tidak boleh mundur! Pilih tanggal hari ini atau masa depan.');
+      this.value = hariIni; // Reset ke hari ini
+    }
+  });
+
+  // Cegah input manual tanggal yang salah
+  inputTanggal.addEventListener('keydown', function(e) {
+    e.preventDefault(); // Cegah ketik manual, harus pakai date picker
+  });
+
   // === MODAL TAMBAH PRESENSI ===
   const modal = document.getElementById("presensiModal");
   const tombolTambah = document.querySelectorAll(".card button");
@@ -476,6 +530,7 @@ document.addEventListener("DOMContentLoaded", function () {
   tombolBatal.addEventListener("click", () => {
     modal.style.display = "none";
     modal.querySelector("form").reset(); // 🔥 reset semua input form
+    inputTanggal.value = hariIni; // Reset tanggal ke hari ini
   });
 
   //GA RESET KALAU PENCET LUAR FORM
