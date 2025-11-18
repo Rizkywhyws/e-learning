@@ -31,10 +31,11 @@
 }
 
 
+
 /* Grid isi mapel */
 .mapel-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    grid-template-columns: repeat(3, 1fr); /* maksimal 3 kolom */
     gap: 15px;
     padding: 20px 25px 30px; /* beri padding dalam box */
     background-color: #eef4ff; /* sedikit beda agar lembut */
@@ -238,6 +239,86 @@ tbody tr:hover {
 }
 
 
+/* ============================
+   POPUP NILAI (HOVER / CLICK)
+   ============================ */
+#popupNilai {
+    position: absolute;
+    display: none;                 /* default: tidak muncul */
+    background: #ffffff;           /* putih bersih */
+    padding: 15px 18px;
+    min-width: 210px;
+    border-radius: 10px;           /* sudut membulat */
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e6e6e6;
+    z-index: 9999;
+    transform: translateY(8px);    /* posisi awal untuk animasi */
+    opacity: 0;
+    transition: 
+        opacity 0.18s ease-out,
+        transform 0.18s ease-out;
+}
+
+/* Saat popup aktif ditampilkan */
+#popupNilai.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Judul */
+#popupNilai .judul-tugas {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2d2d2d;
+    margin-bottom: 6px;
+}
+
+/* Baris informasi */
+#popupNilai .popup-row {
+    font-size: 12px;
+    margin-bottom: 4px;
+    color: #333;
+}
+
+/* Label */
+#popupNilai .popup-label {
+    font-weight: 600;
+    color: #666;
+}
+
+/* ============================
+   BADGE STATUS
+   ============================ */
+.status-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 6px;
+}
+
+/* Status: tepat waktu / selesai */
+.status-selesai {
+    background-color: #d4ffe1;
+    color: #0f8a40;
+    border: 1px solid #8ff5b5;
+}
+
+/* Status: terlambat */
+.status-terlambat {
+    background-color: #ffe2e2;
+    color: #cc1e1e;
+    border: 1px solid #ffb3b3;
+}
+
+.status-belum {
+    background: #b0b0b0;
+    color: white;
+}
+
+
+
 /* ====================================== POPUP TUGAS ============================ */
 .popup-overlay {
   display: none;
@@ -292,6 +373,37 @@ tbody tr:hover {
 
 .status-label.belum {
   background: #ff9ea9;
+}
+
+/* Lampiran Box - mirip dengan materi-box */
+.lampiran-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  height: 40px;
+  margin-bottom: 10px;
+  padding: 0 12px;
+}
+
+.lampiran-box a {
+  text-decoration: none;
+  color: #1e3a8a;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lampiran-box a:hover {
+  color: #1a56db;
+}
+
+.lampiran-box span {
+  color: #999;
+  font-size: 13px;
 }
 
 .close-btn {
@@ -412,6 +524,88 @@ tbody tr:hover {
   background: #a9c4ff;
 }
 
+
+/*?////////*/
+/* ===== Style untuk box file yang sudah diupload ===== */
+#uploadedFileBox {
+    margin-top: 15px;
+    margin-bottom: 10px;
+    animation: fadeIn 0.3s ease;
+}
+
+#uploadedFileBox > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: #e8f5e9;
+    border-radius: 8px;
+    border: 1px solid #81c784;
+}
+
+#uploadedFileBox span {
+    color: #2e7d32;
+    font-weight: 500;
+    font-size: 13px;
+    flex: 1;
+}
+
+#uploadedFileBox a {
+    color: #1976d2;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 5px;
+    transition: background 0.2s;
+}
+
+#uploadedFileBox a:hover {
+    background: #bbdefb;
+}
+
+/* ===== Style untuk tombol PERBARUI TUGAS ===== */
+.btn-kumpul.update-mode {
+    background: #fff3cd !important;
+    color: #856404 !important;
+    border: 1px solid #ffc107;
+}
+
+.btn-kumpul.update-mode:hover {
+    background: #ffe69c !important;
+}
+
+/* ===== Label untuk upload file baru ===== */
+.upload-section-label {
+    display: block;
+    font-size: 13px;
+    color: #1a2d60;
+    font-weight: 500;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+.upload-note {
+    font-size: 11px;
+    color: #666;
+    font-style: italic;
+    margin-top: 3px;
+    margin-bottom: 8px;
+}
+
+/* ===== Animation ===== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
 /* ===== FIX Z-INDEX POPUP ===== */
 .sticky-header {
   position: relative;
@@ -455,18 +649,6 @@ tbody tr:hover {
   border-radius: 10px 10px 0 0;
 }
 
-.status-label.selesai {
-  position: absolute;
-  right: 50px;
-  top: 50%;
-  transform: translateY(-50%);
-  background-color: #bbf7d0;
-  color: #064e3b;
-  font-weight: 600;
-  font-size: 0.9rem;
-  padding: 5px 12px;
-  border-radius: 8px;
-}
 
 #popupMateri .popup-body {
   padding: 20px;
