@@ -1,4 +1,5 @@
 <?php
+//file: e-learningMrt/Guru/backend/getTabelKoreksi.php
 include "../../config/db.php";
 session_start();
 
@@ -24,10 +25,10 @@ SELECT
     CASE
        
         WHEN p.idPengumpulan IS NULL THEN 'Kosong'
-        ELSE 'Terkumpul'
+        ELSE p.status
     END AS status
 FROM datasiswa s
-LEFT JOIN pengumpulantugas p ON s.NIS = p.idSiswa AND p.idTugas = '$idTugas'
+LEFT JOIN pengumpulantugas p ON s.NIS = p.NIS AND p.idTugas = '$idTugas'
 JOIN tugas t ON t.idTugas = '$idTugas'
 WHERE s.kelas = '$kelas'
 ");
