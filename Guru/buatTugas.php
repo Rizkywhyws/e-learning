@@ -24,6 +24,37 @@ function generateIdTugas($conn) {
     }
 }
 
+// Fungsi generate random ID untuk materi
+function generateRandomIdMateri($length = 7) {
+    $characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    $randomString = '';
+    for ($i = 0; $i < $length; $i++) {
+        $randomString .= $characters[rand(0, strlen($characters) - 1)];
+    }
+    return $randomString;
+}
+
+// ==================== HANDLE AJAX GET MATERI ====================
+if (isset($_GET['action']) && $_GET['action'] === 'getMateri' && isset($_GET['kodeMapel'])) {
+    $kodeMapel = mysqli_real_escape_string($conn, $_GET['kodeMapel']);
+    
+    $qMateri = mysqli_query($conn, "
+        SELECT idMateri, judul 
+        FROM materi 
+        WHERE kodeMapel = '$kodeMapel' AND NIP = '$nipGuru'
+        ORDER BY createdAt DESC
+    ");
+    
+    $data = [];
+    while ($m = mysqli_fetch_assoc($qMateri)) {
+        $data[] = $m;
+    }
+    
+    header('Content-Type: application/json');
+    echo json_encode($data);
+    exit;
+}
+
 // ==================== HANDLE UPDATE (AJAX) ====================
 if (isset($_POST['action']) && $_POST['action'] === 'update' && isset($_POST['idTugas'])) {
     $id = mysqli_real_escape_string($conn, $_POST['idTugas']);
@@ -35,7 +66,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'update' && isset($_POST['id
     // Handle file upload untuk edit
     $filePath = "";
     if (!empty($_FILES['file']['name'])) {
-        $uploadDir = "uploads/tugas/";
+        $uploadDir = "Guru/uploads/tugas/";
         if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
         $fileName = basename($_FILES['file']['name']);
         $targetFile = $uploadDir . time() . "_" . $fileName;
@@ -96,11 +127,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['action'])) {
     $deskripsi = mysqli_real_escape_string($conn, $_POST['deskripsi']);
     $deadline = mysqli_real_escape_string($conn, $_POST['deadline']);
     $createdAt = date("Y-m-d H:i:s");
+    $materiOption = mysqli_real_escape_string($conn, $_POST['materi']);
 
     // Upload file (optional)
     $filePath = "";
     if (!empty($_FILES['file']['name'])) {
-        $uploadDir = "uploads/tugas/";
+        $uploadDir = "Guru/uploads/tugas/";
         if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
         $fileName = basename($_FILES['file']['name']);
         $targetFile = $uploadDir . time() . "_" . $fileName;
@@ -109,16 +141,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['action'])) {
         }
     }
 
-    // Generate ID
+    // Cek apakah user memilih "buat materi baru"
+    $idMateri = "";
+    if ($materiOption === "new") {
+        // Buat materi baru
+        $idMateri = generateRandomIdMateri();
+        
+        // Insert ke tabel materi
+        $sqlMateri = "INSERT INTO materi (idMateri, kodeMapel, NIP, judul, createdAt)
+                      VALUES ('$idMateri', '$kodeMapel', '$nipGuru', '$judul', '$createdAt')";
+        
+        $resultMateri = mysqli_query($conn, $sqlMateri);
+        
+        if (!$resultMateri) {
+            echo "<script>alert('❌ Gagal menyimpan materi: " . mysqli_error($conn) . "');</script>";
+            exit;
+        }
+    } else {
+        // Gunakan materi yang sudah ada
+        $idMateri = $materiOption;
+    }
+
+    // Generate ID Tugas
     $idTugas = generateIdTugas($conn);
 
-    // Insert data ke tabel tugas dengan filePath
-    $sql = "INSERT INTO tugas (idTugas, kodeMapel, NIP, judul, deskripsi, deadline, filePath, createdAt)
-            VALUES ('$idTugas', '$kodeMapel', '$nipGuru', '$judul', '$deskripsi', '$deadline', '$filePath', '$createdAt')";
+    // Insert data ke tabel tugas dengan idMateri
+    $sql = "INSERT INTO tugas (idTugas, kodeMapel, NIP, judul, deskripsi, deadline, filePath, createdAt, idMateri)
+            VALUES ('$idTugas', '$kodeMapel', '$nipGuru', '$judul', '$deskripsi', '$deadline', '$filePath', '$createdAt', '$idMateri')";
     $result = mysqli_query($conn, $sql);
 
     if ($result) {
-        echo "<script>alert('✅ Tugas berhasil disimpan!'); window.location='pengelolaanPembelajaran.php';</script>";
+        $message = "✅ Tugas berhasil disimpan!";
+        if ($materiOption === "new") {
+            $message .= " Materi baru juga telah dibuat.";
+        }
+        echo "<script>alert('$message'); window.location='pengelolaanPembelajaran.php';</script>";
     } else {
         echo "<script>alert('❌ Gagal menyimpan tugas: " . mysqli_error($conn) . "');</script>";
     }
@@ -133,7 +190,7 @@ $mapelQuery = mysqli_query($conn, "
 ");
 ?>
 
-<link rel="stylesheet" href="css/buatTugas.css?v=1.1">
+<link rel="stylesheet" href="css/buatTugas.css?v=1.3">
 
 <div class="form-container">
     <h2>Tambah / Buat Tugas</h2>
@@ -159,6 +216,13 @@ $mapelQuery = mysqli_query($conn, "
 
         <!-- Input tambahan -->
         <div id="inputLain" style="display:none;">
+            <!-- Dropdown Materi -->
+            <label for="materi">Materi Terkait</label>
+            <select name="materi" id="materi" required>
+                <option value="">-- Pilih Materi --</option>
+                <option value="new" style="font-weight: 600; color: #4c6ef5;">➕ Jadikan Tugas Sebagai Materi Baru</option>
+            </select>
+
             <label for="judul">Judul Tugas</label>
             <input type="text" id="judul" name="judul" placeholder="Masukkan judul tugas" required>
 
@@ -236,13 +300,8 @@ $mapelQuery = mysqli_query($conn, "
                 <option value="">-- Pilih Mapel --</option>
                 <?php
                 // Ambil daftar mapel yang diampu guru
-                $mapelRes = mysqli_query($conn, "
-                    SELECT DISTINCT m.kodeMapel, m.namaMapel
-                    FROM gurumapel g
-                    JOIN mapel m ON g.kodeMapel = m.kodeMapel
-                    WHERE g.nipGuru = '$nipGuru'
-                ");
-                while ($m = mysqli_fetch_assoc($mapelRes)) {
+                mysqli_data_seek($mapelQuery, 0);
+                while ($m = mysqli_fetch_assoc($mapelQuery)) {
                     echo "<option value='{$m['kodeMapel']}'>{$m['namaMapel']}</option>";
                 }
                 ?>
@@ -347,7 +406,7 @@ document.getElementById("tugasTable").addEventListener("click", (e) => {
 
     const idTugas = row.getAttribute("data-id");
     selectedRow = row;
-    selectedTugas = null; // Reset dulu
+    selectedTugas = null;
     isLoading = true;
 
     // Disable tombol sementara
@@ -356,14 +415,8 @@ document.getElementById("tugasTable").addEventListener("click", (e) => {
 
     // Ambil detail tugas dari database
     fetch(`backend/getDetailTugas.php?idTugas=${idTugas}`)
-        .then(res => {
-            console.log("📡 Response status:", res.status);
-            return res.text(); // Ambil sebagai text dulu untuk debugging
-        })
+        .then(res => res.text())
         .then(text => {
-            console.log("📄 Raw response:", text);
-            
-            // Coba parse JSON
             try {
                 const data = JSON.parse(text);
                 
@@ -381,16 +434,12 @@ document.getElementById("tugasTable").addEventListener("click", (e) => {
                 row.classList.remove("loading-row");
                 isLoading = false;
                 
-                // Enable tombol kembali
                 document.querySelector(".edit-btn").disabled = false;
                 document.querySelector(".delete-btn").disabled = false;
                 
-                console.log("✅ Data tugas berhasil dimuat:", data);
-                
             } catch (e) {
                 console.error("❌ JSON Parse Error:", e);
-                console.error("Response bukan JSON valid:", text);
-                alert("❌ Server mengembalikan response yang tidak valid. Cek console untuk detail.");
+                alert("❌ Server mengembalikan response yang tidak valid.");
                 row.classList.remove("loading-row");
                 row.classList.remove("selected-row");
                 isLoading = false;
@@ -408,62 +457,6 @@ document.getElementById("tugasTable").addEventListener("click", (e) => {
             document.querySelector(".delete-btn").disabled = false;
         });
 });
-
-// === Gaya highlight baris ===
-const style = document.createElement("style");
-style.textContent = `
-.selected-row {
-    background-color: #dbe4ff !important;
-    box-shadow: inset 0 0 0 2px #4c6ef5;
-}
-
-.loading-row {
-    position: relative;
-    opacity: 0.7;
-}
-
-.loading-row::after {
-    content: "⏳ Memuat...";
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #4c6ef5;
-    font-weight: 600;
-    font-size: 13px;
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
-.edit-btn:disabled,
-.delete-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.file-info {
-    background: #e7f5ff;
-    padding: 10px 15px;
-    border-radius: 8px;
-    border-left: 4px solid #4c6ef5;
-    margin-bottom: 15px;
-}
-
-.file-link {
-    color: #4c6ef5;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.file-link:hover {
-    text-decoration: underline;
-}
-`;
-document.head.appendChild(style);
 
 // === MODAL EDIT ===
 const modal = document.getElementById("editModal");
@@ -591,10 +584,12 @@ const mapel = document.getElementById("mapel");
 const kelasContainer = document.getElementById("kelasContainer");
 const kelas = document.getElementById("kelas");
 const inputLain = document.getElementById("inputLain");
+const materiSelect = document.getElementById("materi");
 
 mapel.addEventListener("change", () => {
     const kodeMapel = mapel.value;
     if (kodeMapel) {
+        // Ambil daftar kelas
         fetch(`backend/getKelas.php?kodeMapel=${kodeMapel}`)
             .then(res => res.json())
             .then(data => {
@@ -606,7 +601,23 @@ mapel.addEventListener("change", () => {
                     kelas.appendChild(opt);
                 });
             });
-            kelasContainer.style.display = "block";
+        
+        // Ambil daftar materi untuk mapel ini
+        fetch(`buatTugas.php?action=getMateri&kodeMapel=${kodeMapel}`)
+            .then(res => res.json())
+            .then(data => {
+                materiSelect.innerHTML = '<option value="">-- Pilih Materi --</option>';
+                materiSelect.innerHTML += '<option value="new" style="font-weight: 600; color: #4c6ef5;">➕ Jadikan Tugas Sebagai Materi Baru</option>';
+                
+                data.forEach(m => {
+                    const opt = document.createElement("option");
+                    opt.value = m.idMateri;
+                    opt.textContent = m.judul;
+                    materiSelect.appendChild(opt);
+                });
+            });
+            
+        kelasContainer.style.display = "block";
     } else {
         kelasContainer.style.display = "none";
         inputLain.style.display = "none";
@@ -622,15 +633,9 @@ kelas.addEventListener("change", () => {
 const deadlineInput = document.getElementById("deadline");
 if (deadlineInput) {
     const now = new Date();
-
-    // Format jadi YYYY-MM-DDTHH:MM agar sesuai format input datetime-local
     const pad = (n) => n.toString().padStart(2, '0');
     const localISOTime = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    
-    // Set atribut min agar tidak bisa pilih waktu sebelum sekarang
     deadlineInput.min = localISOTime;
-
-    // Optional: otomatis isi dengan waktu sekarang biar praktis
     deadlineInput.value = localISOTime;
 }
 
@@ -643,4 +648,59 @@ if (editDeadlineInput) {
     editDeadlineInput.min = localISOTime;
 }
 
+// === Gaya highlight baris ===
+const style = document.createElement("style");
+style.textContent = `
+.selected-row {
+    background-color: #dbe4ff !important;
+    box-shadow: inset 0 0 0 2px #4c6ef5;
+}
+
+.loading-row {
+    position: relative;
+    opacity: 0.7;
+}
+
+.loading-row::after {
+    content: "⏳ Memuat...";
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #4c6ef5;
+    font-weight: 600;
+    font-size: 13px;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.edit-btn:disabled,
+.delete-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.file-info {
+    background: #e7f5ff;
+    padding: 10px 15px;
+    border-radius: 8px;
+    border-left: 4px solid #4c6ef5;
+    margin-bottom: 15px;
+}
+
+.file-link {
+    color: #4c6ef5;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.file-link:hover {
+    text-decoration: underline;
+}
+`;
+document.head.appendChild(style);
 </script>
