@@ -1,14 +1,10 @@
 <?php
 include_once("../config/db.php");
 
-// === Fungsi generate ID unik ===
+// === Fungsi generate ID unik (MT + random number 5 digit) ===
 function generateIdMateri($conn) {
-    $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     do {
-        $id = 'M';
-        for ($i = 0; $i < 6; $i++) {
-            $id .= $chars[rand(0, strlen($chars) - 1)];
-        }
+        $id = "MT" . rand(10000, 99999);
         $check = mysqli_query($conn, "SELECT idmateri FROM materi WHERE idmateri='$id'");
     } while (mysqli_num_rows($check) > 0);
     return $id;
@@ -52,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $linkVideo = mysqli_real_escape_string($conn, $data['link_video']);
 
         $sql = "UPDATE materi 
-                SET kodeMapel='$kodeMapel', NIP='$NIP', judul='$judul', deskripsi='$deskripsi', 
+                SET kodeMapel='$kodeMapel', NIP='$NIP', judul='$judul', deskripsi='$deskripsi',
                     filePath='$filePath', linkVideo='$linkVideo'
                 WHERE idmateri='$idmateri'";
 
@@ -64,14 +60,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // --- HAPUS DATA ---
+    // --- DELETE DATA FIX SESUAI PERINTAHMU ---
     if ($action === 'delete') {
         $idmateri = mysqli_real_escape_string($conn, $_POST['idmateri']);
-        $sql = "DELETE FROM materi WHERE idmateri='$idmateri'";
-        if (mysqli_query($conn, $sql)) {
-            echo json_encode(["status" => "success"]);
+
+        // cek apakah materi digunakan di tabel tugas
+        $cek = mysqli_query($conn, "SELECT idTugas FROM tugas WHERE idMateri = '$idmateri'");
+
+        if (mysqli_num_rows($cek) > 0) {
+            // kalau dipakai → TIDAK BOLEH HAPUS ROW
+            // hanya hapus filePath dan linkVideo
+            $sql = "
+                UPDATE materi
+                SET filePath = NULL, linkVideo = NULL
+                WHERE idMateri = '$idmateri'
+            ";
+
+            if (mysqli_query($conn, $sql)) {
+                echo json_encode([
+                    "status" => "warning",
+                    "message" => "Materi dipakai di tugas → hanya file & video dihapus"
+                ]);
+            } else {
+                echo json_encode(["status" => "error", "message" => mysqli_error($conn)]);
+            }
         } else {
-            echo json_encode(["status" => "error", "message" => mysqli_error($conn)]);
+            // tidak dipakai tugas → boleh delete row
+            $sql = "DELETE FROM materi WHERE idMateri='$idmateri'";
+            if (mysqli_query($conn, $sql)) {
+                echo json_encode(["status" => "success"]);
+            } else {
+                echo json_encode(["status" => "error", "message" => mysqli_error($conn)]);
+            }
         }
         exit;
     }
@@ -133,7 +153,6 @@ while ($row = mysqli_fetch_assoc($result2)) $mapelList[] = $row;
             </select>
         </div>
 
-        <!-- Tambahan judul di sini -->
         <div class="form-group">
             <label>Judul Materi</label>
             <input type="text" id="judul" placeholder="Masukkan judul materi...">
@@ -202,7 +221,7 @@ document.getElementById("addRow").addEventListener("click", async function() {
 
     let newData = { kelas, kodeMapel, namaMapel, NIP, namaGuru, judul, deskripsi, link_video: link, file_pdf: file, created_at: tanggal };
 
-    // === TAMBAH DATA ===
+    // === TAMBAH ===
     if (editIndex === -1) {
         let formData = new FormData();
         formData.append("action", "add");
@@ -215,9 +234,9 @@ document.getElementById("addRow").addEventListener("click", async function() {
             dataList.push(newData);
             renderTable();
             document.getElementById("materiForm").reset();
-            alert("✅ Data berhasil disimpan dengan ID: " + result.idmateri);
+            alert("Data berhasil disimpan (ID: " + result.idmateri + ")");
         } else {
-            alert("❌ Gagal menambah data: " + result.message);
+            alert("Gagal menambah data: " + result.message);
         }
     } else {
         // === UPDATE ===
@@ -227,6 +246,7 @@ document.getElementById("addRow").addEventListener("click", async function() {
         let formData = new FormData();
         formData.append("action", "update");
         formData.append("data_json", JSON.stringify(newData));
+
         let res = await fetch("uploudMateri.php?t=" + Date.now(), { method: "POST", body: formData });
         let result = await res.json();
 
@@ -236,9 +256,9 @@ document.getElementById("addRow").addEventListener("click", async function() {
             renderTable();
             document.getElementById("materiForm").reset();
             document.getElementById("addRow").textContent = "Tambah";
-            alert("✅ Data berhasil diupdate");
+            alert("Data berhasil diupdate");
         } else {
-            alert("❌ Gagal memperbarui data!");
+            alert("Gagal update!");
         }
     }
 });
@@ -258,8 +278,8 @@ function renderTable() {
             <td>${item.file_pdf}</td>
             <td>${item.created_at}</td>
             <td>
-                <button type="button" class="edit-btn" onclick="editRow(${index})">Edit</button>
-                <button type="button" class="delete-btn" onclick="deleteRow(${index})">Hapus</button>
+                <button type="button" onclick="editRow(${index})">Edit</button>
+                <button type="button" onclick="deleteRow(${index})">Hapus</button>
             </td>
         `;
         tbody.appendChild(row);
@@ -274,25 +294,34 @@ function editRow(index) {
     document.getElementById("judul").value = item.judul;
     document.getElementById("deskripsi").value = item.deskripsi;
     document.getElementById("link_video").value = item.link_video;
+
     editIndex = index;
     document.getElementById("addRow").textContent = "Update";
 }
 
 async function deleteRow(index) {
-    if (!confirm("Yakin ingin menghapus data ini?")) return;
+    if (!confirm("Yakin ingin menghapus?")) return;
+
     const item = dataList[index];
     let formData = new FormData();
     formData.append("action", "delete");
     formData.append("idmateri", item.idmateri);
+
     let res = await fetch("uploudMateri.php?t=" + Date.now(), { method: "POST", body: formData });
     let result = await res.json();
 
     if (result.status === "success") {
         dataList.splice(index, 1);
         renderTable();
-        alert("🗑 Data berhasil dihapus ");
+        alert("Berhasil hapus");
+    } else if (result.status === "warning") {
+        // filePath + linkVideo jadi NULL
+        dataList[index].file_pdf = "";
+        dataList[index].link_video = "";
+        renderTable();
+        alert(result.message);
     } else {
-        alert("❌ Gagal menghapus data!");
+        alert("Gagal hapus: " + result.message);
     }
 }
 </script>
