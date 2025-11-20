@@ -94,7 +94,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
 
         // Validasi Token
-        if ($tokenInput !== $bp['token']) {
+        if ($tokenInput !== $bp['Token']) {
             $_SESSION['statusType'] = 'error';
             $_SESSION['statusMsg'] = 'Token presensi salah! Silakan masukkan token yang benar.';
             header("Location: presensi.php");
@@ -157,10 +157,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $idLokasiPresensi = $bp['idLokasi'] ?? null;
 
         $ins = $conn->prepare("
-            INSERT INTO presensisiswa (idPresensi, idBuatPresensi, NIS, status, waktuPresensi, idLokasi)
-            VALUES (?, ?, ?, ?, NOW(), ?)
+            INSERT INTO presensisiswa (idPresensi, idBuatPresensi, NIS, status, waktuPresensi)
+            VALUES (?, ?, ?, ?, NOW())
         ");
-        $ins->bind_param('sssss', $newIdPresensi, $idBuatPresensi, $nisForm, $statusPresensi, $idLokasiPresensi);
+        $ins->bind_param('ssss', $newIdPresensi, $idBuatPresensi, $nisForm, $statusPresensi);
 
         if ($ins->execute()) {
             $_SESSION['statusType'] = 'success';

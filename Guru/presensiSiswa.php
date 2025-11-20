@@ -4,7 +4,11 @@ session_start();
 // ===== SET TIMEZONE WIB INDONESIA =====
 date_default_timezone_set('Asia/Jakarta');
 
-include '../config/db.php'; // sesuaikan dengan lokasi file koneksi kamu
+include '../config/db.php';
+
+function generateToken() {
+    return strtoupper(substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 5));
+}
 
 // ===== CEK LOGIN =====
 if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'guru') {
@@ -71,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $toleransi = $_POST['toleransi'];
   $kelas = $_POST['kelas'];
   $nipGuru = $_SESSION['nip'];
-  $idLokasi = 'LKSSMK4'; // lokasi SMKN 4 Jember
+  $token = generateToken();
 
   // 🔹 TAMBAHKAN: Ambil nama mapel dari kodeMapel
   $qNamaMapel = mysqli_query($conn, "SELECT namaMapel FROM mapel WHERE kodeMapel='$mapel' LIMIT 1");
@@ -160,9 +164,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   // 🔹 Simpan ke tabel buatpresensi
   $sql = "INSERT INTO buatpresensi 
-          (idBuatPresensi, NIP, idJadwalMapel, waktuDibuat, waktuDimulai, waktuDitutup, toleransiWaktu, keterangan, idLokasi)
+          (idBuatPresensi, NIP, idJadwalMapel, waktuDibuat, waktuDimulai, waktuDitutup, toleransiWaktu, keterangan, Token)
           VALUES 
-          ('$idBuatPresensi', '$nipGuru', '$idJadwalMapel', '$waktuDibuat', '$waktuDimulai', '$waktuDitutup', '$toleransi', '$keterangan', '$idLokasi')";
+          ('$idBuatPresensi', '$nipGuru', '$idJadwalMapel', '$waktuDibuat', '$waktuDimulai', '$waktuDitutup', '$toleransi', '$keterangan', '$token')";
 
   if (mysqli_query($conn, $sql)) {
     // 🔹 UBAH: Tampilkan nama mapel, bukan kode mapel
@@ -315,6 +319,13 @@ $tanggalMinimum = date('Y-m-d');
         <span>menit</span>
       </div>
 
+      <label for="token">Token Presensi</label>
+      <div class="token-presensi-wrapper">
+          <input type="text" name="token" id="token" value="<?= generateToken() ?>" readonly required class="token-presensi-input">
+          <button type="button" onclick="regenerateToken()" class="btn-generate-token" title="Generate Token Baru"><i class="fa-solid fa-rotate"></i></button>
+      </div>
+      <small style="color:#666; font-size:12px;">Token ini akan digunakan siswa untuk presensi</small>
+
       <div class="button-container">
         <button type="button" id="btnBatal" class="btn-secondary">Batal</button>
         <button type="submit" class="btn-primary">Tambah</button>
@@ -351,7 +362,6 @@ $tanggalMinimum = date('Y-m-d');
         
         // Mulai section per kelas
         echo "<div class='kelas-section'>";
-        
         // Header dengan judul dan filter (Berubah: Golongan dipindah ke dalam kelas-header)
         echo "<div class='kelas-header'>";
         echo "<h3>Kelas $tingkat</h3>";
@@ -445,7 +455,20 @@ $tanggalMinimum = date('Y-m-d');
 </section>
 
   <script>
-document.addEventListener("DOMContentLoaded", function () {
+
+    //generate token baru
+      function regenerateToken() {
+    const tokenInput = document.getElementById('token');
+    // Generate token random 5 karakter
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let newToken = '';
+    for (let i = 0; i < 5; i++) {
+      newToken += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    tokenInput.value = newToken;
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
   // === DROPDOWN MENU ATAS ===
   const buttons = document.querySelectorAll(".dropbtn");
   buttons.forEach(btn => {

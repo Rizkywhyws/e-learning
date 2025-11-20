@@ -22,7 +22,7 @@ $jurusanSiswa = null;
 $statusMsg = null;
 $statusType = null;
 
-// Ambil pesan dari session (dari proses_presensi.php)
+// Ambil pesan dari session (dari prosesPresensi.php)
 if (isset($_SESSION['statusMsg'])) {
     $statusMsg = $_SESSION['statusMsg'];
     $statusType = $_SESSION['statusType'];
@@ -189,7 +189,6 @@ if ($nisSiswa) {
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="cssSiswa/presensi.css">
-    <link rel="stylesheet" href="cssSiswa/presensi_modal.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
@@ -258,7 +257,6 @@ if ($nisSiswa) {
                         <div class="presensi-details">
                             <p><strong>Presensi Mulai</strong> : <?= htmlspecialchars($presensi['waktuDimulai']) ?></p>
                             <p><strong>Presensi Akhir</strong> : <?= htmlspecialchars($presensi['waktuDitutup']) ?></p>
-                            <p><strong>ID Lokasi</strong> : <?= htmlspecialchars($presensi['idLokasi'] ?? '-') ?></p>
                             <p><strong>Guru Pengampu</strong> : <?= htmlspecialchars($presensi['namaGuru']) ?></p>
                         </div>
 
@@ -348,7 +346,7 @@ if ($nisSiswa) {
             Masukkan Token Presensi
             <button type="button" class="close-modal" onclick="closeModalToken()">&times;</button>
         </div>
-        <form action="proses_presensi.php" method="POST">
+        <form action="prosesPresensi.php" method="POST">
             <div class="modal-body">
                 <div class="modal-field">
                     <strong>NIS</strong> <span class="colon">:</span>
@@ -414,12 +412,6 @@ if ($nisSiswa) {
                             <input type="radio" name="jenis_izin" value="izin"> Izin
                         </label>
                     </div>
-                </div>
-                
-                <div class="modal-field" style="margin-top: 15px;">
-                    <label for="tokenIzinInput"><strong>Token Presensi</strong></label>
-                    <input type="text" name="token_izin" id="tokenIzinInput" class="token-input" placeholder="Masukkan token dari guru" required>
-                    <small class="file-note">Dapatkan token dari guru pengampu</small>
                 </div>
 
                 <div class="upload-box" style="margin-top: 15px;">
