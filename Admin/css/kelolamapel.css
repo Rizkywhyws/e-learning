@@ -230,43 +230,94 @@ header {
 }
 
 /* =====================================================
-   FORM PANEL
+   MODAL
 =====================================================*/
-.form-panel form {
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
   width: 100%;
-  display: block;
-}
-.form-panel {
-  width: 95%;
-  margin: 20px auto;
-  background: white;
-  padding: 25px;
-  border-radius: 14px;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-  animation: fadeIn .3s;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+  animation: fadeIn 0.3s;
 }
 
-.form-panel h3 {
+.modal-content {
+  background-color: #fff;
+  margin: 5% auto;
+  padding: 30px;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 550px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+  position: relative;
+  animation: slideDown 0.3s;
+}
+
+/* Modal lebih besar untuk form yang panjang (jadwal) */
+.modal-content.modal-large {
+  max-width: 650px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  line-height: 20px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.close:hover,
+.close:focus {
+  color: #000;
+}
+
+.modal-content h3 {
   text-align: center;
   color: #2E7DFF;
   font-weight: 700;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
+  margin-top: 10px;
 }
 
-.form-panel .row {
+.modal-content form {
+  width: 100%;
+  display: block;
+}
+
+.modal-content .row {
   display: flex;
   flex-direction: column;
-  margin-bottom: 15px;
+  margin-bottom: 18px;
 }
 
-.form-panel label {
-  margin-bottom: 6px;
+.modal-content label {
+  margin-bottom: 8px;
   font-weight: 600;
+  color: #333;
 }
 
-.form-panel input,
-.form-panel select {
-  padding: 12px;
+.modal-content input,
+.modal-content select {
+  padding: 12px 15px;
   border-radius: 10px;
   border: 2px solid #aaa;
   outline: none;
@@ -275,14 +326,14 @@ header {
   background-color: #fff;
 }
 
-.form-panel input:focus,
-.form-panel select:focus {
+.modal-content input:focus,
+.modal-content select:focus {
   border-color: #2E7DFF;
   box-shadow: 0 0 6px rgba(46,125,255,0.3);
 }
 
 /* Dropdown khusus guru pengampu */
-.form-panel select {
+.modal-content select {
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg width='14' height='10' viewBox='0 0 14 10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%232e7dff' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -291,22 +342,22 @@ header {
   cursor: pointer;
 }
 
-.form-panel select:hover {
+.modal-content select:hover {
   background-color: #f8fbff;
 }
 
 /* Tombol submit & cancel */
-.form-panel .form-actions {
+.modal-content .form-actions {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 10px;
-  margin-top: 15px;
+  gap: 12px;
+  margin-top: 25px;
   width: 100%;
 }
 
-.form-panel button {
-  padding: 10px 20px;
+.modal-content button {
+  padding: 11px 22px;
   border-radius: 8px;
   border: none;
   font-weight: 600;
@@ -315,31 +366,30 @@ header {
   transition: 0.3s;
 }
 
-.form-panel button.submit {
+.modal-content button.btn.green {
   background-color: #28a745;
 }
 
-.form-panel button.submit:hover {
+.modal-content button.btn.green:hover {
   background-color: #218838;
 }
 
-.form-panel button.cancel {
-  background-color: #000000;
+.modal-content button.btn {
+  background-color: #6c757d;
 }
 
-.form-panel button.cancel:hover {
-  background-color: #ffffff;
+.modal-content button.btn:hover {
+  background-color: #5a6268;
 }
-/* sembunyikan form-panel saat ada class hidden */
-.hidden {
-  display: none !important;
-}
-
 
 /* =====================================================
    ANIMATION
 =====================================================*/
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { 
+    opacity: 0; 
+  }
+  to { 
+    opacity: 1; 
+  }
 }

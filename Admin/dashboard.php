@@ -135,36 +135,49 @@ $countJadwal = $conn->query("SELECT COUNT(*) AS total FROM jadwalmapel")->fetch_
   </table>
 
   <!-- TABEL SISWA -->
-  <table class="data-table hidden" id="table-siswa">
-    <thead>
-      <tr>
-        <th>Nama</th>
-        <th>NIS</th>
-        <th>NISN</th>
-        <th>Kelas</th>
-        <th>Jurusan</th>
-      </tr>
-    </thead>
-    <tbody>
-     <?php
-    $resultSiswa = $conn->query("SELECT nama, NIS, NISN, kelas, jurusan FROM dataSiswa ORDER BY nama ASC");
-
-    if ($resultSiswa->num_rows > 0) {
-        while($row = $resultSiswa->fetch_assoc()) {
-            echo "<tr>
-                    <td>".$row['nama']."</td>
-                    <td>".$row['NIS']."</td>
-                    <td>".$row['NISN']."</td>
-                    <td>".$row['kelas']."</td>
-                    <td>".$row['jurusan']."</td>
-                  </tr>";
+  <div class="table-container hidden" id="table-siswa">
+    <div class="filter-container">
+      <select id="filterKelas" class="filter-select">
+        <option value="">Semua Kelas</option>
+        <?php
+        $kelasOptions = $conn->query("SELECT DISTINCT kelas FROM dataSiswa ORDER BY kelas ASC");
+        while($kelas = $kelasOptions->fetch_assoc()) {
+            echo "<option value='".$kelas['kelas']."'>".$kelas['kelas']."</option>";
         }
-    } else {
-        echo "<tr><td colspan='5'>Tidak ada data siswa</td></tr>";
-    }
-    ?>
-    </tbody>
-  </table>
+        ?>
+      </select>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Nama</th>
+          <th>NIS</th>
+          <th>NISN</th>
+          <th>Kelas</th>
+          <th>Jurusan</th>
+        </tr>
+      </thead>
+      <tbody id="siswaTableBody">
+       <?php
+      $resultSiswa = $conn->query("SELECT nama, NIS, NISN, kelas, jurusan FROM dataSiswa ORDER BY nama ASC");
+
+      if ($resultSiswa->num_rows > 0) {
+          while($row = $resultSiswa->fetch_assoc()) {
+              echo "<tr data-kelas='".$row['kelas']."'>
+                      <td>".$row['nama']."</td>
+                      <td>".$row['NIS']."</td>
+                      <td>".$row['NISN']."</td>
+                      <td>".$row['kelas']."</td>
+                      <td>".$row['jurusan']."</td>
+                    </tr>";
+          }
+      } else {
+          echo "<tr><td colspan='5'>Tidak ada data siswa</td></tr>";
+      }
+      ?>
+      </tbody>
+    </table>
+  </div>
 
   <!-- TABEL MAPEL -->
   <table class="data-table hidden" id="table-mapel">
@@ -253,8 +266,30 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
 
     // tampilkan tabel sesuai target
     let target = this.getAttribute("data-target");
-    document.querySelectorAll(".data-table").forEach(tbl => tbl.classList.add("hidden"));
-    document.getElementById(target).classList.remove("hidden");
+    
+    // sembunyikan semua tabel dan container
+    document.querySelectorAll("#table-guru, #table-siswa, #table-mapel, #table-jadwal")
+    .forEach(el => el.classList.add("hidden"));
+    
+    // tampilkan target yang dipilih
+    let targetElement = document.getElementById(target);
+    if (targetElement) {
+      targetElement.classList.remove("hidden");
+    }
+  });
+});
+
+// Filter Kelas untuk Tabel Siswa
+document.getElementById("filterKelas").addEventListener("change", function() {
+  let selectedKelas = this.value;
+  let rows = document.querySelectorAll("#siswaTableBody tr");
+  
+  rows.forEach(row => {
+    if (selectedKelas === "" || row.getAttribute("data-kelas") === selectedKelas) {
+      row.style.display = "";
+    } else {
+      row.style.display = "none";
+    }
   });
 });
 </script>
