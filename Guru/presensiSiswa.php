@@ -385,7 +385,7 @@ $tanggalMinimum = date('Y-m-d');
         echo "<option value=''>Semua Kelas $tingkat</option>";
         
         // Ambil daftar kelas untuk tingkat ini
-        $kelasList = mysqli_query($conn, "SELECT DISTINCT kelas FROM datasiswa WHERE kelas LIKE '{$tingkat}%' ORDER BY kelas ASC");
+        $kelasList = mysqli_query($conn, "SELECT DISTINCT kelas FROM datasiswa WHERE kelas LIKE '{$tingkat}-%' ORDER BY kelas ASC");
         while ($row = mysqli_fetch_assoc($kelasList)) {
           $selected = $golonganDipilih === $row['kelas'] ? 'selected' : '';
           echo "<option value='{$row['kelas']}' $selected>{$row['kelas']}</option>";
@@ -419,7 +419,7 @@ $tanggalMinimum = date('Y-m-d');
             p.filePath
           FROM presensisiswa p
           JOIN datasiswa d ON p.NIS = d.NIS
-          WHERE d.kelas LIKE '$tingkat%'
+          WHERE d.kelas LIKE '{$tingkat}-%'
             AND DATE(p.waktuPresensi) = '$tanggalDipilih'
         ";
 
