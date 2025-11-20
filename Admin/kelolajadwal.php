@@ -122,8 +122,14 @@ $data = $conn->query("
     </tbody>
   </table>
 
-  <section class="form-panel hidden" id="formPanel">
+</section>
+
+<!-- MODAL -->
+<div id="jadwalModal" class="modal">
+  <div class="modal-content modal-large">
+    <span class="close">&times;</span>
     <h3 id="formTitle">Add Jadwal</h3>
+
     <form id="jadwalForm" method="POST" action="backend/add-jadwalmapel.php">
       <input type="hidden" name="idJadwal" id="idJadwal">
 
@@ -132,25 +138,27 @@ $data = $conn->query("
         <select name="kodeMapel" id="kodeMapel" required>
           <option value="">-- Pilih Mapel --</option>
           <?php
-          $mapelList = $conn->query("SELECT kodeMapel, namaMapel FROM mapel");
+          $mapelList = $conn->query("
+            SELECT m.kodeMapel, m.namaMapel, gm.nipGuru, g.nama AS namaGuru
+            FROM mapel m
+            LEFT JOIN gurumapel gm ON m.kodeMapel = gm.kodeMapel
+            LEFT JOIN dataguru g ON gm.nipGuru = g.NIP
+          ");
           while ($m = $mapelList->fetch_assoc()):
           ?>
-          <option value="<?= $m['kodeMapel'] ?>"><?= $m['namaMapel'] ?></option>
+          <option value="<?= $m['kodeMapel'] ?>" 
+                  data-guru="<?= $m['nipGuru'] ?>" 
+                  data-nama-guru="<?= $m['namaGuru'] ?: 'Belum ada guru' ?>">
+            <?= $m['namaMapel'] ?>
+          </option>
           <?php endwhile; ?>
         </select>
       </div>
 
       <div class="row">
-        <label>Guru Pengampu</label>
-        <select name="nipGuru" id="nipGuru" required>
-          <option value="">-- Pilih Guru --</option>
-          <?php
-          $guruList = $conn->query("SELECT NIP, nama FROM dataguru");
-          while ($g = $guruList->fetch_assoc()):
-          ?>
-          <option value="<?= $g['NIP'] ?>"><?= $g['nama'] ?></option>
-          <?php endwhile; ?>
-        </select>
+        <label>Guru Pengampu (Otomatis)</label>
+        <input type="text" id="namaGuruDisplay" readonly placeholder="Pilih mapel terlebih dahulu" style="background-color: #f0f0f0; cursor: not-allowed;">
+        <input type="hidden" name="nipGuru" id="nipGuru">
       </div>
 
       <div class="row">
@@ -195,21 +203,23 @@ $data = $conn->query("
         <button type="button" id="cancelBtn" class="btn">Cancel</button>
       </div>
     </form>
-  </section>
-</section>
+  </div>
+</div>
 
 <script>
 const rows = document.querySelectorAll("#jadwalTable tbody tr");
 const btnEdit = document.getElementById("btnEdit");
 const btnDelete = document.getElementById("btnDelete");
 const btnAdd = document.getElementById("btnAdd");
-const formPanel = document.getElementById("formPanel");
+const modal = document.getElementById("jadwalModal");
+const closeModal = document.querySelector(".close");
 const cancelBtn = document.getElementById("cancelBtn");
 const jadwalForm = document.getElementById("jadwalForm");
 
 const ipId = document.getElementById("idJadwal");
 const ipMapel = document.getElementById("kodeMapel");
 const ipGuru = document.getElementById("nipGuru");
+const ipNamaGuruDisplay = document.getElementById("namaGuruDisplay");
 const ipHari = document.getElementById("hari");
 const ipJam = document.getElementById("jamMulai");
 const ipDurasi = document.getElementById("durasi");
@@ -217,6 +227,22 @@ const ipRuangan = document.getElementById("ruangan");
 const ipKelas = document.getElementById("kelas");
 
 let selectedRow = null;
+
+// Otomatis isi guru saat memilih mapel
+ipMapel.addEventListener("change", function() {
+  const selectedOption = this.options[this.selectedIndex];
+  const guruNip = selectedOption.getAttribute("data-guru");
+  const guruNama = selectedOption.getAttribute("data-nama-guru");
+  
+  ipGuru.value = guruNip || "";
+  ipNamaGuruDisplay.value = guruNama || "Belum ada guru pengampu";
+  
+  if (!guruNip) {
+    ipNamaGuruDisplay.style.color = "#d9534f";
+  } else {
+    ipNamaGuruDisplay.style.color = "#333";
+  }
+});
 
 rows.forEach(row => {
   row.addEventListener("click", () => {
@@ -228,14 +254,18 @@ rows.forEach(row => {
   });
 });
 
+// Buka modal untuk Add
 btnAdd.onclick = () => {
   jadwalForm.action = "backend/add-jadwalmapel.php";
   document.getElementById("formTitle").innerText = "Add Jadwal";
   ipId.value = "";
   jadwalForm.reset();
-  formPanel.classList.remove("hidden");
+  ipNamaGuruDisplay.value = "Pilih mapel terlebih dahulu";
+  ipNamaGuruDisplay.style.color = "#999";
+  modal.style.display = "block";
 };
 
+// Buka modal untuk Edit
 btnEdit.onclick = () => {
   if (!selectedRow) return;
   jadwalForm.action = "backend/edit-jadwalmapel.php";
@@ -243,17 +273,36 @@ btnEdit.onclick = () => {
 
   ipId.value = selectedRow.dataset.id;
   ipMapel.value = selectedRow.dataset.mapel;
-  ipGuru.value = selectedRow.dataset.guru;
   ipHari.value = selectedRow.dataset.hari;
   ipJam.value = selectedRow.dataset.jam;
   ipDurasi.value = selectedRow.dataset.durasi;
   ipRuangan.value = selectedRow.dataset.ruangan;
   ipKelas.value = selectedRow.dataset.kelas;
-  formPanel.classList.remove("hidden");
+  
+  // Trigger change event untuk isi guru otomatis
+  const event = new Event('change');
+  ipMapel.dispatchEvent(event);
+  
+  modal.style.display = "block";
 };
 
-cancelBtn.onclick = () => formPanel.classList.add("hidden");
+// Tutup modal
+closeModal.onclick = () => {
+  modal.style.display = "none";
+};
 
+cancelBtn.onclick = () => {
+  modal.style.display = "none";
+};
+
+// Tutup modal jika klik di luar modal
+window.onclick = (event) => {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+};
+
+// Delete
 btnDelete.onclick = () => {
   if (!selectedRow) return;
   if (confirm("Yakin ingin menghapus jadwal ini?")) {

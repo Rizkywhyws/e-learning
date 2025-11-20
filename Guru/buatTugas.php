@@ -4,7 +4,7 @@ session_start();
 include "../config/db.php";
 
 // ==================== INISIALISASI SESSION LOGIN ====================
-$_SESSION['idAkun'] = "A0002"; // akun aktif
+$_SESSION['idAkun'] = "GR32481"; // akun aktif
 $idAkun = $_SESSION['idAkun'];
 
 // ==================== AMBIL DATA GURU (NIP) DARI AKUN LOGIN ====================
@@ -66,7 +66,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'update' && isset($_POST['id
     // Handle file upload untuk edit
     $filePath = "";
     if (!empty($_FILES['file']['name'])) {
-        $uploadDir = "Guru/uploads/tugas/";
+        $uploadDir = "../../uploads/tugas/";
         if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
         $fileName = basename($_FILES['file']['name']);
         $targetFile = $uploadDir . time() . "_" . $fileName;
@@ -132,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['action'])) {
     // Upload file (optional)
     $filePath = "";
     if (!empty($_FILES['file']['name'])) {
-        $uploadDir = "Guru/uploads/tugas/";
+        $uploadDir = "../../uploads/tugas/";
         if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
         $fileName = basename($_FILES['file']['name']);
         $targetFile = $uploadDir . time() . "_" . $fileName;

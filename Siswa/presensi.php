@@ -1,6 +1,8 @@
 <?php
 session_start();
-include '../config/db.php'; // pastikan path benar dan $conn adalah mysqli object
+include '../config/db.php'; 
+
+date_default_timezone_set('Asia/Jakarta');// pastikan path benar dan $conn adalah mysqli object
 
 // ===== CEK LOGIN =====
 if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'siswa') {
@@ -381,7 +383,7 @@ if ($kelasSiswa) {
             dataguru dg ON bp.NIP = dg.NIP
         WHERE 
             jm.kelas = ? 
-            AND NOW() >= bp.waktuDibuat 
+            AND NOW() >= bp.waktuDimulai 
             AND NOW() <= bp.waktuDitutup
         ORDER BY 
             bp.waktuDibuat DESC 
@@ -430,7 +432,7 @@ if ($kelasSiswa) {
         JOIN jadwalmapel jm ON bp.idJadwalMapel = jm.idJadwalMapel
         JOIN mapel m ON jm.kodeMapel = m.kodeMapel
         WHERE jm.kelas = ? 
-          AND bp.waktuDibuat >= NOW()
+          AND bp.waktuDimulai >= NOW()
         ORDER BY bp.waktuDibuat ASC
         LIMIT 1
     ");

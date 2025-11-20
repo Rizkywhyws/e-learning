@@ -276,6 +276,43 @@ main {
 .data-section {
   padding-top: 20px;
   margin: 0;
+  padding-bottom: 50px;
+}
+
+/* ===================================
+   TABLE CONTAINER & FILTER
+====================================*/
+.table-container {
+  width: 90%;
+  margin: 15px auto;
+}
+
+.filter-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+  padding-right: 10px;
+}
+
+.filter-select {
+  padding: 8px 16px;
+  border: 2px solid #2e7dff;
+  border-radius: 20px;
+  background: white;
+  color: #2e7dff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: 0.3s;
+}
+
+.filter-select:hover {
+  background: #e8f0ff;
+}
+
+.filter-select:focus {
+  border-color: #1a5cd7;
 }
 
 /* ===================================
@@ -325,6 +362,12 @@ main {
   border-radius: 10px;
   overflow: hidden;
   border: 3px solid #2e7dff;
+}
+
+/* Tabel di dalam container */
+.table-container .data-table {
+  width: 100%;
+  margin: 0;
 }
 
 .data-table thead {
