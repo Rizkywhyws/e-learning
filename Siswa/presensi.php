@@ -328,6 +328,7 @@ if ($nisSiswa) {
 
     <section class="rekap-presensi-section">
         <h1>Rekap Presensi</h1>
+        <?php include "../Siswa/rekapPresensi.php"; ?>
     </section>
 
     <div class="legend-row">
