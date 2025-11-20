@@ -27,31 +27,32 @@ if ($dataSiswa) {
 }
 
 // Helper: generate idPresensi unik
-function generateIdPresensi($conn) {
-    $tahun = date('Y');
-    $maxAttempts = 10;
-    $attempt = 0;
-    
-    do {
-        $rand = str_pad(mt_rand(0, 999), 3, '0', STR_PAD_LEFT);
-        $newId = "PR{$tahun}-{$rand}";
-        
-        $checkQuery = $conn->prepare("SELECT idPresensi FROM presensisiswa WHERE idPresensi = ? LIMIT 1");
-        $checkQuery->bind_param('s', $newId);
-        $checkQuery->execute();
-        $result = $checkQuery->get_result();
-        $exists = $result->num_rows > 0;
-        $checkQuery->close();
-        
-        $attempt++;
-        
-        if (!$exists) {
+function generateIdPresensi($conn, $idBuatPresensi) {
+
+    for ($i = 0; $i < 20; $i++) {
+
+        // angka random 6 digit
+        $rand6 = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        // format final: (idBuatPresensi)-(6digit)
+        $newId = $idBuatPresensi . "-" . $rand6;
+
+        // cek apakah sudah ada di database
+        $stmt = $conn->prepare("SELECT 1 FROM presensisiswa WHERE idPresensi = ? LIMIT 1");
+        $stmt->bind_param('s', $newId);
+        $stmt->execute();
+        $stmt->store_result();
+
+        // kalau belum ada → return
+        if ($stmt->num_rows === 0) {
+            $stmt->close();
             return $newId;
         }
-        
-    } while ($attempt < $maxAttempts);
-    
-    return "PR{$tahun}-" . substr(time(), -3);
+
+        $stmt->close();
+    }
+
+    throw new Exception("Gagal menghasilkan ID Presensi unik setelah 20 percobaan.");
 }
 
 // ===== PROSES PRESENSI DENGAN TOKEN =====
@@ -153,8 +154,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
 
         // Simpan presensi
-        $newIdPresensi = generateIdPresensi($conn);
-        $idLokasiPresensi = $bp['idLokasi'] ?? null;
+        $newIdPresensi = generateIdPresensi($conn, $idBuatPresensi);
 
         $ins = $conn->prepare("
             INSERT INTO presensisiswa (idPresensi, idBuatPresensi, NIS, status, waktuPresensi)
@@ -182,7 +182,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (isset($_POST['submit_izin'])) {
         $nisForm = $_POST['nis'] ?? $nisSiswa;
         $jenisIzin = $_POST['jenis_izin'] ?? null;
-        $tokenInput = $_POST['token_izin'] ?? null;
         $fileSurat = $_FILES['surat_izin'] ?? null;
         $idBuatPresensiAktif = null;
 
@@ -282,7 +281,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             ");
             $queryAction->bind_param('ssss', $statusPresensi, $filePathDB, $idBuatPresensiAktif, $nisForm);
         } else {
-            $newIdPresensi = generateIdPresensi($conn);
+            $newIdPresensi = generateIdPresensi($conn, $idBuatPresensiAktif);
             $queryAction = $conn->prepare("
                 INSERT INTO presensisiswa (idPresensi, idBuatPresensi, NIS, status, waktuPresensi, filePath)
                 VALUES (?, ?, ?, ?, NOW(), ?)

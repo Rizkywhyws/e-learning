@@ -73,78 +73,87 @@ $data = $conn->query("
         <button id="btnDelete" class="btn red" disabled><i class="fa fa-trash"></i> Delete Teacher</button>
     </div>
 
-    <table class="data-table" id="guruTable">
-        <thead>
-            <tr>
-                <th>Pilih</th>
-                <th>NIP</th>
-                <th>Nama</th>
-                <th>No Telp</th>
-                <th>Email</th>
-            </tr>
-        </thead>
-        <tbody>
-        <?php while ($row = $data->fetch_assoc()): ?>
-            <tr 
-                data-nip="<?= $row['NIP'] ?>"
-                data-nama="<?= htmlspecialchars($row['nama']) ?>"
-                data-notelp="<?= htmlspecialchars($row['noTelp']) ?>"
-                data-email="<?= htmlspecialchars($row['email']) ?>"
-                data-id="<?= htmlspecialchars($row['idAkun']) ?>"
-            >
-                <td><input type="checkbox" class="row-check"></td>
-                <td><?= $row['NIP'] ?></td>
-                <td><?= htmlspecialchars($row['nama']) ?></td>
-                <td><?= htmlspecialchars($row['noTelp']) ?></td>
-                <td><?= htmlspecialchars($row['email']) ?></td>
-            </tr>
-        <?php endwhile; ?>
-        </tbody>
-    </table>
-
-    <section class="form-panel hidden" id="formPanel">
-        <h3 id="formTitle">Add Teacher</h3>
-
-        <form id="guruForm" method="POST" action="backend/add-guru.php">
-            <input type="hidden" name="original_nip" id="original_nip">
-
-            <div class="row">
-                <label>NIP</label>
-                <input type="number" id="nip" name="nip" required>
-            </div>
-            <div class="row">
-                <label>Nama</label>
-                <input type="text" id="nama" name="nama" required>
-            </div>
-            <div class="row">
-                <label>Email</label>
-                <input type="email" id="email" name="email" required>
-            </div>
-            <div class="row">
-                <label>Password</label>
-                <input type="password" id="password" name="password">
-            </div>
-            <div class="row">
-                <label>No Telp</label>
-                <input type="text" id="noTelp" name="noTelp" required>
-            </div>
-
-            <div class="form-actions">
-                <button class="btn green" type="submit">
-                    <i class="fa-solid fa-floppy-disk"></i> Submit
-                </button>
-                <button type="button" id="cancelBtn" class="btn">Cancel</button>
-            </div>
-        </form>
-    </section>
+    <div class="table-container">
+      <table class="data-table" id="guruTable">
+          <thead>
+              <tr>
+                  <th>Pilih</th>
+                  <th>NIP</th>
+                  <th>Nama</th>
+                  <th>No Telp</th>
+                  <th>Email</th>
+              </tr>
+          </thead>
+          <tbody>
+          <?php while ($row = $data->fetch_assoc()): ?>
+              <tr 
+                  data-nip="<?= $row['NIP'] ?>"
+                  data-nama="<?= htmlspecialchars($row['nama']) ?>"
+                  data-notelp="<?= htmlspecialchars($row['noTelp']) ?>"
+                  data-email="<?= htmlspecialchars($row['email']) ?>"
+                  data-id="<?= htmlspecialchars($row['idAkun']) ?>"
+              >
+                  <td><input type="checkbox" class="row-check"></td>
+                  <td><?= $row['NIP'] ?></td>
+                  <td><?= htmlspecialchars($row['nama']) ?></td>
+                  <td><?= htmlspecialchars($row['noTelp']) ?></td>
+                  <td><?= htmlspecialchars($row['email']) ?></td>
+              </tr>
+          <?php endwhile; ?>
+          </tbody>
+      </table>
+    </div>
   </section>
+
+  <!-- MODAL -->
+  <div id="guruModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="formTitle">Add Teacher</h3>
+        <span class="close">&times;</span>
+      </div>
+      
+      <form id="guruForm" method="POST" action="backend/add-guru.php">
+          <input type="hidden" name="original_nip" id="original_nip">
+
+          <div class="row">
+              <label>NIP</label>
+              <input type="number" id="nip" name="nip" required>
+          </div>
+          <div class="row">
+              <label>Nama</label>
+              <input type="text" id="nama" name="nama" required>
+          </div>
+          <div class="row">
+              <label>Email</label>
+              <input type="email" id="email" name="email" required>
+          </div>
+          <div class="row">
+              <label>Password</label>
+              <input type="password" id="password" name="password">
+          </div>
+          <div class="row">
+              <label>No Telp</label>
+              <input type="text" id="noTelp" name="noTelp" required>
+          </div>
+
+          <div class="form-actions">
+              <button class="btn green" type="submit">
+                  <i class="fa-solid fa-floppy-disk"></i> Submit
+              </button>
+              <button type="button" id="cancelBtn" class="btn">Cancel</button>
+          </div>
+      </form>
+    </div>
+  </div>
 
   <script>
   const rows = document.querySelectorAll("#guruTable tbody tr");
   const btnEdit = document.getElementById("btnEdit");
   const btnDelete = document.getElementById("btnDelete");
   const btnAdd = document.getElementById("btnAdd");
-  const formPanel = document.getElementById("formPanel");
+  const modal = document.getElementById("guruModal");
+  const closeModal = document.querySelector(".close");
   const cancelBtn = document.getElementById("cancelBtn");
   const guruForm = document.getElementById("guruForm");
 
@@ -178,7 +187,7 @@ $data = $conn->query("
       ipEmail.value = "";
       ipPassword.value = "";
       ipTelp.value = "";
-      formPanel.classList.remove("hidden");
+      modal.style.display = "block";
   };
 
   // Edit guru
@@ -194,10 +203,24 @@ $data = $conn->query("
       ipPassword.value = "";
       ipTelp.value = selectedRow.dataset.notelp;
 
-      formPanel.classList.remove("hidden");
+      modal.style.display = "block";
   };
 
-  cancelBtn.onclick = () => formPanel.classList.add("hidden");
+  // Close modal
+  closeModal.onclick = () => {
+      modal.style.display = "none";
+  };
+
+  cancelBtn.onclick = () => {
+      modal.style.display = "none";
+  };
+
+  // Close modal saat klik di luar modal
+  window.onclick = (event) => {
+      if (event.target == modal) {
+          modal.style.display = "none";
+      }
+  };
 
   // Hapus guru (GET)
   btnDelete.onclick = async () => {

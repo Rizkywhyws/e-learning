@@ -3,7 +3,7 @@ include "../config/db.php";
 session_start();
 
 // ==================== INISIALISASI SESSION LOGIN ====================
-$_SESSION['idAkun'] = "A0002"; // akun aktif
+$_SESSION['idAkun'] = "GR32481"; // akun aktif
 
 
 ?>
