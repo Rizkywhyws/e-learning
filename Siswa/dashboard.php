@@ -98,12 +98,11 @@ if ($kelasSiswa) {
     <div class="dropdown">
       <button class="dropbtn">
         <i class="fa-solid fa-database"></i>
-        Data Master
+        Profil
         <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
       </button>
       <div class="dropdown-content">
-        <a href="#"><i class="fa-solid fa-user"></i> Data Guru</a>
-        <a href="#"><i class="fa-solid fa-users"></i> Data Siswa</a>
+        <a href="#"><i class="fa-solid fa-user"></i> Profil Saya</a>
       </div>
     </div>
 
@@ -114,7 +113,7 @@ if ($kelasSiswa) {
         <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
       </button>
       <div class="dropdown-content">
-        <a href="#"><i class="fa-solid fa-check"></i> Lihat Presensi</a>
+        <a href="../Siswa/presensi.php"><i class="fa-solid fa-check"></i> Lihat Presensi</a>
       </div>
     </div>
 
@@ -125,8 +124,7 @@ if ($kelasSiswa) {
         <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
       </button>
       <div class="dropdown-content">
-        <a href="#"><i class="fa-solid fa-book-open"></i> Materi</a>
-        <a href="#"><i class="fa-solid fa-file-lines"></i> Tugas</a>
+        <a href="../Siswa/mataPelajaran.php"><i class="fa-solid fa-book-open"></i> Mata Pelajaran</a>
         <a href="#"><i class="fa-solid fa-pen-to-square"></i> Quiz</a>
       </div>
     </div>

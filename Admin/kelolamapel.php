@@ -21,7 +21,6 @@ $data = $conn->query("
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kelola Mapel | E-School</title>
   <link rel="stylesheet" href="css/kelolamapel.css?v=<?php echo time(); ?>">
- <!-- pakai style sama -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -102,7 +101,12 @@ $data = $conn->query("
     </tbody>
   </table>
 
-  <section class="form-panel hidden" id="formPanel">
+</section>
+
+<!-- MODAL -->
+<div id="mapelModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
     <h3 id="formTitle">Add Mapel</h3>
 
     <form id="mapelForm" method="POST" action="backend/add-mapel.php">
@@ -136,16 +140,16 @@ $data = $conn->query("
         <button type="button" id="cancelBtn" class="btn">Cancel</button>
       </div>
     </form>
-  </section>
-
-</section>
+  </div>
+</div>
 
 <script>
 const rows = document.querySelectorAll("#mapelTable tbody tr");
 const btnEdit = document.getElementById("btnEdit");
 const btnDelete = document.getElementById("btnDelete");
 const btnAdd = document.getElementById("btnAdd");
-const formPanel = document.getElementById("formPanel");
+const modal = document.getElementById("mapelModal");
+const closeModal = document.querySelector(".close");
 const cancelBtn = document.getElementById("cancelBtn");
 const mapelForm = document.getElementById("mapelForm");
 
@@ -166,6 +170,7 @@ rows.forEach(row => {
   });
 });
 
+// Buka modal untuk Add
 btnAdd.onclick = () => {
   mapelForm.action = "backend/add-mapel.php";
   document.getElementById("formTitle").innerText = "Add Mapel";
@@ -173,9 +178,10 @@ btnAdd.onclick = () => {
   ipKode.value = "";
   ipNama.value = "";
   ipGuru.value = "";
-  formPanel.classList.remove("hidden");
+  modal.style.display = "block";
 };
 
+// Buka modal untuk Edit
 btnEdit.onclick = () => {
   if (!selectedRow) return;
   mapelForm.action = "backend/edit-mapel.php";
@@ -184,11 +190,26 @@ btnEdit.onclick = () => {
   ipKode.value = selectedRow.dataset.kode;
   ipNama.value = selectedRow.dataset.nama;
   ipGuru.value = selectedRow.dataset.guru;
-  formPanel.classList.remove("hidden");
+  modal.style.display = "block";
 };
 
-cancelBtn.onclick = () => formPanel.classList.add("hidden");
+// Tutup modal
+closeModal.onclick = () => {
+  modal.style.display = "none";
+};
 
+cancelBtn.onclick = () => {
+  modal.style.display = "none";
+};
+
+// Tutup modal jika klik di luar modal
+window.onclick = (event) => {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+};
+
+// Delete
 btnDelete.onclick = () => {
   if (!selectedRow) return;
   if (confirm("Yakin ingin menghapus mapel ini?")) {
@@ -197,8 +218,9 @@ btnDelete.onclick = () => {
   }
 };
 </script>
+
 <script>
-// ✅ Dropdown JS
+// Dropdown JS
 document.addEventListener("DOMContentLoaded", function () {
   const dropdownButtons = document.querySelectorAll(".dropbtn");
 

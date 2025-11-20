@@ -60,12 +60,11 @@ if ($nipGuru) {
   <div class="menu-row">
     <div class="dropdown">
       <button class="dropbtn">
-        <i class="fa-solid fa-database"></i> Data Master
+        <i class="fa-solid fa-user"></i> Profil
         <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
       </button>
       <div class="dropdown-content">
-        <a href="#"><i class="fa-solid fa-user-tie"></i> Kelola Guru</a>
-        <a href="#"><i class="fa-solid fa-user-graduate"></i> Kelola Siswa</a>
+        <a href="#"><i class="fa-solid fa-user-tie"></i> Profil Saya</a>
       </div>
     </div>
 
