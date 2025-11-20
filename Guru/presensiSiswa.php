@@ -406,6 +406,7 @@ $tanggalMinimum = date('Y-m-d');
                   <th>Tanggal</th>
                   <th>Waktu Presensi</th>
                   <th>Status</th>
+                  <th>File</th>
                 </tr>";
 
         // Query data
@@ -414,7 +415,8 @@ $tanggalMinimum = date('Y-m-d');
             d.nama, d.NIS, d.jurusan, d.kelas, 
             DATE(p.waktuPresensi) AS tanggal, 
             TIME(p.waktuPresensi) AS jam, 
-            p.status
+            p.status,
+            p.filePath
           FROM presensisiswa p
           JOIN datasiswa d ON p.NIS = d.NIS
           WHERE d.kelas LIKE '$tingkat%'
@@ -429,19 +431,26 @@ $tanggalMinimum = date('Y-m-d');
         $result = mysqli_query($conn, $query);
         $no = 1;
 
-        if (mysqli_num_rows($result) > 0) {
+      if (mysqli_num_rows($result) > 0) {
           while ($row = mysqli_fetch_assoc($result)) {
-            echo "<tr>
-                    <td>{$no}</td>
-                    <td>{$row['nama']}</td>
-                    <td>{$row['NIS']}</td>
-                    <td>{$row['jurusan']}</td>
-                    <td>{$row['kelas']}</td>
-                    <td>{$row['tanggal']}</td>
-                    <td>{$row['jam']}</td>
-                    <td>{$row['status']}</td>
-                  </tr>";
-            $no++;
+
+              $file = $row['filePath'];
+              $linkFile = $file 
+                  ? "<a href='../uploads/$file' target='_blank'>Lihat</a>"
+                  : "-";
+
+              echo "<tr>
+                      <td>{$no}</td>
+                      <td>{$row['nama']}</td>
+                      <td>{$row['NIS']}</td>
+                      <td>{$row['jurusan']}</td>
+                      <td>{$row['kelas']}</td>
+                      <td>{$row['tanggal']}</td>
+                      <td>{$row['jam']}</td>
+                      <td>{$row['status']}</td>
+                      <td>{$linkFile}</td>
+                    </tr>";
+                  $no++;
           }
         } else {
           echo "<tr><td colspan='8'>Tidak ada data presensi untuk tanggal ini.</td></tr>";

@@ -3,7 +3,7 @@
 session_start();
 
 // Set session login otomatis
-$_SESSION['idAkun'] = 'A0004';
+$_SESSION['idAkun'] = 'SW83675';
  
 // Include koneksi database
 include('../config/db.php');
@@ -65,12 +65,11 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
       <div class="dropdown">
         <button class="dropbtn">
           <i class="fa-solid fa-database"></i>
-          Data Master
+          Profil
           <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
         </button>
         <div class="dropdown-content">
-          <a href="#"><i class="fa-solid fa-user"></i> Data Guru</a>
-          <a href="#"><i class="fa-solid fa-users"></i> Data Siswa</a>
+          <a href="#"><i class="fa-solid fa-user"></i> Profil</a>
         </div>
       </div>
 
@@ -81,7 +80,7 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
           <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
         </button>
         <div class="dropdown-content">
-          <a href="#"><i class="fa-solid fa-check"></i> Lihat Presensi</a>
+          <a href="../Siswa/presensi.php"><i class="fa-solid fa-check"></i> Lihat Presensi</a>
         </div>
       </div>
 
@@ -97,6 +96,13 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
           <a href="#"><i class="fa-solid fa-pen-to-square"></i> Quiz</a>
         </div>
       </div>
+      <div class="dropdown">
+        <button class="dropbtn"><i class="fa-solid fa-house"></i> Dashboard</button>
+         <div class="dropdown-content">
+        <a href="dashboard.php"><i class="fa-solid fa-gauge"></i> Dashboard Utama</a>
+        </div>
+  </div>
+      
 
     </div>
   </header>
