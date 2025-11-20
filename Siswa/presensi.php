@@ -364,8 +364,8 @@ if ($nisSiswa) {
                     <strong>Mata Pelajaran</strong> <span class="colon">:</span>
                     <span><?= htmlspecialchars($presensi['namaMapel'] ?? '-') ?></span>
                 </div>
-                <div class="modal-field" style="margin-top: 20px;">
-                    <label for="tokenInput"><strong>Token Presensi</strong></label>
+                <div class="modal-field">
+                    <strong>Token Presensi</strong> <span class="colon">:</span>
                     <input type="text" name="token" id="tokenInput" class="token-input" placeholder="Masukkan token dari guru" required autofocus>
                     <small class="file-note">Dapatkan token dari guru pengampu</small>
                 </div>
@@ -384,7 +384,7 @@ if ($nisSiswa) {
             Upload surat izin/sakit
             <button type="button" class="close-modal" onclick="closeModalUpload()">&times;</button>
         </div>
-        <form action="proses_presensi.php" method="POST" enctype="multipart/form-data">
+        <form action="prosesPresensi.php" method="POST" enctype="multipart/form-data">
             <div class="modal-body">
                 <div class="modal-field">
                     <strong>NIS</strong> <span class="colon">:</span>
@@ -416,13 +416,12 @@ if ($nisSiswa) {
                 </div>
 
                 <div class="upload-box" style="margin-top: 15px;">
-                    <label id="fileLabel" class="upload-label" for="fileInput">Upload File (Max 2MB, PDF/JPG)</label>
+                    <label id="fileLabel" class="upload-label" for="fileInput">Upload file maksimal ukuran 2MB, format PDF/JPG</label>
                     <input type="file" name="surat_izin" id="fileInput" class="upload-input" accept=".pdf,.jpg,.jpeg" required>
                     <label for="fileInput" class="upload-icon-btn">
                         <i class="fa-solid fa-cloud-arrow-up"></i>
                     </label>
                 </div>
-                <small class="file-note">(Maksimal ukuran file 2MB, format PDF atau JPG)</small>
             </div>
             <div class="modal-footer">
                 <button type="submit" name="submit_izin" class="modal-kirim-btn">Kirim</button>

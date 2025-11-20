@@ -177,7 +177,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     // -------------------------
-    // 2) UPLOAD IZIN / SAKIT DENGAN TOKEN
+    // 2) UPLOAD IZIN
     // -------------------------
     if (isset($_POST['submit_izin'])) {
         $nisForm = $_POST['nis'] ?? $nisSiswa;
@@ -189,7 +189,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         // Cari sesi buatpresensi aktif
         if ($kelasSiswa) {
             $qAct = $conn->prepare("
-                SELECT bp.idBuatPresensi, bp.waktuDimulai, bp.waktuDitutup, bp.toleransiWaktu, bp.idLokasi, bp.token
+                SELECT bp.idBuatPresensi, bp.waktuDimulai, bp.waktuDitutup, bp.toleransiWaktu
                 FROM buatpresensi bp
                 JOIN jadwalmapel jm ON bp.idJadwalMapel = jm.idJadwalMapel
                 WHERE jm.kelas = ?
@@ -205,13 +205,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $idBuatPresensiAktif = $activeRow['idBuatPresensi'] ?? null;
             $waktuDimulaiAktif = $activeRow['waktuDimulai'] ?? null;
             $waktuDitutupAktif = $activeRow['waktuDitutup'] ?? null;
-            $idLokasiAktif = $activeRow['idLokasi'] ?? null;
-            $tokenAktif = $activeRow['token'] ?? null;
         }
 
-        if (!$nisForm || !$jenisIzin || !$tokenInput || !$fileSurat || $fileSurat['error'] !== UPLOAD_ERR_OK) {
+        if (!$nisForm || !$jenisIzin || !$fileSurat || $fileSurat['error'] !== UPLOAD_ERR_OK) {
             $_SESSION['statusType'] = 'error';
-            $_SESSION['statusMsg'] = 'Data tidak lengkap atau upload file gagal. Token wajib diisi. (Error Code: ' . ($fileSurat['error'] ?? 'N/A') . ')';
+            $_SESSION['statusMsg'] = 'Tambahkan file surat' . ($fileSurat['error'] ?? 'N/A') . ')';
             header("Location: presensi.php");
             exit;
         }
@@ -219,14 +217,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         if (!$idBuatPresensiAktif) {
             $_SESSION['statusType'] = 'error';
             $_SESSION['statusMsg'] = 'Saat ini tidak ada sesi presensi aktif untuk kelas Anda.';
-            header("Location: presensi.php");
-            exit;
-        }
-
-        // Validasi Token untuk upload surat
-        if ($tokenInput !== $tokenAktif) {
-            $_SESSION['statusType'] = 'error';
-            $_SESSION['statusMsg'] = 'Token presensi salah! Silakan masukkan token yang benar.';
             header("Location: presensi.php");
             exit;
         }
@@ -294,10 +284,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         } else {
             $newIdPresensi = generateIdPresensi($conn);
             $queryAction = $conn->prepare("
-                INSERT INTO presensisiswa (idPresensi, idBuatPresensi, NIS, status, waktuPresensi, filePath, idLokasi)
-                VALUES (?, ?, ?, ?, NOW(), ?, ?)
+                INSERT INTO presensisiswa (idPresensi, idBuatPresensi, NIS, status, waktuPresensi, filePath)
+                VALUES (?, ?, ?, ?, NOW(), ?)
             ");
-            $queryAction->bind_param('ssssss', $newIdPresensi, $idBuatPresensiAktif, $nisForm, $statusPresensi, $filePathDB, $idLokasiAktif);
+            $queryAction->bind_param('sssss', $newIdPresensi, $idBuatPresensiAktif, $nisForm, $statusPresensi, $filePathDB);
         }
 
         if ($queryAction->execute()) {

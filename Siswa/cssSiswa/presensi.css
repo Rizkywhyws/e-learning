@@ -527,14 +527,6 @@ header {
     background: #1a60cc;
 }
 
-.file-note {
-    color: #999;
-    display: block;
-    text-align: right;
-    font-size: 0.8em;
-    margin-top: 5px;
-}
-
 .notification-box {
           padding: 15px;
           margin-bottom: 20px;
@@ -611,11 +603,12 @@ header {
 }
 
 .file-note {
+    white-space: nowrap;  /* biar 1 baris */
     display: block;
-    color: #666;
-    font-size: 12px;
+    margin-left: 135px;   /* align sejajar input */
     margin-top: 5px;
 }
+
 
 /* RESPONSIVE */
 @media (max-width: 992px) {
