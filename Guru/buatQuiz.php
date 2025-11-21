@@ -2,21 +2,28 @@
 include_once("../config/db.php");
 session_start();
 
+// Cek apakah guru sudah login
+if (!isset($_SESSION['nip']) || $_SESSION['role'] !== 'guru') {
+  echo "<script>alert('Anda harus login sebagai guru!'); window.location='../Auth/login.php';</script>";
+  exit;
+}
+
+$nipGuru = $_SESSION['nip']; // Ambil NIP dari session
+
 // Simpan quiz ke database
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $kodeMapel = $_POST['kodeMapel'];
-  $NIP = $_POST['NIP'];
   $judul = $_POST['judul'];
   $deskripsi = $_POST['deskripsi'];
   $waktuMulai = $_POST['waktuMulai'];
   $tipeQuiz = $_POST['tipeQuiz'];
-  $kelas = $_POST['kelas']; // ✅ ambil kelas dari dropdown
+  $kelas = $_POST['kelas'];
 
   // Generate ID quiz otomatis
   $idQuiz = "QZ" . rand(1000, 9999);
 
   $query = "INSERT INTO quiz (idQuiz, kodeMapel, NIP, judul, deskripsi, waktuMulai, kelas)
-            VALUES ('$idQuiz', '$kodeMapel', '$NIP', '$judul', '$deskripsi', '$waktuMulai', '$kelas')";
+            VALUES ('$idQuiz', '$kodeMapel', '$nipGuru', '$judul', '$deskripsi', '$waktuMulai', '$kelas')";
 
   if ($conn->query($query)) {
     echo "<script>
@@ -35,38 +42,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <h2>Tambah / Buat Quiz</h2>
 
   <form action="" method="POST" enctype="multipart/form-data">
-    <!-- Pilih Mapel -->
+    
+    <!-- Pilih Mapel (hanya yang diampu guru ini) -->
     <label for="kodeMapel">Mata Pelajaran</label>
     <select id="kodeMapel" name="kodeMapel" required>
       <option value="">-- Pilih Mata Pelajaran --</option>
       <?php
-        $mapel = $conn->query("SELECT kodeMapel, namaMapel FROM mapel");
-        while ($row = $mapel->fetch_assoc()) {
-          echo "<option value='{$row['kodeMapel']}'>{$row['namaMapel']}</option>";
+        // Ambil mapel yang diampu guru ini dari jadwalmapel
+        $queryMapel = "SELECT DISTINCT m.kodeMapel, m.namaMapel 
+                       FROM jadwalmapel jm
+                       JOIN mapel m ON jm.kodeMapel = m.kodeMapel
+                       WHERE jm.nipGuru = '$nipGuru'
+                       ORDER BY m.namaMapel ASC";
+        $mapel = $conn->query($queryMapel);
+        
+        if ($mapel && $mapel->num_rows > 0) {
+          while ($row = $mapel->fetch_assoc()) {
+            echo "<option value='{$row['kodeMapel']}'>{$row['namaMapel']}</option>";
+          }
+        } else {
+          echo "<option value='' disabled>Tidak ada mata pelajaran</option>";
         }
       ?>
     </select>
 
-    <!-- Pilih Guru -->
-    <label for="NIP">Guru Pengampu</label>
-    <select id="NIP" name="NIP" required>
-      <option value="">-- Pilih Guru --</option>
-      <?php
-        $guru = $conn->query("SELECT NIP, nama FROM dataguru");
-        while ($row = $guru->fetch_assoc()) {
-          echo "<option value='{$row['NIP']}'>{$row['nama']}</option>";
-        }
-      ?>
-    </select>
-
-    <!-- Pilih Kelas -->
+    <!-- Pilih Kelas (hanya yang diajar guru ini) -->
     <label for="kelas">Kelas</label>
     <select id="kelas" name="kelas" required>
       <option value="">-- Pilih Kelas --</option>
       <?php
-        $kelasResult = $conn->query("SELECT DISTINCT kelas FROM datasiswa ORDER BY kelas ASC");
-        while ($row = $kelasResult->fetch_assoc()) {
-          echo "<option value='{$row['kelas']}'>{$row['kelas']}</option>";
+        // Ambil kelas yang diajar guru ini dari jadwalmapel
+        $queryKelas = "SELECT DISTINCT kelas 
+                       FROM jadwalmapel 
+                       WHERE nipGuru = '$nipGuru'
+                       ORDER BY kelas ASC";
+        $kelasResult = $conn->query($queryKelas);
+        
+        if ($kelasResult && $kelasResult->num_rows > 0) {
+          while ($row = $kelasResult->fetch_assoc()) {
+            echo "<option value='{$row['kelas']}'>{$row['kelas']}</option>";
+          }
+        } else {
+          echo "<option value='' disabled>Tidak ada kelas</option>";
         }
       ?>
     </select>
