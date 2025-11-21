@@ -1,6 +1,21 @@
 <?php
-header('Content-Type: application/json');
+session_start();
 include('../config/db.php');
+
+// Cek apakah guru sudah login
+if (!isset($_SESSION['nip']) || $_SESSION['role'] !== 'guru') {
+    if (isset($_GET['action'])) {
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'Anda harus login sebagai guru!']);
+        exit;
+    }
+    echo "<script>alert('Anda harus login sebagai guru!'); window.location='../Auth/login.php';</script>";
+    exit;
+}
+
+$nipGuru = $_SESSION['nip']; // Ambil NIP dari session
+
+header('Content-Type: application/json');
 
 function jsonResponse($data) {
     echo json_encode($data, JSON_PRETTY_PRINT);
@@ -91,20 +106,22 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     const nilaiInput = document.getElementById('nilaiInput');
     const idxLabel = document.getElementById('indexLabel');
 
-    // ambil mapel
+    // ambil mapel yang diampu guru ini
     const mapel = await api(base+'get_mapel');
     if(mapel.error) return alertMsg(mapel.error);
+    if(mapel.message) return alertMsg(mapel.message);
     mapel.forEach(m=>{
         const o=document.createElement('option');
         o.value=m.kodeMapel; 
-        o.textContent=${m.namaMapel};
+        o.textContent=m.namaMapel;
         mapelSel.appendChild(o);
     });
 
-    // ambil kelas
+    // ambil kelas yang diajar guru ini
     const kelas = await api(base+'get_kelas');
-    if(kelas.error) alertMsg(kelas.error);
-    else kelas.forEach(k=>{
+    if(kelas.error) return alertMsg(kelas.error);
+    if(kelas.message) return alertMsg(kelas.message);
+    kelas.forEach(k=>{
         const o=document.createElement('option');
         o.value=k; o.textContent=k;
         kelasSel.appendChild(o);
@@ -131,7 +148,12 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     let selectedNIS='';
 
     siswaSearch.addEventListener('change', async ()=>{
-        const data=await api(base+'search_siswa&term='+siswaSearch.value);
+        const selectedKelas = kelasSel.value;
+        if(!selectedKelas){
+            alertMsg('Pilih kelas terlebih dahulu.');
+            return;
+        }
+        const data=await api(base+'search_siswa&term='+siswaSearch.value+'&kelas='+selectedKelas);
         if(data.error) return alertMsg(data.error);
         if(data.message) return alertMsg(data.message);
         if(data.length>0){
@@ -200,43 +222,51 @@ exit;
 // ====================== API HANDLER ======================
 switch ($action) {
 
-    // --- Ambil daftar mapel ---
+    // --- Ambil daftar mapel yang diampu guru ini ---
     case 'get_mapel':
         $q = mysqli_query($conn, "
-            SELECT kodeMapel, namaMapel 
-            FROM mapel 
-            ORDER BY namaMapel ASC
+            SELECT DISTINCT m.kodeMapel, m.namaMapel 
+            FROM jadwalmapel jm
+            JOIN mapel m ON jm.kodeMapel = m.kodeMapel
+            WHERE jm.nipGuru = '$nipGuru'
+            ORDER BY m.namaMapel ASC
         ");
         if (!$q) jsonResponse(['error' => 'Query mapel gagal: '.mysqli_error($conn)]);
         $data = [];
         while ($r = mysqli_fetch_assoc($q)) $data[] = $r;
-        if (!$data) jsonResponse(['message' => 'Belum ada data mapel.']);
+        if (!$data) jsonResponse(['message' => 'Anda belum mengampu mata pelajaran.']);
         jsonResponse($data);
         break;
 
-    // --- Ambil daftar kelas ---
+    // --- Ambil daftar kelas yang diajar guru ini ---
     case 'get_kelas':
         $q = mysqli_query($conn, "
             SELECT DISTINCT kelas 
-            FROM quiz 
-            ORDER BY FIELD(kelas, 'X-1','X-2','XI-1','XI-2','XII-1','XII-2')
+            FROM jadwalmapel 
+            WHERE nipGuru = '$nipGuru'
+            ORDER BY kelas ASC
         ");
         if (!$q) jsonResponse(['error' => 'Query kelas gagal: '.mysqli_error($conn)]);
         $kelas = [];
         while ($r = mysqli_fetch_assoc($q)) $kelas[] = $r['kelas'];
-        if (!$kelas) jsonResponse(['message' => 'Belum ada data kelas.']);
+        if (!$kelas) jsonResponse(['message' => 'Anda belum mengajar di kelas manapun.']);
         jsonResponse($kelas);
         break;
 
-    // --- Ambil quiz sesuai mapel & kelas ---
+    // --- Ambil quiz sesuai mapel & kelas (milik guru ini) ---
     case 'get_quiz_by_filter':
-        $mapel = $_GET['mapel'] ?? '';
-        $kelas = $_GET['kelas'] ?? '';
+        $mapel = mysqli_real_escape_string($conn, $_GET['mapel'] ?? '');
+        $kelas = mysqli_real_escape_string($conn, $_GET['kelas'] ?? '');
+        
         if (!$mapel || !$kelas) jsonResponse(['error'=>'Mapel dan kelas wajib dipilih.']);
+        
+        // Pastikan quiz yang ditampilkan hanya milik guru yang login
         $q = mysqli_query($conn, "
             SELECT idQuiz, judul 
             FROM quiz 
-            WHERE kodeMapel='$mapel' AND kelas='$kelas'
+            WHERE kodeMapel='$mapel' 
+            AND kelas='$kelas'
+            AND NIP='$nipGuru'
             ORDER BY judul ASC
         ");
         if (!$q) jsonResponse(['error'=>'Query quiz gagal: '.mysqli_error($conn)]);
@@ -246,31 +276,40 @@ switch ($action) {
         jsonResponse($data);
         break;
 
-    // --- Cari siswa ---
+    // --- Cari siswa (sesuai kelas yang dipilih) ---
     case 'search_siswa':
-        $term = $_GET['term'] ?? '';
+        $term = mysqli_real_escape_string($conn, $_GET['term'] ?? '');
+        $kelas = mysqli_real_escape_string($conn, $_GET['kelas'] ?? '');
+        
         if (!$term) jsonResponse(['message' => 'Masukkan nama siswa terlebih dahulu.']);
+        if (!$kelas) jsonResponse(['message' => 'Pilih kelas terlebih dahulu.']);
+        
         $q = mysqli_query($conn, "
             SELECT s.NIS, s.nama, s.kelas, s.jurusan, a.email
             FROM datasiswa s
             LEFT JOIN akun a ON s.idAkun = a.idAkun
             WHERE s.nama LIKE '%$term%'
+            AND s.kelas = '$kelas'
             ORDER BY s.nama ASC
         ");
         if (!$q) jsonResponse(['error' => 'Query gagal: '.mysqli_error($conn)]);
         $data = [];
         while ($r = mysqli_fetch_assoc($q)) $data[] = $r;
-        if (!$data) jsonResponse(['message' => 'Nama siswa tidak ditemukan.']);
+        if (!$data) jsonResponse(['message' => 'Nama siswa tidak ditemukan di kelas ini.']);
         jsonResponse($data);
         break;
 
     // --- Load soal & jawaban siswa (hanya esai) ---
     case 'load_question':
-        $idQuiz = $_GET['idQuiz'] ?? '';
-        $NIS = $_GET['NIS'] ?? '';
+        $idQuiz = mysqli_real_escape_string($conn, $_GET['idQuiz'] ?? '');
+        $NIS = mysqli_real_escape_string($conn, $_GET['NIS'] ?? '');
         $idx = intval($_GET['idx'] ?? 0);
 
         if (!$idQuiz || !$NIS) jsonResponse(['error' => 'Parameter tidak lengkap.']);
+
+        // Pastikan quiz ini milik guru yang login
+        $cekQuiz = mysqli_query($conn, "SELECT * FROM quiz WHERE idQuiz='$idQuiz' AND NIP='$nipGuru'");
+        if (mysqli_num_rows($cekQuiz) == 0) jsonResponse(['error' => 'Quiz ini bukan milik Anda.']);
 
         $soalQ = mysqli_query($conn, "SELECT * FROM soalquiz WHERE idQuiz='$idQuiz' AND type='esai'");
         if (!$soalQ) jsonResponse(['error' => 'Query soal gagal: '.mysqli_error($conn)]);
@@ -293,13 +332,17 @@ switch ($action) {
 
     // --- Simpan nilai ---
     case 'save_nilai':
-        $idQuiz = $_POST['idQuiz'] ?? '';
-        $idSoal = $_POST['idSoal'] ?? '';
-        $NIS = $_POST['NIS'] ?? '';
-        $nilai = $_POST['nilai'] ?? '';
+        $idQuiz = mysqli_real_escape_string($conn, $_POST['idQuiz'] ?? '');
+        $idSoal = mysqli_real_escape_string($conn, $_POST['idSoal'] ?? '');
+        $NIS = mysqli_real_escape_string($conn, $_POST['NIS'] ?? '');
+        $nilai = mysqli_real_escape_string($conn, $_POST['nilai'] ?? '');
 
         if (!$idQuiz || !$idSoal || !$NIS) jsonResponse(['error' => 'Data belum lengkap.']);
         if ($nilai === '') jsonResponse(['warning' => 'Nilai belum diisi.']);
+
+        // Pastikan quiz ini milik guru yang login
+        $cekQuiz = mysqli_query($conn, "SELECT * FROM quiz WHERE idQuiz='$idQuiz' AND NIP='$nipGuru'");
+        if (mysqli_num_rows($cekQuiz) == 0) jsonResponse(['error' => 'Quiz ini bukan milik Anda.']);
 
         $cek = mysqli_query($conn, "SELECT * FROM jawabanquiz WHERE idSoal='$idSoal' AND NIS='$NIS'");
         if (mysqli_num_rows($cek) == 0)
