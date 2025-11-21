@@ -1,6 +1,6 @@
 <?php
 //file mataPelajaran.php
-session_start();
+
 
 // Set session login otomatis
 $_SESSION['idAkun'] = 'SW83675';

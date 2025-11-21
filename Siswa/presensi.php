@@ -207,7 +207,7 @@ if ($nisSiswa) {
     <div class="dropdown">
         <button class="dropbtn"><i class="fa-solid fa-database"></i> Data Master <i class="fa-solid fa-chevron-down dropdown-arrow"></i></button>
         <div class="dropdown-content">
-            <a href="#"><i class="fa-solid fa-user"></i> Dashboard</a>
+            <a href="dashboard.php"><i class="fa-solid fa-user"></i> Dashboard</a>
             <a href="#"><i class="fa-solid fa-users"></i> Profil Saya</a>
         </div>
     </div>
@@ -215,17 +215,22 @@ if ($nisSiswa) {
     <div class="dropdown">
         <button class="dropbtn"><i class="fa-solid fa-clipboard-check"></i> Presensi Siswa <i class="fa-solid fa-chevron-down dropdown-arrow"></i></button>
         <div class="dropdown-content">
-            <a href="#"><i class="fa-solid fa-check"></i> Lihat Presensi</a>
+            <a href="rekapPresensi.php"><i class="fa-solid fa-check"></i> Lihat Presensi</a>
         </div>
     </div>
 
     <div class="dropdown">
         <button class="dropbtn"><i class="fa-solid fa-school"></i> Pengelolaan Pembelajaran <i class="fa-solid fa-chevron-down dropdown-arrow"></i></button>
         <div class="dropdown-content">
-            <a href="#"><i class="fa-solid fa-book-open"></i> Materi</a>
-            <a href="#"><i class="fa-solid fa-file-lines"></i> Tugas</a>
+            <a href="mataPelajaran.php"><i class="fa-solid fa-book-open"></i> Mapel</a>
             <a href="#"><i class="fa-solid fa-pen-to-square"></i> Quiz</a>
         </div>
+    </div>
+    <div class="dropdown">
+      <button class="dropbtn">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <a href="../Auth/logout.php" onclick="return confirm('Yakin ingin logout?')"style="text-decoration:none; color:#2e7dff;"> Logout</a>
+      </button>
     </div>
 </div>
 
