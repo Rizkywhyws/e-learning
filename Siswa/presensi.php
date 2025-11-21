@@ -1,8 +1,9 @@
 <?php
 session_start();
-include '../config/db.php'; 
+include '../config/db.php';
 
 date_default_timezone_set('Asia/Jakarta');// pastikan path benar dan $conn adalah mysqli object
+
 
 // ===== CEK LOGIN =====
 if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'siswa') {
@@ -80,6 +81,7 @@ if ($kelasSiswa) {
             AND UNIX_TIMESTAMP(bp.waktuDitutup) >= UNIX_TIMESTAMP(NOW())
             AND NOW() >= bp.waktuDimulai 
             AND NOW() <= bp.waktuDitutup
+
         ORDER BY 
             bp.waktuDimulai ASC
         LIMIT 1
