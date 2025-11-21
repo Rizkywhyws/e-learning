@@ -216,13 +216,32 @@ $countJadwal = $conn->query("SELECT COUNT(*) AS total FROM jadwalmapel")->fetch_
       </tr>
     </thead>
     <tbody>
-      <tr><td></td><td></td><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td><td></td><td></td></tr>
+      <?php
+$queryJadwal = "
+    SELECT j.kelas, m.namaMapel, g.nama AS namaGuru, j.hari, j.jamMulai
+    FROM jadwalmapel j
+    LEFT JOIN mapel m ON j.kodeMapel = m.kodeMapel
+    LEFT JOIN dataguru g ON j.nipGuru = g.NIP
+    ORDER BY FIELD(j.hari, 'Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'),
+             j.jamMulai ASC
+";
+
+$resultJadwal = $conn->query($queryJadwal);
+
+if ($resultJadwal->num_rows > 0) {
+    while($row = $resultJadwal->fetch_assoc()) {
+        echo "<tr>
+                <td>".$row['kelas']."</td>
+                <td>".$row['namaMapel']."</td>
+                <td>".$row['namaGuru']."</td>
+                <td>".$row['hari']."</td>
+                <td>".$row['jamMulai']."</td>
+              </tr>";
+    }
+} else {
+    echo "<tr><td colspan='5'>Tidak ada data jadwal</td></tr>";
+}
+?>
     </tbody>
   </table>
 
