@@ -4,7 +4,11 @@ session_start();
 // ===== SET TIMEZONE WIB INDONESIA =====
 date_default_timezone_set('Asia/Jakarta');
 
-include '../config/db.php'; // sesuaikan dengan lokasi file koneksi kamu
+include '../config/db.php';
+
+function generateToken() {
+    return strtoupper(substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 5));
+}
 
 // ===== CEK LOGIN =====
 if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'guru') {
@@ -71,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $toleransi = $_POST['toleransi'];
   $kelas = $_POST['kelas'];
   $nipGuru = $_SESSION['nip'];
-  $idLokasi = 'LKSSMK4'; // lokasi SMKN 4 Jember
+  $token = generateToken();
 
   // 🔹 TAMBAHKAN: Ambil nama mapel dari kodeMapel
   $qNamaMapel = mysqli_query($conn, "SELECT namaMapel FROM mapel WHERE kodeMapel='$mapel' LIMIT 1");
@@ -160,9 +164,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   // 🔹 Simpan ke tabel buatpresensi
   $sql = "INSERT INTO buatpresensi 
-          (idBuatPresensi, NIP, idJadwalMapel, waktuDibuat, waktuDimulai, waktuDitutup, toleransiWaktu, keterangan, idLokasi)
+          (idBuatPresensi, NIP, idJadwalMapel, waktuDibuat, waktuDimulai, waktuDitutup, toleransiWaktu, keterangan, Token)
           VALUES 
-          ('$idBuatPresensi', '$nipGuru', '$idJadwalMapel', '$waktuDibuat', '$waktuDimulai', '$waktuDitutup', '$toleransi', '$keterangan', '$idLokasi')";
+          ('$idBuatPresensi', '$nipGuru', '$idJadwalMapel', '$waktuDibuat', '$waktuDimulai', '$waktuDitutup', '$toleransi', '$keterangan', '$token')";
 
   if (mysqli_query($conn, $sql)) {
     // 🔹 UBAH: Tampilkan nama mapel, bukan kode mapel
@@ -315,6 +319,13 @@ $tanggalMinimum = date('Y-m-d');
         <span>menit</span>
       </div>
 
+      <label for="token">Token Presensi</label>
+      <div class="token-presensi-wrapper">
+          <input type="text" name="token" id="token" value="<?= generateToken() ?>" readonly required class="token-presensi-input">
+          <button type="button" onclick="regenerateToken()" class="btn-generate-token" title="Generate Token Baru"><i class="fa-solid fa-rotate"></i></button>
+      </div>
+      <small style="color:#666; font-size:12px;">Token ini akan digunakan siswa untuk presensi</small>
+
       <div class="button-container">
         <button type="button" id="btnBatal" class="btn-secondary">Batal</button>
         <button type="submit" class="btn-primary">Tambah</button>
@@ -351,7 +362,6 @@ $tanggalMinimum = date('Y-m-d');
         
         // Mulai section per kelas
         echo "<div class='kelas-section'>";
-        
         // Header dengan judul dan filter (Berubah: Golongan dipindah ke dalam kelas-header)
         echo "<div class='kelas-header'>";
         echo "<h3>Kelas $tingkat</h3>";
@@ -375,7 +385,7 @@ $tanggalMinimum = date('Y-m-d');
         echo "<option value=''>Semua Kelas $tingkat</option>";
         
         // Ambil daftar kelas untuk tingkat ini
-        $kelasList = mysqli_query($conn, "SELECT DISTINCT kelas FROM datasiswa WHERE kelas LIKE '{$tingkat}%' ORDER BY kelas ASC");
+        $kelasList = mysqli_query($conn, "SELECT DISTINCT kelas FROM datasiswa WHERE kelas LIKE '{$tingkat}-%' ORDER BY kelas ASC");
         while ($row = mysqli_fetch_assoc($kelasList)) {
           $selected = $golonganDipilih === $row['kelas'] ? 'selected' : '';
           echo "<option value='{$row['kelas']}' $selected>{$row['kelas']}</option>";
@@ -396,6 +406,7 @@ $tanggalMinimum = date('Y-m-d');
                   <th>Tanggal</th>
                   <th>Waktu Presensi</th>
                   <th>Status</th>
+                  <th>File</th>
                 </tr>";
 
         // Query data
@@ -404,10 +415,11 @@ $tanggalMinimum = date('Y-m-d');
             d.nama, d.NIS, d.jurusan, d.kelas, 
             DATE(p.waktuPresensi) AS tanggal, 
             TIME(p.waktuPresensi) AS jam, 
-            p.status
+            p.status,
+            p.filePath
           FROM presensisiswa p
           JOIN datasiswa d ON p.NIS = d.NIS
-          WHERE d.kelas LIKE '$tingkat%'
+          WHERE d.kelas LIKE '{$tingkat}-%'
             AND DATE(p.waktuPresensi) = '$tanggalDipilih'
         ";
 
@@ -419,19 +431,26 @@ $tanggalMinimum = date('Y-m-d');
         $result = mysqli_query($conn, $query);
         $no = 1;
 
-        if (mysqli_num_rows($result) > 0) {
+      if (mysqli_num_rows($result) > 0) {
           while ($row = mysqli_fetch_assoc($result)) {
-            echo "<tr>
-                    <td>{$no}</td>
-                    <td>{$row['nama']}</td>
-                    <td>{$row['NIS']}</td>
-                    <td>{$row['jurusan']}</td>
-                    <td>{$row['kelas']}</td>
-                    <td>{$row['tanggal']}</td>
-                    <td>{$row['jam']}</td>
-                    <td>{$row['status']}</td>
-                  </tr>";
-            $no++;
+
+              $file = $row['filePath'];
+              $linkFile = $file 
+                  ? "<a href='../uploads/$file' target='_blank'>Lihat</a>"
+                  : "-";
+
+              echo "<tr>
+                      <td>{$no}</td>
+                      <td>{$row['nama']}</td>
+                      <td>{$row['NIS']}</td>
+                      <td>{$row['jurusan']}</td>
+                      <td>{$row['kelas']}</td>
+                      <td>{$row['tanggal']}</td>
+                      <td>{$row['jam']}</td>
+                      <td>{$row['status']}</td>
+                      <td>{$linkFile}</td>
+                    </tr>";
+                  $no++;
           }
         } else {
           echo "<tr><td colspan='8'>Tidak ada data presensi untuk tanggal ini.</td></tr>";
@@ -445,7 +464,20 @@ $tanggalMinimum = date('Y-m-d');
 </section>
 
   <script>
-document.addEventListener("DOMContentLoaded", function () {
+
+    //generate token baru
+      function regenerateToken() {
+    const tokenInput = document.getElementById('token');
+    // Generate token random 5 karakter
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let newToken = '';
+    for (let i = 0; i < 5; i++) {
+      newToken += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    tokenInput.value = newToken;
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
   // === DROPDOWN MENU ATAS ===
   const buttons = document.querySelectorAll(".dropbtn");
   buttons.forEach(btn => {
