@@ -240,6 +240,42 @@ header {
   background: #ddd;
 }
 
+/* ===== STYLE UNTUK INPUT TOKEN ===== */
+.token-presensi-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.token-presensi-input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid #d4d4d4;
+    border-radius: 8px;
+    font-size: 16px;
+    background: #fff;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+/* ===== BUTTON GENERATE TOKEN ===== */
+.btn-generate-token {
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: #1a75ff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.btn-generate-token:hover {
+    background: #005ce6;
+}
+
+
 /* RESPONSIVE */
 @media (max-width: 768px) {
   .attendance-cards {

@@ -527,15 +527,7 @@ header {
     background: #1a60cc;
 }
 
-.file-note {
-    color: #999;
-    display: block;
-    text-align: right;
-    font-size: 0.8em;
-    margin-top: 5px;
-}
-
-      .notification-box {
+.notification-box {
           padding: 15px;
           margin-bottom: 20px;
           border-radius: 5px;
@@ -545,22 +537,78 @@ header {
           max-width: 1200px;
           margin-left: auto;
           margin-right: auto;
-      }
-      .notification-box.success {
+}
+.notification-box.success {
           background-color: #d4edda;
           color: #155724;
           border: 1px solid #c3e6cb;
-      }
-      .notification-box.error {
+}
+.notification-box.error {
           background-color: #f8d7da;
           color: #721c24;
           border: 1px solid #f5c6cb;
-      }
-      .notification-box.warning {
+}
+.notification-box.warning {
           background-color: #fff3cd;
           color: #856404;
           border: 1px solid #ffeeba;
-      }
+}
+/* ========================================
+   CSS TAMBAHAN UNTUK MODAL TOKEN PRESENSI
+   ======================================== */
+
+.token-input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    font-family: 'Poppins', sans-serif;
+    transition: border-color 0.3s;
+    box-sizing: border-box;
+}
+
+.token-input:focus {
+    outline: none;
+    border-color: #4285f4;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #666;
+    cursor: pointer;
+    float: right;
+    line-height: 20px;
+    margin-top: -5px;
+    transition: color 0.3s;
+}
+
+.close-modal:hover {
+    color: #f44336;
+}
+
+.modal-header {
+    position: relative;
+    padding-right: 40px;
+}
+
+/* Tambahan styling untuk modal field dengan token */
+.modal-field label {
+    display: block;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.file-note {
+    white-space: nowrap;  /* biar 1 baris */
+    display: block;
+    margin-left: 135px;   /* align sejajar input */
+    margin-top: 5px;
+}
+
 
 /* RESPONSIVE */
 @media (max-width: 992px) {
