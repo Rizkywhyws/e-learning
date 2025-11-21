@@ -1,5 +1,6 @@
 <?php
 include('../config/db.php');
+include '../config/session.php';
 
 // Cek apakah guru sudah login
 if (!isset($_SESSION['nip']) || $_SESSION['role'] !== 'guru') {
