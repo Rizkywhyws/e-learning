@@ -50,13 +50,14 @@ if ($user = mysqli_fetch_assoc($result)) {
             $redirect = '../Guru/dashboard.php';
 
         } elseif ($user['role'] === 'siswa') {
-            $qSiswa = $conn->prepare("SELECT nama FROM datasiswa WHERE idAkun = ? LIMIT 1");
+            $qSiswa = $conn->prepare("SELECT nama, NIS, kelas FROM datasiswa WHERE idAkun = ? LIMIT 1");
             $qSiswa->bind_param("s", $user['idAkun']);
             $qSiswa->execute();
             $siswa = $qSiswa->get_result()->fetch_assoc();
 
             $_SESSION['nama'] = $siswa['nama'] ?? $user['email'];
             $_SESSION['nis'] = $siswa['NIS'] ?? null;
+            $_SESSION['kelas'] = $siswa['kelas'] ?? null;
             $redirect = '../Siswa/dashboard.php';
 
         } else { // admin

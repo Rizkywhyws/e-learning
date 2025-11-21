@@ -7,67 +7,103 @@ checkRole(['siswa']);
 
 $namaSiswa = $_SESSION['nama'] ?? 'Siswa';
 $kelasSiswa = $_SESSION['kelas'] ?? null;
+
 $mapelSelanjutnya = 'Belum ada jadwal';
+$nextMapelName = '';
+$nextJamMulai = '';
+$nextJamSelesai = '';
+$nextStatus = '';
+
+date_default_timezone_set('Asia/Jakarta');
+
+$hariEng = date("l"); // Friday, Saturday, etc
+$jamSekarang = date("H:i");
+
+// Konversi nama hari ke Indonesia
+$hariIndo = [
+    'Monday'=>'Senin','Tuesday'=>'Selasa','Wednesday'=>'Rabu',
+    'Thursday'=>'Kamis','Friday'=>'Jumat','Saturday'=>'Sabtu','Sunday'=>'Minggu'
+][$hariEng];
 
 if ($kelasSiswa) {
-    $hariIni = date('l');
-    $jamSekarang = date('H:i:s');
 
-    $mapHari = [
-        'Sunday' => 'Minggu',
-        'Monday' => 'Senin',
-        'Tuesday' => 'Selasa',
-        'Wednesday' => 'Rabu',
-        'Thursday' => 'Kamis',
-        'Friday' => 'Jumat',
-        'Saturday' => 'Sabtu'
-    ];
-    $hariIndo = $mapHari[$hariIni];
-
-    // 🔹 Cek jadwal hari ini yang jamnya belum lewat
-    $sql = "
-        SELECT m.namaMapel, jm.jamMulai 
+    // ==========================
+    // CEK JADWAL HARI INI YANG BELUM DIMULAI
+    $sqlNext = "
+        SELECT m.namaMapel, jm.jamMulai, jm.durasi
         FROM jadwalmapel jm
         JOIN mapel m ON jm.kodeMapel = m.kodeMapel
-        WHERE jm.kelas = ? 
-          AND jm.hari = ? 
+        WHERE jm.kelas = ?
+          AND jm.hari = ?
           AND jm.jamMulai > ?
         ORDER BY jm.jamMulai ASC
         LIMIT 1
     ";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sss", $kelasSiswa, $hariIndo, $jamSekarang);
-    $stmt->execute();
-    $result = $stmt->get_result();
 
-    if ($row = $result->fetch_assoc()) {
-        $mapelSelanjutnya = $row['namaMapel'] . " — " . date("H:i", strtotime($row['jamMulai']));
+    $stmtN = $conn->prepare($sqlNext);
+    $stmtN->bind_param("sss", $kelasSiswa, $hariIndo, $jamSekarang);
+    $stmtN->execute();
+    $resultN = $stmtN->get_result();
+
+    if ($rowN = $resultN->fetch_assoc()) {
+
+        $nextMapelName = $rowN['namaMapel'];
+        $nextJamMulai = date("H:i", strtotime($rowN['jamMulai']));
+        $nextJamSelesai = date("H:i", strtotime($rowN['jamMulai'] . " + {$rowN['durasi']} minutes"));
+        $nextStatus = "Hari ini";
+
     } else {
-        // 🔸 Jika tidak ada lagi pelajaran hari ini, ambil hari berikutnya
-        $urutanHari = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'];
-        $index = array_search($hariIndo, $urutanHari);
-        $hariBerikutnya = $urutanHari[($index + 1) % 7];
 
-        $sql2 = "
-            SELECT m.namaMapel, jm.jamMulai 
+        // ==========================
+        // TIDAK ADA JADWAL HARI INI → CARI HARI BERIKUTNYA (SKIP SABTU-MINGGU)
+
+        switch ($hariEng) {
+            case 'Friday':
+                $hariBerikutnyaEng = 'Monday';
+                break;
+            case 'Saturday':
+                $hariBerikutnyaEng = 'Monday';
+                break;
+            case 'Sunday':
+                $hariBerikutnyaEng = 'Monday';
+                break;
+            default:
+                $hariBerikutnyaEng = date("l", strtotime("+1 day"));
+        }
+
+        // Konversi hari Inggris → Indonesia
+        $hariBerikutnya = [
+            'Monday'=>'Senin','Tuesday'=>'Selasa','Wednesday'=>'Rabu',
+            'Thursday'=>'Kamis','Friday'=>'Jumat','Saturday'=>'Sabtu','Sunday'=>'Minggu'
+        ][$hariBerikutnyaEng];
+
+        // ==========================
+        // AMBIL JADWAL HARI BERIKUTNYA
+        $sqlNext2 = "
+            SELECT m.namaMapel, jm.jamMulai, jm.durasi
             FROM jadwalmapel jm
             JOIN mapel m ON jm.kodeMapel = m.kodeMapel
-            WHERE jm.kelas = ? 
+            WHERE jm.kelas = ?
               AND jm.hari = ?
             ORDER BY jm.jamMulai ASC
             LIMIT 1
         ";
-        $stmt2 = $conn->prepare($sql2);
-        $stmt2->bind_param("ss", $kelasSiswa, $hariBerikutnya);
-        $stmt2->execute();
-        $result2 = $stmt2->get_result();
 
-        if ($row2 = $result2->fetch_assoc()) {
-            $mapelSelanjutnya = $row2['namaMapel'] . " — " . date("H:i", strtotime($row2['jamMulai'])) . " (" . $hariBerikutnya . ")";
+        $stmtN2 = $conn->prepare($sqlNext2);
+        $stmtN2->bind_param("ss", $kelasSiswa, $hariBerikutnya);
+        $stmtN2->execute();
+        $resultN2 = $stmtN2->get_result();
+
+        if ($rowN2 = $resultN2->fetch_assoc()) {
+            $nextMapelName = $rowN2['namaMapel'];
+            $nextJamMulai = date("H:i", strtotime($rowN2['jamMulai']));
+            $nextJamSelesai = date("H:i", strtotime($rowN2['jamMulai'] . " + {$rowN2['durasi']} minutes"));
+            $nextStatus = "Besok ($hariBerikutnya)";
         }
     }
 }
 ?>
+
 
 
 <!DOCTYPE html>
@@ -152,25 +188,70 @@ if ($kelasSiswa) {
   <!-- GRID WRAPPER -->
   <section class="main-grid">
 
-    <!-- JADWAL PELAJARAN -->
+<!-- JADWAL PELAJARAN -->
     <div class="box jadwal">
       <h3>Jadwal Pelajaran</h3>
-      <table class="table-jadwal">
-        <thead>
-          <tr>
-            <th>No</th>
-            <th>Hari</th>
-            <th>Jam</th>
-            <th>Mata Pelajaran</th>
-            <th>Guru Pengajar</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>1</td><td>Senin</td><td>07.00 - 09.00</td><td>Matematika</td><td>Bu Rina, S.Pd</td></tr>
-          <tr><td>2</td><td>Senin</td><td>09.15 - 11.00</td><td>Bhs Indonesia</td><td>Pak Sandi, M.Pd</td></tr>
-          <tr><td>3</td><td>Selasa</td><td>07.00 - 09.00</td><td>Sejarah</td><td>Bu Angela, S.Pd</td></tr>
-        </tbody>
-      </table>
+      <div class="table-scroll">
+        <table class="table-jadwal">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Hari</th>
+              <th>Jam</th>
+              <th>Mata Pelajaran</th>
+              <th>Guru Pengajar</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php
+            if ($kelasSiswa) {
+                $sqlJadwal = "
+              SELECT jm.hari, jm.jamMulai, jm.durasi, m.namaMapel, g.nama AS namaGuru
+              FROM jadwalmapel jm
+              JOIN mapel m ON jm.kodeMapel = m.kodeMapel
+              LEFT JOIN dataguru g ON jm.nipGuru = g.NIP
+              WHERE jm.kelas = ?
+              ORDER BY 
+                  FIELD(jm.hari, 'Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'),
+                  jm.jamMulai ASC
+          ";
+                $stmtJadwal = $conn->prepare($sqlJadwal);
+                $stmtJadwal->bind_param("s", $kelasSiswa);
+                $stmtJadwal->execute();
+                $resultJadwal = $stmtJadwal->get_result();
+                
+                if ($resultJadwal->num_rows > 0) {
+                    $no = 1;
+                   while ($jadwal = $resultJadwal->fetch_assoc()) {
+                      $jamMulaiRaw = $jadwal['jamMulai'];
+                      $durasi = intval($jadwal['durasi']); // ambil durasi dari database
+
+                      // Hitung jam selesai
+                      $jamSelesaiRaw = date("H:i", strtotime($jamMulaiRaw . " +$durasi minutes"));
+
+                      $jamMulai = date("H:i", strtotime($jamMulaiRaw));
+                      $jamSelesai = $jamSelesaiRaw;
+
+                      $namaGuru = $jadwal['namaGuru'] ?? 'Belum ditentukan';
+
+                      echo "<tr>";
+                      echo "<td>" . $no++ . "</td>";
+                      echo "<td>" . htmlspecialchars($jadwal['hari']) . "</td>";
+                      echo "<td>" . $jamMulai . " - " . $jamSelesai . "</td>";
+                      echo "<td>" . htmlspecialchars($jadwal['namaMapel']) . "</td>";
+                      echo "<td>" . htmlspecialchars($namaGuru) . "</td>";
+                      echo "</tr>";
+                  }
+                } else {
+                    echo "<tr><td colspan='5' style='text-align: center;'>Belum ada jadwal tersedia</td></tr>";
+                }
+            } else {
+                echo "<tr><td colspan='5' style='text-align: center;'>Data kelas tidak ditemukan</td></tr>";
+            }
+            ?>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- KALENDER -->
@@ -228,9 +309,12 @@ if ($kelasSiswa) {
     <!-- INFO KELAS -->
     <div class="box selanjutnya">
       <h3>Selanjutnya</h3>
-      <p><b>Matematika</b></p>
-      <p>08.30 - 09.15</p>
-      <div class="jam-box">On Progress</div>
+      <p><b><?= htmlspecialchars($nextMapelName) ?></b></p>
+      <p><?= htmlspecialchars($nextJamMulai . " - " . $nextJamSelesai) ?></p>
+      
+      <div class="jam-box">
+        <?= htmlspecialchars($nextStatus) ?>
+  </div>
     </div>
     
     <div class="charts">
