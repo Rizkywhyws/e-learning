@@ -1,5 +1,6 @@
 <?php
 require_once "../config/db.php";
+include '../config/session.php';
 
 $data = $conn->query("
     SELECT s.NIS, s.NISN, s.nama, s.kelas, s.jurusan, a.email, s.idAkun

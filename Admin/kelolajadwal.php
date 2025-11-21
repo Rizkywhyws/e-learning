@@ -1,5 +1,6 @@
 <?php
 require_once "../config/db.php";
+include '../config/session.php';
 
 // Ambil data jadwal beserta nama mapel dan guru
 $data = $conn->query("

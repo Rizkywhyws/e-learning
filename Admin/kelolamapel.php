@@ -1,5 +1,6 @@
 <?php
 require_once "../config/db.php";
+include '../config/session.php';
 
 // Ambil data mapel + guru pengampu (jika ada)
 $data = $conn->query("

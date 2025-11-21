@@ -56,6 +56,7 @@ if ($user = mysqli_fetch_assoc($result)) {
             $siswa = $qSiswa->get_result()->fetch_assoc();
 
             $_SESSION['nama'] = $siswa['nama'] ?? $user['email'];
+            $_SESSION['nis'] = $siswa['NIS'] ?? null;
             $redirect = '../Siswa/dashboard.php';
 
         } else { // admin
