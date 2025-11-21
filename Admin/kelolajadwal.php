@@ -30,6 +30,35 @@ $data = $conn->query("
   <link rel="stylesheet" href="css/kelolamapel.css?v=<?php echo time(); ?>">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    .filter-box {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin-bottom: 15px;
+      margin-right: 50px;
+      gap: 10px;
+    }
+    
+    .filter-box label {
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .filter-box select {
+      padding: 8px 8px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+      min-width: 100px;
+      cursor: pointer;
+    }
+    
+    .filter-box select:focus {
+      outline: none;
+      border-color: #4CAF50;
+    }
+  </style>
 </head>
 <body>
 
@@ -71,7 +100,7 @@ $data = $conn->query("
   </section>
 
   <div class="search-bar">
-    <input type="text" placeholder="Search...">
+    <input type="text" id="searchInput" placeholder="Search...">
     <button><i class="fa-solid fa-magnifying-glass"></i></button>
   </div>
 </main>
@@ -81,6 +110,20 @@ $data = $conn->query("
     <button id="btnAdd" class="btn green"><i class="fa fa-plus"></i> Add Jadwal</button>
     <button id="btnEdit" class="btn yellow" disabled><i class="fa fa-pen"></i> Edit Jadwal</button>
     <button id="btnDelete" class="btn red" disabled><i class="fa fa-trash"></i> Delete Jadwal</button>
+  </div>
+
+  <!-- FILTER KELAS -->
+  <div class="filter-box">
+    <label><b>Filter Kelas:</b></label>
+    <select id="filterKelas">
+      <option value="">Semua</option>
+      <option value="X-1">X-1</option>
+      <option value="X-2">X-2</option>
+      <option value="XI-1">XI-1</option>
+      <option value="XI-2">XI-2</option>
+      <option value="XII-1">XII-1</option>
+      <option value="XII-2">XII-2</option>
+    </select>
   </div>
 
   <table class="data-table" id="jadwalTable">
@@ -311,6 +354,44 @@ btnDelete.onclick = () => {
     window.location.href = "backend/delete-jadwalmapel.php?id=" + id;
   }
 };
+
+// ==================== FILTER KELAS ====================
+const filterKelas = document.getElementById("filterKelas");
+
+filterKelas.addEventListener("change", function () {
+  const selected = this.value.toLowerCase();
+
+  document.querySelectorAll("#jadwalTable tbody tr").forEach(row => {
+    const kelas = row.dataset.kelas.toLowerCase();
+    row.style.display = (selected === "" || kelas === selected) ? "" : "none";
+  });
+});
+
+// ==================== SEARCH FUNCTION ====================
+const searchInput = document.getElementById("searchInput");
+
+searchInput.addEventListener("input", function() {
+  const searchValue = this.value.toLowerCase();
+  
+  document.querySelectorAll("#jadwalTable tbody tr").forEach(row => {
+    const kodeMapel = row.dataset.mapel.toLowerCase();
+    const hari = row.dataset.hari.toLowerCase();
+    const ruangan = row.dataset.ruangan.toLowerCase();
+    const kelas = row.dataset.kelas.toLowerCase();
+    
+    const namaMapel = row.cells[2].textContent.toLowerCase();
+    const namaGuru = row.cells[3].textContent.toLowerCase();
+    
+    const match = kodeMapel.includes(searchValue) || 
+                  namaMapel.includes(searchValue) || 
+                  namaGuru.includes(searchValue) || 
+                  hari.includes(searchValue) || 
+                  ruangan.includes(searchValue) || 
+                  kelas.includes(searchValue);
+    
+    row.style.display = match ? "" : "none";
+  });
+});
 </script>
 
 <script>
