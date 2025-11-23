@@ -1,0 +1,394 @@
+/* === RESET & BASE === */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  background: #f4f6fb;
+}
+
+/* === HEADER === */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  background: #f4f6fb;
+  z-index: 100;
+  padding-bottom: 10px;
+}
+
+header {
+  text-align: center;
+  padding: 20px;
+}
+
+.logo {
+  width: 190px;
+}
+
+/* === MENU === */
+.menu-row {
+  display: flex;
+  gap: 16px;
+  background: #d5ebff;
+  border: 2px solid #2e7dff;
+  padding: 20px 20px;
+  border-radius: 40px;
+  width: fit-content;
+  margin: -20px auto 20px;
+}
+
+.dropbtn {
+  background: transparent;
+  border: none;
+  color: #2e7dff;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.dropdown {
+  position: relative;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background: white;
+  min-width: 180px;
+  padding: 8px 0;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  z-index: 50;
+  top: 100%;
+  margin-top: 5px;
+}
+
+.dropdown-content a {
+  padding: 10px 15px;
+  text-decoration: none;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: 0.2s;
+}
+
+.dropdown-content a:hover {
+  background: #e6f0ff;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+/* === WELCOME BOX === */
+.welcome-box {
+  background: #bcd4ff;
+  padding: 35px;
+  width: 90%;
+  margin: 20px auto;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.welcome-box h2 {
+  font-size: 24px;
+  color: #1a3e8e;
+  margin-bottom: 8px;
+}
+
+.welcome-box p {
+  font-size: 16px;
+  color: #2e5a9e;
+}
+
+/* === MAPEL CONTAINER === */
+.mapel-container {
+  width: 90%;
+  margin: 30px auto;
+}
+
+.mapel-container h3 {
+  font-size: 22px;
+  color: #1a3e8e;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.mapel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+/* === MAPEL CARD === */
+.mapel-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  max-height: 120px;
+  overflow: hidden;
+  position: relative;
+}
+
+.mapel-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.mapel-card.active {
+  max-height: 800px;
+  box-shadow: 0 6px 16px rgba(46, 125, 255, 0.2);
+}
+
+/* === INDIKATOR QUIZ BELUM DIKERJAKAN === */
+.quiz-indicator {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 12px;
+  height: 12px;
+  background: #ff4444;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+.kode-mapel {
+  font-size: 12px;
+  color: #999;
+  font-weight: 500;
+}
+
+.mapel-card h4 {
+  font-size: 18px;
+  color: #1a3e8e;
+  margin: 8px 0;
+  padding-right: 30px; /* Beri ruang untuk indikator */
+}
+
+/* === QUIZ LIST === */
+.quiz-list {
+  margin-top: 15px;
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mapel-card.active .quiz-list {
+  display: flex;
+}
+
+.quiz-item {
+  padding: 12px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.quiz-item:hover {
+  opacity: 0.8;
+}
+
+.quiz-item.biru {
+  background: #c5d7ff;
+  color: #1a3e8e;
+}
+
+.quiz-item.hijau {
+  background: #bbf7d0;
+  color: #064e3b;
+}
+
+.quiz-item .judul {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.quiz-item .tgl-quiz {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* === POPUP OVERLAY === */
+.popup-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.popup-content {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* === POPUP HEADER === */
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px;
+  border-bottom: 2px solid #e8f0ff;
+  background: #f8fbff;
+  border-radius: 16px 16px 0 0;
+  position: relative;
+}
+
+.popup-header h2 {
+  font-size: 20px;
+  color: #1a3e8e;
+}
+
+.status-label {
+  position: absolute;
+  top: 20px;
+  right: 70px;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: #ff4444;
+  color: white;
+  border: none;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-btn:hover {
+  background: #cc0000;
+}
+
+/* === POPUP BODY === */
+.popup-body {
+  padding: 25px;
+}
+
+.mapel-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.mapel-row .mapel {
+  font-weight: 600;
+  color: #2e7dff;
+  font-size: 14px;
+}
+
+.mapel-row .tanggal {
+  font-size: 13px;
+  color: #666;
+}
+
+.popup-body h3 {
+  font-size: 18px;
+  color: #1a3e8e;
+  margin-bottom: 20px;
+}
+
+.popup-body label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 8px;
+  margin-top: 15px;
+}
+
+.popup-body input[type="text"] {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #f8f9fa;
+}
+
+.info-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+/* === BUTTON === */
+.btn-kerjakan {
+  width: 100%;
+  padding: 14px;
+  margin-top: 25px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-kerjakan:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .menu-row {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .mapel-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .info-row {
+    grid-template-columns: 1fr;
+  }
+
+  .popup-content {
+    max-width: 95%;
+  }
+}
