@@ -161,7 +161,7 @@ if ($kelasSiswa) {
       </button>
       <div class="dropdown-content">
         <a href="../Siswa/mataPelajaran.php"><i class="fa-solid fa-book-open"></i> Mata Pelajaran</a>
-        <a href="#"><i class="fa-solid fa-pen-to-square"></i> Quiz</a>
+        <a href="../Siswa/ngerjakanQuiz.php"><i class="fa-solid fa-pen-to-square"></i> Quiz</a>
       </div>
     </div>
     <div class="dropdown">

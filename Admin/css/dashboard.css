@@ -147,8 +147,8 @@ main {
 .welcome-box {
   background-color: #b5ccff;
   text-align: center;
-  padding: 40px 20px;
-  border-radius: 20px;
+  padding: 50px;
+  border-radius: 10px;
   margin: 20px auto 10px;
   width: 90%;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.299);
