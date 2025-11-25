@@ -1,28 +1,38 @@
 <?php
 //file mataPelajaran.php
+session_start();
 
-
-// Set session login otomatis
-$_SESSION['idAkun'] = 'SW83675';
- 
 // Include koneksi database
+include('../config/session.php');
+checkLogin();  
 include('../config/db.php');
 
-// Ambil data siswa yang login
-$idAkun = $_SESSION['idAkun'];
+// PERBAIKAN: Ambil idAkun dari session yang benar
+$idAkun = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
 
-// Query untuk mendapatkan NIS dari idAkun
-$querySiswa = "SELECT NIS, nama FROM datasiswa WHERE idAkun = '$idAkun'";
+// Jika session tidak ada, redirect ke login
+if (!$idAkun) {
+    header('Location: ../Auth/login.php');
+    exit;
+}
+
+// Query siswa SEKALIGUS ambil NIS, nama, kelas
+$querySiswa = "SELECT NIS, nama, kelas FROM datasiswa WHERE idAkun = '$idAkun'";
 $resultSiswa = mysqli_query($conn, $querySiswa);
+
+// Tambahkan validasi
+if (!$resultSiswa || mysqli_num_rows($resultSiswa) == 0) {
+    die("Data siswa tidak ditemukan!");
+}
+
 $dataSiswa = mysqli_fetch_assoc($resultSiswa);
+
 $NIS = $dataSiswa['NIS'];
 $namaSiswa = $dataSiswa['nama'];
+$kelasSiswa = $dataSiswa['kelas'];
 
-// Query untuk mendapatkan kelas siswa
-$queryKelas = "SELECT kelas FROM datasiswa WHERE NIS = '$NIS'";
-$resultKelas = mysqli_query($conn, $queryKelas);
-$dataKelas = mysqli_fetch_assoc($resultKelas);
-$kelasSiswa = $dataKelas['kelas'];
+// Simpan NIS ke session untuk digunakan di file lain
+$_SESSION['NIS'] = $NIS;
 
 // Query untuk mendapatkan mata pelajaran dari kelas siswa
 $queryMapel = "SELECT DISTINCT m.kodeMapel, m.namaMapel 
@@ -101,8 +111,19 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
          <div class="dropdown-content">
         <a href="dashboard.php"><i class="fa-solid fa-gauge"></i> Dashboard Utama</a>
         </div>
-  </div>
+      </div>
       
+      <!-- Tambahkan tombol logout -->
+      <div class="dropdown">
+        <button class="dropbtn">
+          <i class="fa-solid fa-user"></i>
+          <?= htmlspecialchars($namaSiswa) ?>
+          <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
+        </button>
+        <div class="dropdown-content">
+          <a href="../Auth/logout.php"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+        </div>
+      </div>
 
     </div>
   </header>
@@ -112,7 +133,7 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
 <div class="welcome-box">
     <?php
     // Query untuk mendapatkan pelajaran selanjutnya (contoh: dari jadwal hari ini)
-    $hariIni = date('l'); // Nama hari dalam bahasa Inggris
+    $hariIni = date('l');
     $hariIndo = [
         'Monday' => 'Senin',
         'Tuesday' => 'Selasa',
@@ -123,20 +144,29 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
         'Sunday' => 'Minggu'
     ];
     $hari = $hariIndo[$hariIni];
-    
-    $queryJadwal = "SELECT m.namaMapel 
-                    FROM jadwalmapel jm 
-                    INNER JOIN mapel m ON jm.kodeMapel = m.kodeMapel 
-                    WHERE jm.Kelas = '$kelasSiswa' AND jm.hari = '$hari' 
-                    ORDER BY jm.jamMulai ASC LIMIT 1";
+
+    $jamSekarang = date('H:i:s');
+
+    $queryJadwal = "
+        SELECT m.namaMapel, jm.jamMulai
+        FROM jadwalmapel jm
+        INNER JOIN mapel m ON jm.kodeMapel = m.kodeMapel
+        WHERE jm.Kelas = '$kelasSiswa'
+        AND jm.hari = '$hari'
+        AND jm.jamMulai > '$jamSekarang'
+        ORDER BY jm.jamMulai ASC
+        LIMIT 1
+    ";
+
     $resultJadwal = mysqli_query($conn, $queryJadwal);
-    
-    if($resultJadwal && mysqli_num_rows($resultJadwal) > 0) {
+
+    if ($resultJadwal && mysqli_num_rows($resultJadwal) > 0) {
         $dataJadwal = mysqli_fetch_assoc($resultJadwal);
         $pelajaranSelanjutnya = $dataJadwal['namaMapel'];
     } else {
         $pelajaranSelanjutnya = "Tidak ada jadwal";
     }
+
     ?>
     <h2>Halo! Selamat Datang, <?= htmlspecialchars($namaSiswa) ?></h2>
     <p>Jadwal Pelajaran selanjutnya <?= htmlspecialchars($pelajaranSelanjutnya) ?></p>
@@ -159,25 +189,21 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
                 // Query untuk mendapatkan materi dari mata pelajaran ini
                 $kodeMapel = $mapel['kodeMapel'];
                 
-                // PERBAIKAN: Query sesuai dengan struktur tabel materi
                 $queryMateri = "SELECT m.idMateri, m.judul, m.createdAt, m.deskripsi, m.filePath, m.linkVideo
                                 FROM materi m
                                 WHERE m.kodeMapel = '$kodeMapel'
                                 ORDER BY m.createdAt DESC";
                 $resultMateri = mysqli_query($conn, $queryMateri);
                 
-                // Error handling untuk query materi
                 if (!$resultMateri) {
                     echo "<p style='color:red;'>Error query materi: " . mysqli_error($conn) . "</p>";
                     continue;
                 }
                 
                 while($materi = mysqli_fetch_assoc($resultMateri)):
-                    // PERBAIKAN: Cek apakah ada tugas untuk materi ini yang belum dikumpulkan
-                    // Relasi: tugas berelasi dengan materi melalui idMateri
                     $idMateri = $materi['idMateri'];
                     
-                    // Query untuk cek: apakah ada tugas DAN belum dikumpulkan
+                    // Query untuk cek tugas
                     $queryTugasBelum = "SELECT 
                                             COUNT(CASE WHEN pt.idPengumpulan IS NULL THEN 1 END) as belum,
                                             COUNT(t.idTugas) as total
@@ -186,14 +212,11 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
                                         WHERE t.idMateri = '$idMateri'";
                     $resultTugasBelum = mysqli_query($conn, $queryTugasBelum);
                     
-                    $statusWarna = 'biru'; // default biru
+                    $statusWarna = 'biru';
                     
                     if($resultTugasBelum) {
                         $dataTugasBelum = mysqli_fetch_assoc($resultTugasBelum);
                         
-                        // Logika warna:
-                        // - Merah: Ada tugas (total > 0) DAN ada yang belum dikumpulkan (belum > 0)
-                        // - Biru: Tidak ada tugas (total = 0) ATAU semua tugas sudah dikumpulkan (belum = 0)
                         if($dataTugasBelum['total'] > 0 && $dataTugasBelum['belum'] > 0) {
                             $statusWarna = 'merah';
                         } else {
@@ -215,6 +238,9 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
 
     </div>
 </section>
+
+<!-- Rest of the HTML remains the same... -->
+<!-- Script, popup forms, etc. -->
 
 <!-- === Script interaktif untuk mapel === -->
 <script>

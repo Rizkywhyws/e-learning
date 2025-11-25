@@ -14,6 +14,16 @@ if (!isset($_GET['kodeMapel']) || !isset($_GET['idMateri'])) {
 $kodeMapel = mysqli_real_escape_string($conn, $_GET['kodeMapel']);
 $idMateri  = mysqli_real_escape_string($conn, $_GET['idMateri']);
 
+// Ubah baris 16-17 dari:
+$idAkun = isset($_SESSION['idAkun']) ? $_SESSION['idAkun'] : 'A0004';
+
+// Menjadi:
+$idAkun = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
+
+if (!$idAkun) {
+    echo json_encode(array('success' => false, 'message' => 'Session expired'));
+    exit;
+}
 $NIS = isset($_SESSION['NIS']) ? $_SESSION['NIS'] : null;
 
 // Jika belum ada NIS di session, ambil dari idAkun
