@@ -70,16 +70,16 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
     <img src="../assets/logo-elearning.png" class="logo" alt="E-School">
 
     <!-- MENU ROW -->
-    <div class="menu-row">
+    <di class="menu-row">
 
       <div class="dropdown">
         <button class="dropbtn">
-          <i class="fa-solid fa-database"></i>
+          <i class="fa-solid fa-user"></i>
           Profil
           <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
         </button>
         <div class="dropdown-content">
-          <a href="#"><i class="fa-solid fa-user"></i> Profil</a>
+          <a href="#"><i class="fa-solid fa-user"></i> Profil Saya</a>
         </div>
       </div>
 
@@ -101,28 +101,23 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
           <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
         </button>
         <div class="dropdown-content">
-          <a href="#"><i class="fa-solid fa-book-open"></i> Materi</a>
-          <a href="#"><i class="fa-solid fa-file-lines"></i> Tugas</a>
-          <a href="#"><i class="fa-solid fa-pen-to-square"></i> Quiz</a>
+          <a href="#"><i class="fa-solid fa-book-open"></i> Mapel</a>
+          <a href="../Siswa/ngerjakanQuiz.php"><i class="fa-solid fa-pen-to-square"></i> Quiz</a>
         </div>
       </div>
-      <div class="dropdown">
+       <div class="dropdown">
         <button class="dropbtn"><i class="fa-solid fa-house"></i> Dashboard</button>
-         <div class="dropdown-content">
-        <a href="dashboard.php"><i class="fa-solid fa-gauge"></i> Dashboard Utama</a>
+        <div class="dropdown-content">
+        <a href="dashboard.php"><i class="fa-solid fa-gauge"></i>Dashboard Utama</a>
         </div>
-      </div>
+    </div>
       
       <!-- Tambahkan tombol logout -->
       <div class="dropdown">
         <button class="dropbtn">
-          <i class="fa-solid fa-user"></i>
-          <?= htmlspecialchars($namaSiswa) ?>
-          <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <a href="../Auth/logout.php" onclick="return confirm('Yakin ingin logout?')"style="text-decoration:none; color:#2e7dff;"> Logout</a>
         </button>
-        <div class="dropdown-content">
-          <a href="../Auth/logout.php"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
-        </div>
       </div>
 
     </div>
