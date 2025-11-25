@@ -91,6 +91,118 @@ $resultMapel = mysqli_stmt_get_result($stmtMapel);
 <!-- ====== File CSS ====== -->
 <link rel="stylesheet" href="cssSiswa/dashboard.css">
 <link rel="stylesheet" href="cssSiswa/ngerjakanQuiz.css">
+<style>
+    /* Tambahkan style khusus untuk popup detail quiz */
+    .popup-content {
+        max-width: 500px; /* Atur lebar maksimal */
+        width: 90%; /* Atur lebar relatif untuk mobile */
+        border-radius: 12px; /* Sudut membulat */
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); /* Bayangan */
+        background: #fff;
+        overflow: hidden; /* Pastikan elemen tidak meluber */
+    }
+    .popup-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        background-color: #f8fafc; /* Warna latar header */
+        border-bottom: 1px solid #e2e8f0; /* Garis batas bawah */
+    }
+    .popup-header h2 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1e293b;
+    }
+    .status-label {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-align: center;
+    }
+    .close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #94a3b8;
+    }
+    .close-btn:hover {
+        color: #64748b;
+    }
+    .popup-body {
+        padding: 20px;
+    }
+    .mapel-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .mapel-row p {
+        margin: 0;
+        font-weight: 600;
+        color: #334155;
+    }
+    .popup-body h3 {
+        margin: 10px 0;
+        font-size: 1.1rem;
+        color: #0f172a;
+    }
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 15px; /* Jarak antar kolom */
+        margin-bottom: 15px;
+    }
+    .info-row > div {
+        flex: 1; /* Agar kolom sama lebar */
+    }
+    .info-row label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: #64748b;
+        margin-bottom: 5px;
+    }
+    .info-row input[type="text"] {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background-color: #f1f5f9;
+        font-size: 0.9rem;
+        color: #334155;
+        box-sizing: border-box;
+    }
+    .info-row input[type="text"]:focus {
+        outline: none;
+        border-color: #93c5fd;
+    }
+    #hasilQuizSection {
+        background-color: #f8fafc;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 15px 0;
+    }
+    #btnKerjakan {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    #btnKerjakan:hover {
+        opacity: 0.9;
+    }
+</style>
 </head>
 <body>
 
@@ -104,7 +216,7 @@ $resultMapel = mysqli_stmt_get_result($stmtMapel);
 
       <div class="dropdown">
         <button class="dropbtn">
-          <i class="fa-solid fa-database"></i>
+          <i class="fa-solid fa-user"></i>
           Profil
           <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
         </button>
@@ -304,11 +416,8 @@ $resultMapel = mysqli_stmt_get_result($stmtMapel);
         </div>
       </div>
 
+      <!-- Hapus baris info-row untuk Durasi -->
       <div class="info-row">
-        <div>
-          <label>Durasi</label>
-          <input type="text" id="quizDurasi" readonly>
-        </div>
         <div>
           <label>Jumlah Soal</label>
           <input type="text" id="quizJumlahSoal" readonly>
@@ -412,13 +521,13 @@ function loadQuizDetail(idQuiz, kodeMapel) {
         .then(data => {
             // jika sampai sini, data adalah objek JSON
             if (data.success) {
-                // ... (Logika pembaruan DOM tetap sama, sudah bagus) ...
+                // ... (Logika pembaruan DOM, tanpa durasi) ...
                 document.getElementById('quizJudul').textContent = data.judul;
                 document.getElementById('quizMapel').textContent = data.namaMapel;
                 document.getElementById('quizTanggal').textContent = data.tanggal;
                 document.getElementById('quizWaktuMulai').value = data.waktuMulai ?? '';
                 document.getElementById('quizWaktuSelesai').value = data.waktuSelesai ?? '';
-                document.getElementById('quizDurasi').value = (data.durasi ?? 0) + ' menit';
+                // Hapus referensi ke data.durasi
                 document.getElementById('quizJumlahSoal').value = (data.jumlahSoal ?? 0) + ' soal';
                 document.getElementById('idQuizHidden').value = data.idQuiz;
                 
@@ -431,8 +540,8 @@ function loadQuizDetail(idQuiz, kodeMapel) {
                     statusLabel.style.backgroundColor = '#bbf7d0';
                     statusLabel.style.color = '#064e3b';
                     hasilSection.style.display = 'block';
-                    document.getElementById('quizNilai').value = data.nilai ?? '';
-                    document.getElementById('quizWaktuPengerjaan').value = data.waktuPengerjaan ?? '';
+                    document.getElementById('quizNilai').value = (data.nilai ?? 'N/A') + ' / 100'; // Format nilai
+                    document.getElementById('quizWaktuPengerjaan').value = data.waktuPengerjaan ?? 'N/A';
                     btnKerjakan.textContent = 'LIHAT PEMBAHASAN';
                     btnKerjakan.style.backgroundColor = '#d1fae5';
                     btnKerjakan.style.color = '#065f46';

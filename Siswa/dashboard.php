@@ -7,6 +7,7 @@ checkRole(['siswa']);
 
 $namaSiswa = $_SESSION['nama'] ?? 'Siswa';
 $kelasSiswa = $_SESSION['kelas'] ?? null;
+$nisSiswa = $_SESSION['NIS'] ?? null; // Pastikan NIS tersedia di session
 
 $mapelSelanjutnya = 'Belum ada jadwal';
 $nextMapelName = '';
@@ -102,8 +103,185 @@ if ($kelasSiswa) {
         }
     }
 }
-?>
 
+// --- TAMBAHAN LOGIKA UNTUK TIMELINE DAN SEKARANG ---
+
+// --- TAMBAHAN LOGIKA UNTUK TIMELINE DAN SEKARANG ---
+
+// --- TAMBAHAN LOGIKA UNTUK TIMELINE DAN SEKARANG ---
+
+$timelineItems = [];
+$sekarangMapel = '';
+$sekarangJam = '';
+$sekarangStatus = 'Anda belum melakukan presensi';
+$sekarangGuru = '';
+
+if ($kelasSiswa) {
+    // 1. Ambil Daftar kodeMapel untuk kelas siswa
+    $sqlGetMapel = "
+        SELECT DISTINCT kodeMapel
+        FROM jadwalmapel
+        WHERE kelas = ?
+    ";
+    $stmtGetMapel = $conn->prepare($sqlGetMapel);
+    $stmtGetMapel->bind_param("s", $kelasSiswa);
+    $stmtGetMapel->execute();
+    $resultGetMapel = $stmtGetMapel->get_result();
+
+    $kodeMapelList = [];
+    while ($row = $resultGetMapel->fetch_assoc()) {
+        $kodeMapelList[] = $row['kodeMapel'];
+    }
+
+    // Jika tidak ada mapel, set array kosong agar query tidak error
+    if (empty($kodeMapelList)) {
+        $kodeMapelList = ['NULL']; // Dummy value
+    }
+
+    // 2. Ambil Quiz (SEMUA, untuk memastikan data muncul)
+    $placeholders = str_repeat('?,', count($kodeMapelList) - 1) . '?';
+    $sqlQuiz = "
+        SELECT q.judul, q.waktuMulai, m.namaMapel
+        FROM quiz q
+        JOIN mapel m ON q.kodeMapel = m.kodeMapel
+        WHERE q.kodeMapel IN ($placeholders)
+        ORDER BY q.waktuMulai ASC
+        LIMIT 3
+    ";
+
+    $stmtQuiz = $conn->prepare($sqlQuiz);
+    $types = str_repeat('s', count($kodeMapelList));
+    $stmtQuiz->bind_param($types, ...$kodeMapelList);
+    $stmtQuiz->execute();
+    $resultQuiz = $stmtQuiz->get_result();
+
+    while ($row = $resultQuiz->fetch_assoc()) {
+        $timelineItems[] = [
+            'type' => 'Quiz',
+            'judul' => $row['judul'],
+            'mapel' => $row['namaMapel'],
+            'waktu' => date("H:i", strtotime($row['waktuMulai']))
+        ];
+    }
+
+    // 3. Ambil Tugas yang deadline-nya akan datang (tetap kosong, karena tabel tugas kosong)
+    $sqlTugas = "
+        SELECT t.judul, t.deadline, m.namaMapel
+        FROM tugas t
+        JOIN mapel m ON t.kodeMapel = m.kodeMapel
+        WHERE t.kodeMapel IN ($placeholders)
+          AND t.deadline > NOW()
+        ORDER BY t.deadline ASC
+        LIMIT 3
+    ";
+
+    $stmtTugas = $conn->prepare($sqlTugas);
+    $stmtTugas->bind_param($types, ...$kodeMapelList);
+    $stmtTugas->execute();
+    $resultTugas = $stmtTugas->get_result();
+
+    while ($row = $resultTugas->fetch_assoc()) {
+        $timelineItems[] = [
+            'type' => 'Tugas',
+            'judul' => $row['judul'],
+            'mapel' => $row['namaMapel'],
+            'waktu' => date("H:i", strtotime($row['deadline']))
+        ];
+    }
+
+    // 4. Ambil Materi terbaru (tetap kosong, karena tabel materi kosong)
+    $sqlMateri = "
+        SELECT m.judul, m.createdAt, mp.namaMapel
+        FROM materi m
+        JOIN mapel mp ON m.kodeMapel = mp.kodeMapel
+        WHERE mp.kodeMapel IN ($placeholders)
+        ORDER BY m.createdAt DESC
+        LIMIT 3
+    ";
+
+    $stmtMateri = $conn->prepare($sqlMateri);
+    $stmtMateri->bind_param($types, ...$kodeMapelList);
+    $stmtMateri->execute();
+    $resultMateri = $stmtMateri->get_result();
+
+    while ($row = $resultMateri->fetch_assoc()) {
+        $timelineItems[] = [
+            'type' => 'Materi',
+            'judul' => $row['judul'],
+            'mapel' => $row['namaMapel'],
+            'waktu' => date("H:i", strtotime($row['createdAt']))
+        ];
+    }
+
+    // Urutkan timelineItems berdasarkan waktu (ascending)
+    usort($timelineItems, function($a, $b) {
+        $timeA = strtotime($a['waktu']);
+        $timeB = strtotime($b['waktu']);
+        return $timeA <=> $timeB;
+    });
+
+    // Ambil maksimal 3 item untuk ditampilkan di timeline
+    $timelineItems = array_slice($timelineItems, 0, 3);
+
+    // === LOGIKA UNTUK BAGIAN "SEKARANG" ===
+    $sqlSekarang = "
+        SELECT m.namaMapel, jm.jamMulai, jm.durasi, g.nama AS namaGuru, jm.idJadwalMapel
+        FROM jadwalmapel jm
+        JOIN mapel m ON jm.kodeMapel = m.kodeMapel
+        LEFT JOIN dataguru g ON jm.nipGuru = g.NIP
+        WHERE jm.kelas = ?
+          AND jm.hari = ?
+          AND ? BETWEEN jm.jamMulai AND DATE_ADD(jm.jamMulai, INTERVAL jm.durasi MINUTE)
+        LIMIT 1
+    ";
+
+    $stmtSekarang = $conn->prepare($sqlSekarang);
+    $stmtSekarang->bind_param("sss", $kelasSiswa, $hariIndo, $jamSekarang);
+    $stmtSekarang->execute();
+    $resultSekarang = $stmtSekarang->get_result();
+
+    if ($rowSekarang = $resultSekarang->fetch_assoc()) {
+        $sekarangMapel = $rowSekarang['namaMapel'];
+        $jamMulaiRaw = $rowSekarang['jamMulai'];
+        $durasi = intval($rowSekarang['durasi']);
+        $jamSelesaiRaw = date("H:i", strtotime("$jamMulaiRaw +$durasi minutes"));
+        $sekarangJam = "$jamMulaiRaw - $jamSelesaiRaw";
+        $sekarangGuru = $rowSekarang['namaGuru'] ?? 'Belum ditentukan';
+        $idJadwalSekarang = $rowSekarang['idJadwalMapel'];
+
+        // Cek status presensi
+        if ($nisSiswa) { // Pastikan NIS tersedia
+            $sqlCekPresensi = "
+                SELECT COUNT(*) as total
+                FROM presensi_siswa ps
+                WHERE ps.NIS = ? 
+                  AND ps.tanggal = CURDATE()
+                  AND ps.idJadwalMapel = ?
+            ";
+            $stmtCekPresensi = $conn->prepare($sqlCekPresensi);
+            $stmtCekPresensi->bind_param("ss", $nisSiswa, $idJadwalSekarang);
+            $stmtCekPresensi->execute();
+            $resultCekPresensi = $stmtCekPresensi->get_result();
+            $rowCekPresensi = $resultCekPresensi->fetch_assoc();
+
+            if ($rowCekPresensi['total'] > 0) {
+                $sekarangStatus = 'Anda sudah melakukan presensi';
+            } else {
+                $sekarangStatus = 'Anda belum melakukan presensi';
+            }
+        } else {
+            $sekarangStatus = 'Tidak dapat memeriksa presensi (NIS tidak ditemukan).';
+        }
+
+    } else {
+        // Jika tidak ada pelajaran yang sedang berlangsung
+        $sekarangMapel = 'Tidak ada pelajaran';
+        $sekarangJam = '';
+        $sekarangStatus = 'Tidak ada pelajaran saat ini';
+        $sekarangGuru = '';
+    }
+}
+?>
 
 
 <!DOCTYPE html>
@@ -133,7 +311,7 @@ if ($kelasSiswa) {
 
     <div class="dropdown">
       <button class="dropbtn">
-        <i class="fa-solid fa-database"></i>
+        <i class="fa-solid fa-user"></i>
         Profil
         <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
       </button>
@@ -278,9 +456,13 @@ if ($kelasSiswa) {
       <div class="box timeline">
         <h3>Timeline</h3>
         <div class="timeline-list">
-          <p><b>Tugas:</b> Bahasa Inggris — 09.00</p>
-          <p><b>Quiz:</b> Matematika — 10.00</p>
-          <p><b>Tugas:</b> Sosiologi — 13.00</p>
+          <?php if (!empty($timelineItems)): ?>
+            <?php foreach ($timelineItems as $item): ?>
+              <p><b><?= htmlspecialchars($item['type']) ?>:</b> <?= htmlspecialchars($item['judul']) ?> — <?= htmlspecialchars($item['waktu']) ?></p>
+            <?php endforeach; ?>
+          <?php else: ?>
+            <p>Tidak ada aktivitas mendatang.</p>
+          <?php endif; ?>
         </div>
       </div>
 
@@ -298,9 +480,12 @@ if ($kelasSiswa) {
             <button class="absen-btn">Absen Sekarang</button>
           </div>
           <div class="info-area">
-            <p><i class="fa-solid fa-book"></i> Bahasa Indonesia</p>
-            <h2>08.30 - 09.15</h2>
-            <p class="status">Anda belum melakukan presensi</p>
+            <p><i class="fa-solid fa-book"></i> <?= htmlspecialchars($sekarangMapel) ?></p>
+            <h2><?= htmlspecialchars($sekarangJam) ?></h2>
+            <p class="status"><?= htmlspecialchars($sekarangStatus) ?></p>
+            <?php if (!empty($sekarangGuru) && $sekarangGuru !== 'Belum ditentukan'): ?>
+              <p class="guru"><i class="fa-solid fa-chalkboard-teacher"></i> Guru: <?= htmlspecialchars($sekarangGuru) ?></p>
+            <?php endif; ?>
           </div>
         </div>
       </div>

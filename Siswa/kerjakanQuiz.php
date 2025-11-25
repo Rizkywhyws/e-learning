@@ -1,6 +1,7 @@
 <?php
 include('../config/db.php');
 include('../config/session.php');
+date_default_timezone_set('Asia/Jakarta');
 
 // Cek login & role
 checkLogin();
@@ -93,8 +94,9 @@ while($soal = mysqli_fetch_assoc($resultSoal)) {
     $soalList[] = $soal;
 }
 
-// Hitung waktu pengerjaan (dalam detik)
-$durasiMenit = $dataQuiz['durasi'];
+// Hitung durasi: gunakan default 30 menit atau 2 menit per soal (pilih yang lebih besar)
+$durasiPerSoal = count($soalList) * 2; // 2 menit per soal
+$durasiMenit = max(30, $durasiPerSoal); // Minimal 30 menit
 $durasiDetik = $durasiMenit * 60;
 ?>
 
@@ -397,7 +399,7 @@ body {
     <div class="quiz-header">
         <div class="quiz-info">
             <h2><?= htmlspecialchars($dataQuiz['judul']) ?></h2>
-            <p><?= htmlspecialchars($dataQuiz['namaMapel']) ?> • <?= count($soalList) ?> Soal</p>
+            <p><?= htmlspecialchars($dataQuiz['namaMapel']) ?> • <?= count($soalList) ?> Soal • <?= $durasiMenit ?> Menit</p>
         </div>
         <div class="timer-box" id="timerBox">
             <p>SISA WAKTU</p>
@@ -422,114 +424,144 @@ body {
         <input type="hidden" name="waktuMulai" id="waktuMulai" value="">
         <input type="hidden" name="waktuSelesai" id="waktuSelesai" value="">
 
-        <?php foreach($soalList as $index => $soal): ?>
-        <div class="soal-container" id="soal-<?= $index ?>" style="display: <?= $index === 0 ? 'block' : 'none' ?>">
-            <div class="soal-header">
-                <span class="soal-number">Soal <?= $index + 1 ?></span>
-                <span class="soal-type">
-                    <?php
-                    switch($soal['type']) {
-                        case 'Pilgan':
-                            echo '<i class="fas fa-check-circle"></i> Pilihan Ganda';
-                            break;
-                        case 'Multi':
-                            echo '<i class="fas fa-list-check"></i> Pilihan Ganda Berganda';
-                            break;
-                        case 'Esai':
-                            echo '<i class="fas fa-pen"></i> Esai';
-                            break;
-                        default:
-                            echo $soal['type'];
-                    }
-                    ?>
-                </span>
-            </div>
+<?php foreach($soalList as $index => $soal): ?>
+<div class="soal-container" id="soal-<?= $index ?>" style="display: <?= $index === 0 ? 'block' : 'none' ?>">
 
-            <div class="pertanyaan">
-                <?= nl2br(htmlspecialchars($soal['pertanyaan'])) ?>
-            </div>
+    <!-- Soal Header -->
+<div class="soal-header">
+    <span class="soal-number">Soal <?= $index + 1 ?></span>
+    <span class="soal-type">
+        <?php
+        // Normalisasi type: ubah jadi lowercase dan trim spasi
+        $typeNormalized = strtolower(trim($soal['type']));
 
-            <?php if($soal['type'] === 'Pilgan'): ?>
-                <!-- Pilihan Ganda -->
-                <div class="pilihan-container">
-                    <?php 
-                    $pilihanLabels = ['a', 'b', 'c', 'd', 'e'];
-                    $pilihanFields = ['opsi_a', 'opsi_b', 'opsi_c', 'opsi_d', 'opsi_e'];
-                    
-                    foreach($pilihanFields as $idx => $field):
-                        if(!empty($soal[$field])):
-                    ?>
-                    <label class="pilihan-item" data-soal="<?= $index ?>">
-                        <input type="radio" 
-                               name="jawaban[<?= $soal['idSoal'] ?>]" 
-                               value="<?= $pilihanLabels[$idx] ?>"
-                               onchange="updateSelection(this)">
-                        <span class="pilihan-label"><?= strtoupper($pilihanLabels[$idx]) ?>.</span>
-                        <span class="pilihan-text"><?= htmlspecialchars($soal[$field]) ?></span>
-                    </label>
-                    <?php 
-                        endif;
-                    endforeach; 
-                    ?>
-                </div>
+        switch($typeNormalized) {
+            case 'pilgan':
+                echo '<i class="fas fa-check-circle"></i> Pilihan Ganda';
+                break;
+            case 'multi':
+                echo '<i class="fas fa-list-check"></i> Pilihan Ganda Berganda';
+                break;
+            case 'esai':
+                echo '<i class="fas fa-pen"></i> Esai';
+                break;
+            default:
+                echo htmlspecialchars($soal['type']);
+        }
+        ?>
+    </span>
+</div>
 
-            <?php elseif($soal['type'] === 'Multi'): ?>
-                <!-- Pilihan Ganda Berganda -->
-                <div class="pilihan-container">
-                    <?php 
-                    $pilihanLabels = ['a', 'b', 'c', 'd', 'e'];
-                    $pilihanFields = ['opsi_a', 'opsi_b', 'opsi_c', 'opsi_d', 'opsi_e'];
-                    
-                    foreach($pilihanFields as $idx => $field):
-                        if(!empty($soal[$field])):
-                    ?>
-                    <label class="pilihan-item" data-soal="<?= $index ?>">
-                        <input type="checkbox" 
-                               name="jawaban_multi[<?= $soal['idSoal'] ?>][]" 
-                               value="<?= $pilihanLabels[$idx] ?>"
-                               onchange="updateSelection(this)">
-                        <span class="pilihan-label"><?= strtoupper($pilihanLabels[$idx]) ?>.</span>
-                        <span class="pilihan-text"><?= htmlspecialchars($soal[$field]) ?></span>
-                    </label>
-                    <?php 
-                        endif;
-                    endforeach; 
-                    ?>
-                </div>
-                <!-- Hidden input untuk menyimpan jawaban multi sebagai string -->
-                <input type="hidden" name="jawaban[<?= $soal['idSoal'] ?>]" id="multi-<?= $soal['idSoal'] ?>">
+<div class="pertanyaan">
+    <?= nl2br(htmlspecialchars($soal['pertanyaan'])) ?>
+</div>
 
-            <?php elseif($soal['type'] === 'Esai'): ?>
-                <!-- Esai -->
-                <textarea 
-                    class="textarea-jawaban" 
-                    name="jawaban[<?= $soal['idSoal'] ?>]" 
-                    placeholder="Tuliskan jawaban Anda di sini..."
-                    onchange="markAnswered(<?= $index ?>)"></textarea>
-            <?php endif; ?>
+<?php 
+// Normalisasi type untuk kondisi if
+$typeForIf = strtolower(trim($soal['type']));
+?>
 
-            <!-- Navigation Buttons -->
-            <div class="navigation-buttons">
-                <?php if($index > 0): ?>
-                <button type="button" class="btn btn-prev" onclick="prevSoal(<?= $index ?>)">
-                    <i class="fas fa-arrow-left"></i> Sebelumnya
-                </button>
-                <?php else: ?>
-                <div></div>
-                <?php endif; ?>
+<?php if($typeForIf === 'pilihan ganda'): ?>
+    <!-- Pilihan Ganda -->
+    <div class="pilihan-container">
+        <?php 
+        $pilihanLabels = ['a', 'b', 'c', 'd', 'e'];
+        $pilihanFields = ['opsi_a', 'opsi_b', 'opsi_c', 'opsi_d', 'opsi_e'];
+        
+        foreach($pilihanFields as $idx => $field):
+            // Ambil nilai, pastikan tidak null
+            $nilaiOpsi = $soal[$field] ?? '';
+            
+            // Hapus semua jenis whitespace (spasi, tab, newline, dll) dari awal dan akhir string
+            $nilaiTrimmed = preg_replace('/^\s+|\s+$/u', '', $nilaiOpsi);
 
-                <?php if($index < count($soalList) - 1): ?>
-                <button type="button" class="btn btn-next" onclick="nextSoal(<?= $index ?>)">
-                    Selanjutnya <i class="fas fa-arrow-right"></i>
-                </button>
-                <?php else: ?>
-                <button type="button" class="btn btn-submit" onclick="confirmSubmit()">
-                    <i class="fas fa-paper-plane"></i> Selesai & Submit
-                </button>
-                <?php endif; ?>
-            </div>
-        </div>
-        <?php endforeach; ?>
+            // Debug: Tampilkan info tentang nilai sebelum dan sesudah trim
+            echo "<!-- DEBUG: Field=$field, Raw Value=" . json_encode($nilaiOpsi) . ", Trimmed=" . json_encode($nilaiTrimmed) . ", Length=" . strlen($nilaiTrimmed) . " -->";
+
+            // Tampilkan hanya jika hasil trim bukan string kosong
+            if ($nilaiTrimmed !== ''):
+        ?>
+        <label class="pilihan-item" data-soal="<?= $index ?>">
+            <input type="radio" 
+                   name="jawaban[<?= $soal['idSoal'] ?>]" 
+                   value="<?= $pilihanLabels[$idx] ?>"
+                   onchange="updateSelection(this)">
+            <span class="pilihan-label"><?= strtoupper($pilihanLabels[$idx]) ?>.</span>
+            <span class="pilihan-text"><?= htmlspecialchars($nilaiTrimmed) ?></span>
+        </label>
+        <?php 
+            else:
+                echo "<!-- DEBUG: Melewati pilihan $field karena kosong setelah trim -->";
+            endif;
+        endforeach; 
+        ?>
+    </div>
+
+<?php elseif($typeForIf === 'multi-select'): ?>
+    <!-- Pilihan Ganda Berganda -->
+    <div class="pilihan-container">
+        <?php 
+        $pilihanLabels = ['a', 'b', 'c', 'd', 'e'];
+        $pilihanFields = ['opsi_a', 'opsi_b', 'opsi_c', 'opsi_d', 'opsi_e'];
+        
+        foreach($pilihanFields as $idx => $field):
+            $nilaiOpsi = $soal[$field] ?? '';
+            // Hapus semua jenis whitespace (spasi, tab, newline, dll) dari awal dan akhir string
+            $nilaiTrimmed = preg_replace('/^\s+|\s+$/u', '', $nilaiOpsi);
+
+            echo "<!-- DEBUG: Field=$field, Raw Value=" . json_encode($nilaiOpsi) . ", Trimmed=" . json_encode($nilaiTrimmed) . ", Length=" . strlen($nilaiTrimmed) . " -->";
+
+            if ($nilaiTrimmed !== ''):
+        ?>
+        <label class="pilihan-item" data-soal="<?= $index ?>">
+            <input type="checkbox" 
+                   name="jawaban_multi[<?= $soal['idSoal'] ?>][]" 
+                   value="<?= $pilihanLabels[$idx] ?>"
+                   onchange="updateSelection(this)">
+            <span class="pilihan-label"><?= strtoupper($pilihanLabels[$idx]) ?>.</span>
+            <span class="pilihan-text"><?= htmlspecialchars($nilaiTrimmed) ?></span>
+        </label>
+        <?php 
+            else:
+                echo "<!-- DEBUG: Melewati pilihan $field karena kosong setelah trim -->";
+            endif;
+        endforeach; 
+        ?>
+    </div>
+    <!-- Hidden input untuk menyimpan jawaban multi sebagai string -->
+    <input type="hidden" name="jawaban[<?= $soal['idSoal'] ?>]" id="multi-<?= $soal['idSoal'] ?>">
+
+<?php elseif($typeForIf === 'esai'): ?>
+    <!-- Esai -->
+    <textarea 
+        class="textarea-jawaban" 
+        name="jawaban[<?= $soal['idSoal'] ?>]" 
+        placeholder="Tuliskan jawaban Anda di sini..."
+        onchange="markAnswered(<?= $index ?>)"></textarea>
+<?php endif; ?>
+
+    <!-- Navigation Buttons -->
+    <div class="navigation-buttons">
+        <?php if($index > 0): ?>
+        <button type="button" class="btn btn-prev" onclick="prevSoal(<?= $index ?>)">
+            <i class="fas fa-arrow-left"></i> Sebelumnya
+        </button>
+        <?php else: ?>
+        <div></div>
+        <?php endif; ?>
+
+        <?php if($index < count($soalList) - 1): ?>
+        <button type="button" class="btn btn-next" onclick="nextSoal(<?= $index ?>)">
+            Selanjutnya <i class="fas fa-arrow-right"></i>
+        </button>
+        <?php else: ?>
+        <button type="button" class="btn btn-submit" onclick="confirmSubmit()">
+            <i class="fas fa-paper-plane"></i> Selesai & Submit
+        </button>
+        <?php endif; ?>
+    </div>
+</div>
+<?php endforeach; ?>
     </form>
 </div>
 
