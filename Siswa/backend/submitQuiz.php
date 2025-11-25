@@ -26,19 +26,7 @@ $idQuiz = mysqli_real_escape_string($conn, $_POST['idQuiz']);
 $NIS = mysqli_real_escape_string($conn, $_POST['NIS']);
 $waktuMulai = mysqli_real_escape_string($conn, $_POST['waktuMulai']);
 $waktuSelesai = mysqli_real_escape_string($conn, $_POST['waktuSelesai']);
-$jawaban = $_POST['jawaban']; // Array jawaban
-
-// Validasi NIS dari data siswa di database
-$queryValidasi = "SELECT NIS FROM datasiswa WHERE idAkun = ?";
-$stmtValidasi = mysqli_prepare($conn, $queryValidasi);
-mysqli_stmt_bind_param($stmtValidasi, "s", $_SESSION['user_id']);
-mysqli_stmt_execute($stmtValidasi);
-$resultValidasi = mysqli_stmt_get_result($stmtValidasi);
-$dataValidasi = mysqli_fetch_assoc($resultValidasi);
-
-if(!$dataValidasi || $NIS !== $dataValidasi['NIS']) {
-    die("Error: Data tidak valid! <a href='../ngerjakanQuiz.php'>Kembali</a>");
-}
+$jawaban = $_POST['jawaban'];
 
 // Cek apakah sudah pernah submit
 $queryCheck = "SELECT COUNT(*) as sudah FROM jawabanquiz WHERE idQuiz = ? AND NIS = ?";
@@ -49,7 +37,6 @@ $resultCheck = mysqli_stmt_get_result($stmtCheck);
 $dataCheck = mysqli_fetch_assoc($resultCheck);
 
 if($dataCheck['sudah'] > 0) {
-    // Sudah pernah submit, redirect ke pembahasan
     header('Location: ../pembahasanQuiz.php?idQuiz=' . $idQuiz);
     exit;
 }
@@ -59,15 +46,13 @@ mysqli_begin_transaction($conn);
 
 try {
     $totalBenar = 0;
-    $totalSoalPilgan = 0; // Hanya hitung soal pilgan dan multi untuk nilai
+    $totalSoalPilgan = 0;
     $adaEsai = false;
     
-    // Loop setiap jawaban dan simpan ke database
     foreach($jawaban as $idSoal => $jawabanSiswa) {
         $idSoal = mysqli_real_escape_string($conn, $idSoal);
         
-        // Ambil data soal untuk cek tipe dan jawaban benar
-        $querySoal = "SELECT type, jawabanMulti FROM soalquiz WHERE idSoal = ?";
+        $querySoal = "SELECT type, jawabanPilgan, jawabanMulti FROM soalquiz WHERE idSoal = ?";
         $stmtSoal = mysqli_prepare($conn, $querySoal);
         mysqli_stmt_bind_param($stmtSoal, "s", $idSoal);
         mysqli_stmt_execute($stmtSoal);
@@ -75,47 +60,101 @@ try {
         
         if($resultSoal && mysqli_num_rows($resultSoal) > 0) {
             $dataSoal = mysqli_fetch_assoc($resultSoal);
-            $tipeSoal = $dataSoal['type'];
+            $tipeSoal = strtolower(trim($dataSoal['type']));
             
-            // Inisialisasi variabel
             $jawabanPilgan = null;
             $jawabanEsai = null;
-            $isBenar = false;
+            $nilaiSoal = null;
             
-            // Proses berdasarkan tipe soal
-            if($tipeSoal === 'Esai') {
-                // Untuk esai, simpan ke jawabanEsai
+            if($tipeSoal === 'esai') {
                 $jawabanEsai = mysqli_real_escape_string($conn, $jawabanSiswa);
                 $adaEsai = true;
-                // Esai tidak dihitung dalam nilai otomatis (guru yang menilai)
+                $nilaiSoal = null;
                 
             } else {
-                // Untuk Pilgan dan Multi, simpan ke jawabanPilgan
+                // Pilgan atau Multi
                 $jawabanPilgan = mysqli_real_escape_string($conn, strtolower(trim($jawabanSiswa)));
-                $jawabanBenar = strtolower(trim($dataSoal['jawabanMulti']));
                 
-                // Hitung apakah jawaban benar
-                if($jawabanPilgan === $jawabanBenar) {
-                    $isBenar = true;
-                    $totalBenar++;
+                $jawabanBenarRaw = null;
+                if ($tipeSoal === 'pilgan' || $tipeSoal === 'pilihan ganda') {
+                    $jawabanBenarRaw = trim($dataSoal['jawabanPilgan']);
+                } else {
+                    $jawabanBenarRaw = trim($dataSoal['jawabanMulti']);
                 }
-                
+                $jawabanBenar = strtolower($jawabanBenarRaw);
+
+                // Konversi jawaban siswa dari huruf ke angka
+                $jawabanSiswaAngka = -1;
+                switch (strtolower($jawabanSiswa)) {
+                    case 'a': $jawabanSiswaAngka = 0; break;
+                    case 'b': $jawabanSiswaAngka = 1; break;
+                    case 'c': $jawabanSiswaAngka = 2; break;
+                    case 'd': $jawabanSiswaAngka = 3; break;
+                    case 'e': $jawabanSiswaAngka = 4; break;
+                }
+
+                // Konversi jawaban benar ke integer
+                $jawabanBenarInt = intval($jawabanBenar);
+
+                // PERBAIKAN: Logika penilaian yang benar
+                if ($jawabanSiswaAngka >= 0 && $jawabanSiswaAngka <= 4) {
+                    if ($jawabanSiswaAngka === $jawabanBenarInt) {
+                        $totalBenar++;
+                        $nilaiSoal = 100;
+                    } else {
+                        $nilaiSoal = 0;
+                    }
+                } else {
+                    $nilaiSoal = 0;
+                }
+
                 $totalSoalPilgan++;
             }
             
-            // Insert ke jawabanquiz
+            // Generate idJawaban
+            $queryLastId = "SELECT MAX(idJawaban) as last_id FROM jawabanquiz WHERE idJawaban LIKE 'JW%'";
+            $stmtLastId = mysqli_prepare($conn, $queryLastId);
+            mysqli_stmt_execute($stmtLastId);
+            $resultLastId = mysqli_stmt_get_result($stmtLastId);
+            $rowLastId = mysqli_fetch_assoc($resultLastId);
+            $lastId = $rowLastId['last_id'] ?? 'JW00000';
+            $number = intval(substr($lastId, 2));
+            $newNumber = $number + 1;
+            $idJawaban = 'JW' . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+
+            // Safety check
+            $queryCheckId = "SELECT COUNT(*) as count FROM jawabanquiz WHERE idJawaban = ?";
+            $stmtCheckId = mysqli_prepare($conn, $queryCheckId);
+            mysqli_stmt_bind_param($stmtCheckId, "s", $idJawaban);
+            mysqli_stmt_execute($stmtCheckId);
+            $resultCheckId = mysqli_stmt_get_result($stmtCheckId);
+            $rowCheckId = mysqli_fetch_assoc($resultCheckId);
+            if ($rowCheckId['count'] > 0) {
+                do {
+                    $newNumber++;
+                    $idJawaban = 'JW' . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+                    mysqli_stmt_bind_param($stmtCheckId, "s", $idJawaban);
+                    mysqli_stmt_execute($stmtCheckId);
+                    $resultCheckId = mysqli_stmt_get_result($stmtCheckId);
+                    $rowCheckId = mysqli_fetch_assoc($resultCheckId);
+                } while ($rowCheckId['count'] > 0);
+            }
+            mysqli_stmt_close($stmtCheckId);
+            mysqli_stmt_close($stmtLastId);
+
+            // Insert jawaban
             $queryInsert = "INSERT INTO jawabanquiz 
-                           (idQuiz, idSoal, NIS, jawabanPilgan, jawabanEsai, waktuMulai, waktuSelesai) 
+                           (idJawaban, idQuiz, idSoal, NIS, jawabanPilgan, jawabanEsai, nilai) 
                            VALUES (?, ?, ?, ?, ?, ?, ?)";
             $stmtInsert = mysqli_prepare($conn, $queryInsert);
             mysqli_stmt_bind_param($stmtInsert, "sssssss", 
+                $idJawaban, 
                 $idQuiz, 
                 $idSoal, 
                 $NIS, 
                 $jawabanPilgan,
                 $jawabanEsai,
-                $waktuMulai,
-                $waktuSelesai
+                $nilaiSoal
             );
             
             if(!mysqli_stmt_execute($stmtInsert)) {
@@ -128,19 +167,58 @@ try {
         mysqli_stmt_close($stmtSoal);
     }
     
-    // Hitung nilai (hanya untuk soal pilgan/multi)
+    // PERBAIKAN: Hitung nilai berdasarkan soal yang dijawab (bukan semua soal)
     $nilai = 0;
     if($totalSoalPilgan > 0) {
+        // Nilai = (jumlah benar / total soal pilgan) * 100
         $nilai = round(($totalBenar / $totalSoalPilgan) * 100, 2);
     }
     
-    // Jika ada soal esai, nilai masih menunggu koreksi guru
     $statusNilai = $adaEsai ? 'menunggu_koreksi' : 'selesai';
     
-    // Commit transaction
     mysqli_commit($conn);
-    
-    // Redirect ke halaman hasil dengan nilai
+
+    // Generate idHasil
+    $queryLastId = "SELECT MAX(idHasil) as last_id FROM hasilquiz WHERE idHasil LIKE 'HZ%'";
+    $stmtLastId = mysqli_prepare($conn, $queryLastId);
+    mysqli_stmt_execute($stmtLastId);
+    $resultLastId = mysqli_stmt_get_result($stmtLastId);
+    $rowLastId = mysqli_fetch_assoc($resultLastId);
+    $lastId = $rowLastId['last_id'] ?? 'HZ00000';
+    $number = intval(substr($lastId, 2));
+    $newNumber = $number + 1;
+    $idHasil = 'HZ' . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+
+    // Safety check
+    $queryCheckId = "SELECT COUNT(*) as count FROM hasilquiz WHERE idHasil = ?";
+    $stmtCheckId = mysqli_prepare($conn, $queryCheckId);
+    mysqli_stmt_bind_param($stmtCheckId, "s", $idHasil);
+    mysqli_stmt_execute($stmtCheckId);
+    $resultCheckId = mysqli_stmt_get_result($stmtCheckId);
+    $rowCheckId = mysqli_fetch_assoc($resultCheckId);
+    if ($rowCheckId['count'] > 0) {
+        do {
+            $newNumber++;
+            $idHasil = 'HZ' . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+            mysqli_stmt_bind_param($stmtCheckId, "s", $idHasil);
+            mysqli_stmt_execute($stmtCheckId);
+            $resultCheckId = mysqli_stmt_get_result($stmtCheckId);
+            $rowCheckId = mysqli_fetch_assoc($resultCheckId);
+        } while ($rowCheckId['count'] > 0);
+    }
+    mysqli_stmt_close($stmtCheckId);
+    mysqli_stmt_close($stmtLastId);
+
+    // Simpan hasil
+    $queryHasil = "INSERT INTO hasilquiz (idHasil, idQuiz, NIS, nilai, tanggalSubmit) VALUES (?, ?, ?, ?, NOW()) 
+                   ON DUPLICATE KEY UPDATE nilai = VALUES(nilai), idHasil = VALUES(idHasil), tanggalSubmit = VALUES(tanggalSubmit)";
+    $stmtHasil = mysqli_prepare($conn, $queryHasil);
+    mysqli_stmt_bind_param($stmtHasil, "sssd", $idHasil, $idQuiz, $NIS, $nilai);
+    if (!mysqli_stmt_execute($stmtHasil)) {
+        throw new Exception("Gagal menyimpan hasil quiz: " . mysqli_error($conn));
+    }
+    mysqli_stmt_close($stmtHasil);
+
     $redirectUrl = '../hasilQuiz.php?idQuiz=' . $idQuiz . 
                    '&nilai=' . $nilai . 
                    '&benar=' . $totalBenar . 
@@ -150,11 +228,13 @@ try {
         $redirectUrl .= '&ada_esai=1';
     }
     
-    header('Location: ' . $redirectUrl);
+    echo "<script>
+            alert('Quiz selesai dikerjakan!');
+            window.location.href = '$redirectUrl';
+          </script>";
     exit;
     
 } catch (Exception $e) {
-    // Rollback jika ada error
     mysqli_rollback($conn);
     die("Error: " . $e->getMessage() . " <a href='../ngerjakanQuiz.php'>Kembali</a>");
 }

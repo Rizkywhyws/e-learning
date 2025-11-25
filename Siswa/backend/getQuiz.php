@@ -1,94 +1,161 @@
 <?php
 // ====================================================================
-// CRITICAL GUARDRAILS: Mencegah output sebelum JSON
+// FIXED getQuiz.php - Ambil nilai dan waktu pengerjaan dari tabel hasilquiz
 // ====================================================================
 
-// 1. Matikan error display agar pesan error tidak merusak JSON
-error_reporting(E_ALL); 
-ini_set('display_errors', 0); // Pastikan ini 0 di production!
+// 1. Error Reporting (Aktifkan sementara untuk debugging)
+error_reporting(E_ALL);
+ini_set('display_errors', 1); // UBAH KE 0 setelah fix
+ini_set('log_errors', 1);
 
-// 2. Definisi universal untuk return JSON
+// 2. Fungsi universal untuk return JSON
 function returnJSON($data) {
-    // Jika ada buffer yang berjalan, bersihkan dan hentikan
     while (ob_get_level() > 0) {
         ob_end_clean();
     }
-    // Set header dan encode JSON, lalu keluar (exit)
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode($data, JSON_UNESCAPED_UNICODE);
+    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     exit;
 }
 
-// 3. Start output buffering. Semua output akan ditangkap.
+// 3. Start output buffering
 ob_start();
 
-// 4. Start session (pastikan ini di atas include jika include menggunakan session)
-session_start();
+// 4. Tentukan path config yang benar
+$possiblePaths = [
+    __DIR__ . '/../../config/db.php',
+    dirname(dirname(__DIR__)) . '/config/db.php',
+    $_SERVER['DOCUMENT_ROOT'] . '/config/db.php'
+];
 
-// ====================================================================
-// LOGIKA UTAMA
-// ====================================================================
+$configPath = null;
+foreach ($possiblePaths as $path) {
+    if (file_exists($path)) {
+        $configPath = $path;
+        break;
+    }
+}
 
-// Path include disesuaikan: ../../config/db.php
-// Asumsi path: /folder_aplikasi/Siswa/backend/getQuiz.php
-// Perlu kembali 2 level ke /folder_aplikasi/config/db.php
-include_once('../../config/db.php');
-
-// ===== 1. CEK SESSION & KONEKSI DB =====
-if (!isset($conn) || $conn->connect_error) {
+if (!$configPath) {
     returnJSON([
-        'success' => false, 
-        'message' => 'Koneksi database gagal atau tidak tersedia.',
+        'success' => false,
+        'message' => 'File konfigurasi tidak ditemukan.',
+        'debug' => 'CONFIG_FILE_NOT_FOUND',
+        'tried_paths' => $possiblePaths,
+        'current_dir' => __DIR__
+    ]);
+}
+
+// 5. Include file konfigurasi
+require_once($configPath);
+
+// Include session config (PENTING!)
+$sessionPath = dirname($configPath) . '/session.php';
+if (file_exists($sessionPath)) {
+    require_once($sessionPath);
+}
+
+// 6. Start session jika belum
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// ===== CEK KONEKSI DB =====
+if (!isset($conn)) {
+    returnJSON([
+        'success' => false,
+        'message' => 'Koneksi database tidak tersedia.',
+        'debug' => 'DB_CONN_NOT_SET'
+    ]);
+}
+
+if ($conn->connect_error) {
+    returnJSON([
+        'success' => false,
+        'message' => 'Koneksi database gagal: ' . $conn->connect_error,
         'debug' => 'DB_CONNECTION_ERROR'
     ]);
 }
+
+// ===== CEK SESSION =====
 if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
     returnJSON([
-        'success' => false, 
+        'success' => false,
         'message' => 'Session user_id tidak ditemukan. Silakan login ulang.',
-        'debug' => 'SESSION_ERROR'
+        'debug' => 'SESSION_ERROR',
+        'session_data' => [
+            'session_id' => session_id(),
+            'has_user_id' => isset($_SESSION['user_id']),
+            'session_keys' => array_keys($_SESSION)
+        ]
     ]);
 }
 
 $idAkun = $_SESSION['user_id'];
 
-// ===== 2. AMBIL NIS DARI DATABASE =====
+// ===== AMBIL NIS & KELAS SISWA =====
 $queryNIS = "SELECT NIS, kelas FROM datasiswa WHERE idAkun = ?";
 $stmtNIS = mysqli_prepare($conn, $queryNIS);
 
 if (!$stmtNIS) {
-    returnJSON(['success' => false, 'message' => 'Error prepare NIS: ' . mysqli_error($conn), 'debug' => 'PREPARE_NIS_ERROR']);
+    returnJSON([
+        'success' => false,
+        'message' => 'Error prepare query NIS.',
+        'debug' => 'PREPARE_NIS_ERROR',
+        'sql_error' => mysqli_error($conn)
+    ]);
 }
 
 mysqli_stmt_bind_param($stmtNIS, "s", $idAkun);
+
 if (!mysqli_stmt_execute($stmtNIS)) {
-    returnJSON(['success' => false, 'message' => 'Error execute NIS: ' . mysqli_stmt_error($stmtNIS), 'debug' => 'EXECUTE_NIS_ERROR']);
+    mysqli_stmt_close($stmtNIS);
+    returnJSON([
+        'success' => false,
+        'message' => 'Error execute query NIS.',
+        'debug' => 'EXECUTE_NIS_ERROR',
+        'sql_error' => mysqli_stmt_error($stmtNIS)
+    ]);
 }
 
 $resultNIS = mysqli_stmt_get_result($stmtNIS);
 
 if (!$resultNIS || mysqli_num_rows($resultNIS) == 0) {
     mysqli_stmt_close($stmtNIS);
-    returnJSON(['success' => false, 'message' => 'Data siswa tidak ditemukan untuk idAkun: ' . $idAkun, 'debug' => 'NIS_NOT_FOUND']);
+    returnJSON([
+        'success' => false,
+        'message' => 'Data siswa tidak ditemukan untuk idAkun: ' . $idAkun,
+        'debug' => 'NIS_NOT_FOUND'
+    ]);
 }
 
 $dataNIS = mysqli_fetch_assoc($resultNIS);
 $NIS = $dataNIS['NIS'];
-$kelasSiswa = $dataNIS['kelas']; // Ambil kelas siswa untuk validasi
+$kelasSiswa = $dataNIS['kelas'];
 mysqli_stmt_close($stmtNIS);
 
-// ===== 3. VALIDASI PARAMETER idQuiz =====
-if (!isset($_GET['idQuiz']) || empty($_GET['idQuiz'])) {
-    returnJSON(['success' => false, 'message' => 'Parameter idQuiz tidak ditemukan', 'debug' => 'IDQUIZ_EMPTY']);
+// ===== VALIDASI PARAMETER idQuiz =====
+if (!isset($_GET['idQuiz']) || empty(trim($_GET['idQuiz']))) {
+    returnJSON([
+        'success' => false,
+        'message' => 'Parameter idQuiz tidak valid.',
+        'debug' => 'IDQUIZ_EMPTY',
+        'get_params' => $_GET
+    ]);
 }
 
-$idQuiz = trim($_GET['idQuiz']); 
-// Tidak perlu mysqli_real_escape_string karena kita pakai prepared statement
+$idQuiz = trim($_GET['idQuiz']);
 
-// ===== 4. AMBIL DATA QUIZ & VALIDASI KELAS =====
+// ===== AMBIL DATA QUIZ =====
 $queryQuiz = "
-    SELECT q.idQuiz, q.judul, q.waktuMulai, q.waktuSelesai, q.durasi, q.kodeMapel, q.kelas,
-           m.namaMapel
+    SELECT 
+        q.idQuiz, 
+        q.judul, 
+        q.`waktuMulai`, 
+        q.`waktuSelesai`, 
+        q.kodeMapel, 
+        q.kelas,
+        m.namaMapel AS namaMapel
     FROM quiz q
     INNER JOIN mapel m ON m.kodeMapel = q.kodeMapel
     WHERE q.idQuiz = ?
@@ -97,127 +164,130 @@ $queryQuiz = "
 $stmtQuiz = mysqli_prepare($conn, $queryQuiz);
 
 if (!$stmtQuiz) {
-    returnJSON(['success' => false, 'message' => 'Error prepare query quiz', 'debug' => 'QUIZ_PREPARE_ERROR']);
+    returnJSON([
+        'success' => false,
+        'message' => 'Error prepare query quiz.',
+        'debug' => 'QUIZ_PREPARE_ERROR',
+        'sql_error' => mysqli_error($conn)
+    ]);
 }
 
 mysqli_stmt_bind_param($stmtQuiz, "s", $idQuiz);
+
 if (!mysqli_stmt_execute($stmtQuiz)) {
-    returnJSON(['success' => false, 'message' => 'Error execute quiz: ' . mysqli_stmt_error($stmtQuiz), 'debug' => 'EXECUTE_QUIZ_ERROR']);
+    $error_msg = mysqli_stmt_error($stmtQuiz);
+    mysqli_stmt_close($stmtQuiz);
+    returnJSON([
+        'success' => false,
+        'message' => 'Error execute query quiz: ' . $error_msg,
+        'debug' => 'EXECUTE_QUIZ_ERROR',
+        'sql_error' => $error_msg
+    ]);
 }
 
 $resultQuiz = mysqli_stmt_get_result($stmtQuiz);
 
-if (!$resultQuiz || mysqli_num_rows($resultQuiz) == 0) {
+if (!$resultQuiz) {
     mysqli_stmt_close($stmtQuiz);
-    returnJSON(['success' => false, 'message' => 'Quiz tidak ditemukan dengan ID: ' . $idQuiz, 'debug' => 'QUIZ_NOT_FOUND']);
+    returnJSON([
+        'success' => false,
+        'message' => 'Error getting result from quiz query.',
+        'debug' => 'GET_RESULT_QUIZ_ERROR',
+        'sql_error' => mysqli_error($conn)
+    ]);
+}
+
+if (mysqli_num_rows($resultQuiz) == 0) {
+    mysqli_stmt_close($stmtQuiz);
+    returnJSON([
+        'success' => false,
+        'message' => 'Quiz tidak ditemukan untuk idQuiz: ' . $idQuiz,
+        'debug' => 'QUIZ_NOT_FOUND'
+    ]);
 }
 
 $dataQuiz = mysqli_fetch_assoc($resultQuiz);
 mysqli_stmt_close($stmtQuiz);
 
-// Lakukan validasi kelas di sisi server
-if (!in_array($kelasSiswa, explode(',', $dataQuiz['kelas']))) {
-    returnJSON(['success' => false, 'message' => 'Quiz tidak dialokasikan untuk kelas Anda.', 'debug' => 'CLASS_MISMATCH']);
+// ===== VALIDASI KELAS =====
+$kelasQuizArray = array_map('trim', explode(',', ($dataQuiz['kelas'] ?? '')));
+
+if (!in_array($kelasSiswa, $kelasQuizArray)) {
+    returnJSON([
+        'success' => false,
+        'message' => 'Quiz ini tidak untuk kelas Anda.',
+        'debug' => 'CLASS_MISMATCH',
+        'kelas_siswa' => $kelasSiswa,
+        'kelas_quiz' => $kelasQuizArray
+    ]);
 }
 
-// ===== 5. HITUNG JUMLAH SOAL (Sudah Bagus) =====
+// ===== HITUNG JUMLAH SOAL =====
 $querySoal = "SELECT COUNT(*) AS jumlah FROM soalquiz WHERE idQuiz = ?";
 $stmtSoal = mysqli_prepare($conn, $querySoal);
 
 if (!$stmtSoal) {
-    returnJSON(['success' => false, 'message' => 'Error prepare query soal', 'debug' => 'SOAL_PREPARE_ERROR']);
+    returnJSON([
+        'success' => false,
+        'message' => 'Error prepare query soal.',
+        'debug' => 'SOAL_PREPARE_ERROR',
+        'sql_error' => mysqli_error($conn)
+    ]);
 }
 
 mysqli_stmt_bind_param($stmtSoal, "s", $idQuiz);
 mysqli_stmt_execute($stmtSoal);
 $resSoal = mysqli_stmt_get_result($stmtSoal);
 $dataSoal = mysqli_fetch_assoc($resSoal);
-$jumlahSoal = $dataSoal['jumlah'] ?? 0;
+$jumlahSoal = intval($dataSoal['jumlah'] ?? 0);
 mysqli_stmt_close($stmtSoal);
 
-// ===== 6. CEK SUDAH DIKERJAKAN (Sudah Bagus) =====
-$queryJawab = "
-    SELECT COUNT(*) AS totalDijawab,
-           MIN(waktuMulai) as waktuMulaiPengerjaan,
-           MAX(waktuSelesai) as waktuSelesaiPengerjaan
-    FROM jawabanquiz 
+// ===== CEK SUDAH DIKERJAKAN & AMBIL NILAI & WAKTU PENGERJAAN DARI HASILQUIZ =====
+$queryHasil = "
+    SELECT 
+        nilai, 
+        tanggalSubmit
+    FROM hasilquiz 
     WHERE idQuiz = ? AND NIS = ?
+    LIMIT 1 -- Ambil satu entri terakhir jika ada unique constraint
 ";
-// ... (Bagian 6 tetap sama)
+$stmtHasil = mysqli_prepare($conn, $queryHasil);
 
-$stmtJawab = mysqli_prepare($conn, $queryJawab);
-// ... (Error handling tetap sama)
+if (!$stmtHasil) {
+    returnJSON([
+        'success' => false,
+        'message' => 'Error prepare query hasilquiz.',
+        'debug' => 'HASIL_PREPARE_ERROR',
+        'sql_error' => mysqli_error($conn)
+    ]);
+}
 
-mysqli_stmt_bind_param($stmtJawab, "ss", $idQuiz, $NIS);
-mysqli_stmt_execute($stmtJawab);
-$resJawab = mysqli_stmt_get_result($stmtJawab);
-$dataJawab = mysqli_fetch_assoc($resJawab);
-mysqli_stmt_close($stmtJawab);
+mysqli_stmt_bind_param($stmtHasil, "ss", $idQuiz, $NIS);
+mysqli_stmt_execute($stmtHasil);
+$resHasil = mysqli_stmt_get_result($stmtHasil);
+$dataHasil = mysqli_fetch_assoc($resHasil);
+mysqli_stmt_close($stmtHasil);
 
-$sudahDikerjakan = ($dataJawab['totalDijawab'] > 0);
-
-// ===== 7. HITUNG NILAI DAN WAKTU JIKA SUDAH DIKERJAKAN (Sudah Bagus) =====
+// Tentukan status dan data berdasarkan hasil
+$sudahDikerjakan = ($dataHasil !== null); // Jika ada baris hasil, berarti sudah dikerjakan
 $nilai = null;
 $waktuPengerjaan = null;
 
 if ($sudahDikerjakan) {
-    // Hitung waktu pengerjaan
-    // ... (Logika perhitungan waktu tetap sama)
-    if (!empty($dataJawab['waktuMulaiPengerjaan']) && !empty($dataJawab['waktuSelesaiPengerjaan'])) {
-        $mulai = strtotime($dataJawab['waktuMulaiPengerjaan']);
-        $selesai = strtotime($dataJawab['waktuSelesaiPengerjaan']);
-        $selisihDetik = $selesai - $mulai;
-        
-        $jam = floor($selisihDetik / 3600);
-        $menit = floor(($selisihDetik % 3600) / 60);
-        $detik = $selisihDetik % 60;
-        
-        if ($jam > 0) {
-            $waktuPengerjaan = $jam . ' jam ' . $menit . ' menit';
-        } else {
-            $waktuPengerjaan = $menit . ' menit ' . $detik . ' detik';
-        }
-    }
-    
-    // Hitung nilai (hanya untuk soal pilgan/multi)
-    // ... (Logika query nilai tetap sama)
-    $queryNilai = "
-        SELECT 
-            COUNT(*) as totalDijawab,
-            SUM(CASE 
-                WHEN LOWER(TRIM(jq.jawabanPilgan)) = LOWER(TRIM(sq.jawabanMulti)) 
-                THEN 1 
-                ELSE 0 
-            END) as totalBenar
-        FROM jawabanquiz jq
-        INNER JOIN soalquiz sq ON jq.idSoal = sq.idSoal
-        WHERE jq.idQuiz = ? 
-        AND jq.NIS = ?
-        AND sq.type IN ('Pilgan', 'Multi')
-        AND jq.jawabanPilgan IS NOT NULL
-    ";
-    
-    $stmtNilai = mysqli_prepare($conn, $queryNilai);
-    if ($stmtNilai) {
-        mysqli_stmt_bind_param($stmtNilai, "ss", $idQuiz, $NIS);
-        mysqli_stmt_execute($stmtNilai);
-        $resNilai = mysqli_stmt_get_result($stmtNilai);
-        $dataNilai = mysqli_fetch_assoc($resNilai);
-        
-        if ($dataNilai['totalDijawab'] > 0) {
-            $nilai = round(($dataNilai['totalBenar'] / $dataNilai['totalDijawab']) * 100, 2);
-        }
-        
-        mysqli_stmt_close($stmtNilai);
+    $nilai = $dataHasil['nilai']; // Ambil nilai dari hasilquiz
+    // Format tanggalSubmit menjadi string untuk UI
+    if ($dataHasil['tanggalSubmit']) {
+        // Contoh format: 01 Jan 2025 14:30
+        $waktuPengerjaan = date('d M Y H:i', strtotime($dataHasil['tanggalSubmit']));
     }
 }
 
-// ===== 8. FORMAT TANGGAL (Sudah Bagus) =====
+// ===== FORMAT TANGGAL =====
 $tanggal = null;
 $waktuMulaiFormatted = null;
 $waktuSelesaiFormatted = null;
 
-if (!empty($dataQuiz['waktuMulai'])) {
+if (isset($dataQuiz['waktuMulai']) && !empty($dataQuiz['waktuMulai'])) {
     $timestamp = strtotime($dataQuiz['waktuMulai']);
     if ($timestamp !== false) {
         $tanggal = date('d M Y', $timestamp);
@@ -225,27 +295,27 @@ if (!empty($dataQuiz['waktuMulai'])) {
     }
 }
 
-if (!empty($dataQuiz['waktuSelesai'])) {
+if (isset($dataQuiz['waktuSelesai']) && !empty($dataQuiz['waktuSelesai'])) {
     $timestamp = strtotime($dataQuiz['waktuSelesai']);
     if ($timestamp !== false) {
         $waktuSelesaiFormatted = date('d M Y H:i', $timestamp);
     }
 }
 
+$namaMapelVal = $dataQuiz['namaMapel'] ?? $dataQuiz['nama_mapel'] ?? null;
 
-// ===== 9. RETURN SUCCESS =====
+// ===== RETURN SUCCESS =====
 returnJSON([
     'success' => true,
-    'idQuiz' => $dataQuiz['idQuiz'],
-    'judul' => $dataQuiz['judul'],
-    'namaMapel' => $dataQuiz['namaMapel'],
+    'idQuiz' => $dataQuiz['idQuiz'] ?? null,
+    'judul' => $dataQuiz['judul'] ?? null,
+    'namaMapel' => $namaMapelVal,
     'tanggal' => $tanggal,
     'waktuMulai' => $waktuMulaiFormatted,
     'waktuSelesai' => $waktuSelesaiFormatted,
-    'durasi' => intval($dataQuiz['durasi']),
-    'jumlahSoal' => intval($jumlahSoal),
+    'jumlahSoal' => $jumlahSoal,
     'sudahDikerjakan' => $sudahDikerjakan,
-    'nilai' => $nilai,
-    'waktuPengerjaan' => $waktuPengerjaan
+    'nilai' => $nilai, // Nilai diambil dari tabel hasilquiz
+    'waktuPengerjaan' => $waktuPengerjaan // Waktu pengerjaan diambil dari tanggalSubmit hasilquiz
 ]);
 ?>
