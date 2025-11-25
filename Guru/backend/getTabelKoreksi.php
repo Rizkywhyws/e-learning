@@ -1,13 +1,31 @@
 <?php
 //file: e-learningMrt/Guru/backend/getTabelKoreksi.php
-include "../../config/db.php";
 session_start();
 
-$idTugas = $_GET['idTugas'];
+// ========== PROTEKSI LOGIN ==========
+if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'guru') {
+    http_response_code(401);
+    echo "<div style='color:red; text-align:center; padding:20px;'>⚠️ Unauthorized - Silakan login terlebih dahulu</div>";
+    exit;
+}
+
+include "../../config/db.php";
+
+$idTugas = isset($_GET['idTugas']) ? mysqli_real_escape_string($conn, $_GET['idTugas']) : '';
+
+if (empty($idTugas)) {
+    echo "<div style='color:red; text-align:center; padding:20px;'>⚠️ ID Tugas tidak ditemukan</div>";
+    exit;
+}
 
 // Ambil data tugas
 $qTugas = mysqli_query($conn, "SELECT * FROM tugas WHERE idTugas='$idTugas'");
 $tugas = mysqli_fetch_assoc($qTugas);
+
+if (!$tugas) {
+    echo "<div style='color:red; text-align:center; padding:20px;'>⚠️ Data tugas tidak ditemukan</div>";
+    exit;
+}
 
 // Ambil kelas berdasarkan jadwalmapel (relasi dengan mapel yang sama)
 $qKelas = mysqli_query($conn, "
@@ -18,12 +36,11 @@ $qKelas = mysqli_query($conn, "
 $dKelas = mysqli_fetch_assoc($qKelas);
 $kelas = $dKelas ? $dKelas['kelas'] : '';
 
-// Ambil data siswa dan status tugas (baris 25) WHEN p.idPengumpulan IS NULL AND NOW() > t.deadline THEN 'Terlambat'
+// Ambil data siswa dan status tugas
 $q = mysqli_query($conn, "
 SELECT 
     s.NIS, s.nama, p.filePath, p.submittedAt, p.nilai,
     CASE
-       
         WHEN p.idPengumpulan IS NULL THEN 'Kosong'
         ELSE p.status
     END AS status
@@ -39,7 +56,7 @@ echo "
         <div class='tugas-header'>
             <div class='judul-container'>
                 <label><strong>Deskripsi Tugas:</strong></label>
-                <p style='max-width: 800px; margin-top: 5px; color: #333; line-height: 1.6;'>{$tugas['deskripsi']}</p>
+                <p style='max-width: 800px; margin-top: 5px; color: #333; line-height: 1.6;'>" . htmlspecialchars($tugas['deskripsi']) . "</p>
             </div>
 
             <div class='search-container'>
@@ -68,13 +85,15 @@ $no = 1;
 while ($r = mysqli_fetch_assoc($q)) {
     $file = $r['filePath'] ? "<a href='{$r['filePath']}' target='_blank' class='file-link'>Lihat File</a>" : "-";
     $disabled = $r['status'] == 'Kosong' ? 'disabled' : '';
+    $nilaiValue = $r['nilai'] ? $r['nilai'] : '';
+    
     echo "
     <tr>
         <td>$no</td>
-        <td class='nama-siswa'>{$r['nama']}</td>
+        <td class='nama-siswa'>" . htmlspecialchars($r['nama']) . "</td>
         <td>$file</td>
         <td>{$r['status']}</td>
-        <td><input type='number' name='nilai[{$r['NIS']}]' value='{$r['nilai']}' min='0' max='100' class='nilai-input' $disabled></td>
+        <td><input type='number' name='nilai[{$r['NIS']}]' value='$nilaiValue' min='0' max='100' class='nilai-input' $disabled></td>
     </tr>
     ";
     $no++;
@@ -95,7 +114,7 @@ echo "
 
 <script>
 $('#saveNilai').click(function(){
-    let data = $('input[name^=\"nilai\"]').serialize();
+    let data = $('input[name^="nilai"]').serialize();
     $.post('backend/simpanNilai.php', data + '&idTugas=<?=$idTugas?>', function(res){
         alert(res);
     });
