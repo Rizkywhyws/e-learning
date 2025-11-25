@@ -1,16 +1,27 @@
 <?php
 //file buatTugas.php
-session_start();
-include "../config/db.php";
+include "../config/session.php";
 
-// ==================== INISIALISASI SESSION LOGIN ====================
-$_SESSION['idAkun'] = "GR32481"; // akun aktif
-$idAkun = $_SESSION['idAkun'];
+// Cek apakah user sudah login dan merupakan guru
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || $_SESSION['role'] !== 'guru') {
+    header('Location: ../Auth/login.php');
+    exit;
+}
+require_once "../config/db.php";
+//include "../config/db.php";
 
-// ==================== AMBIL DATA GURU (NIP) DARI AKUN LOGIN ====================
-$queryGuru = mysqli_query($conn, "SELECT NIP FROM dataguru WHERE idAkun = '$idAkun'");
-$dataGuru = mysqli_fetch_assoc($queryGuru);
-$nipGuru = isset($dataGuru['NIP']) ? $dataGuru['NIP'] : '';
+// ==================== AMBIL DATA DARI SESSION LOGIN ====================
+$idAkun = $_SESSION['user_id']; // Gunakan user_id dari login
+$nipGuru = isset($_SESSION['nip']) ? $_SESSION['nip'] : '';
+
+// Jika NIP tidak ada di session, ambil dari database
+if (empty($nipGuru)) {
+    $queryGuru = mysqli_query($conn, "SELECT NIP FROM dataguru WHERE idAkun = '$idAkun'");
+    $dataGuru = mysqli_fetch_assoc($queryGuru);
+    $nipGuru = isset($dataGuru['NIP']) ? $dataGuru['NIP'] : '';
+    $_SESSION['nip'] = $nipGuru; // Simpan ke session untuk request berikutnya
+}
+
 
 // ==================== FUNGSI BUAT ID OTOMATIS ====================
 function generateIdTugas($conn) {
@@ -25,13 +36,12 @@ function generateIdTugas($conn) {
 }
 
 // Fungsi generate random ID untuk materi
-function generateRandomIdMateri($length = 7) {
-    $characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    $randomString = '';
-    for ($i = 0; $i < $length; $i++) {
-        $randomString .= $characters[rand(0, strlen($characters) - 1)];
-    }
-    return $randomString;
+function generateRandomIdMateri($conn) {
+    do {
+        $id = "MT" . rand(10000, 99999);
+        $check = mysqli_query($conn, "SELECT idmateri FROM materi WHERE idmateri='$id'");
+    } while (mysqli_num_rows($check) > 0);
+    return $id;
 }
 
 // ==================== HANDLE AJAX GET MATERI ====================
@@ -101,19 +111,55 @@ if (isset($_POST['action']) && $_POST['action'] === 'update' && isset($_POST['id
 if (isset($_POST['action']) && $_POST['action'] === 'hapus' && isset($_POST['idTugas'])) {
     $id = mysqli_real_escape_string($conn, $_POST['idTugas']);
     
-    // Hapus file jika ada
-    $qFile = mysqli_query($conn, "SELECT filePath FROM tugas WHERE idTugas='$id'");
-    if ($qFile && mysqli_num_rows($qFile) > 0) {
-        $fileData = mysqli_fetch_assoc($qFile);
-        if (!empty($fileData['filePath']) && file_exists($fileData['filePath'])) {
-            unlink($fileData['filePath']);
-        }
+    // Ambil data tugas termasuk idMateri
+    $qTugas = mysqli_query($conn, "SELECT filePath, idMateri FROM tugas WHERE idTugas='$id'");
+    if (!$qTugas || mysqli_num_rows($qTugas) == 0) {
+        echo "❌ Tugas tidak ditemukan!";
+        exit;
     }
     
+    $tugasData = mysqli_fetch_assoc($qTugas);
+    $idMateri = $tugasData['idMateri'];
+    
+    // Hapus file tugas jika ada
+    if (!empty($tugasData['filePath']) && file_exists($tugasData['filePath'])) {
+        unlink($tugasData['filePath']);
+    }
+    
+    // Hapus tugas dari database
     $delete = mysqli_query($conn, "DELETE FROM tugas WHERE idTugas='$id'");
 
     if ($delete) {
-        echo "✅ Tugas berhasil dihapus!";
+        $message = "✅ Tugas berhasil dihapus!";
+        
+        // Cek apakah perlu hapus materi juga
+        if (!empty($idMateri)) {
+            // Cek kolom filePath dan linkVideo di tabel materi
+            $qMateri = mysqli_query($conn, "SELECT filePath, linkVideo FROM materi WHERE idMateri='$idMateri'");
+            
+            if ($qMateri && mysqli_num_rows($qMateri) > 0) {
+                $materiData = mysqli_fetch_assoc($qMateri);
+                $materiFilePath = $materiData['filePath'];
+                $materiLinkVideo = $materiData['linkVideo'];
+                
+                // Jika kedua kolom kosong/null, hapus materi
+                if ((empty($materiFilePath) || is_null($materiFilePath)) && 
+                    (empty($materiLinkVideo) || is_null($materiLinkVideo))) {
+                    
+                    $deleteMateri = mysqli_query($conn, "DELETE FROM materi WHERE idMateri='$idMateri'");
+                    
+                    if ($deleteMateri) {
+                        $message .= " Materi terkait juga dihapus karena tidak memiliki file atau video.";
+                    } else {
+                        $message .= " ⚠️ Namun gagal menghapus materi: " . mysqli_error($conn);
+                    }
+                } else {
+                    $message .= " Materi terkait tetap tersimpan karena masih memiliki file/video.";
+                }
+            }
+        }
+        
+        echo $message;
     } else {
         echo "❌ Gagal menghapus tugas: " . mysqli_error($conn);
     }
@@ -145,7 +191,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['action'])) {
     $idMateri = "";
     if ($materiOption === "new") {
         // Buat materi baru
-        $idMateri = generateRandomIdMateri();
+        $idMateri = generateRandomIdMateri($conn);
         
         // Insert ke tabel materi
         $sqlMateri = "INSERT INTO materi (idMateri, kodeMapel, NIP, judul, createdAt)

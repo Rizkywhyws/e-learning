@@ -1,5 +1,17 @@
 <?php 
 session_start();
+
+// ========== PROTEKSI LOGIN & ROLE ==========
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || $_SESSION['role'] !== 'guru') {
+    header('Location: ../Auth/login.php');
+    exit;
+}
+
+// ========== AMBIL DATA DARI SESSION ==========
+$idAkun = $_SESSION['user_id']; // Sesuaikan dengan cek_login.php
+$namaGuru = isset($_SESSION['nama']) ? $_SESSION['nama'] : 'Guru';
+$nipGuru = isset($_SESSION['nip']) ? $_SESSION['nip'] : '';
+
 $halaman = isset($_GET['page']) ? $_GET['page'] : '';
 ?>
 
@@ -59,21 +71,69 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
 <!-- WELCOME BOX -->
 <section class="welcome-box">
   <?php 
-  $namaGuru = "Marta"; 
-  $pelajaranSelanjutnya = "Matematika";
+  include '../config/db.php';
+  
+  // Ambil data guru berdasarkan session login
+  $idAkun = isset($_SESSION['idAkun']) ? $_SESSION['idAkun'] : '';
+  $namaGuru = "Guru";
+  $pelajaranSelanjutnya = "-";
+  
+  if (!empty($idAkun)) {
+      // Query untuk mendapatkan nama guru
+      $queryGuru = mysqli_query($conn, "SELECT nama FROM dataguru WHERE idAkun = '$idAkun'");
+      if ($queryGuru && mysqli_num_rows($queryGuru) > 0) {
+          $dataGuru = mysqli_fetch_assoc($queryGuru);
+          $namaGuru = $dataGuru['nama'];
+      }
+      
+      // Query untuk mendapatkan jadwal pelajaran selanjutnya (hari ini)
+      $hariIni = date('l'); // Nama hari dalam bahasa Inggris
+      $waktuSekarang = date('H:i:s');
+      
+      // Mapping hari Indonesia
+      $hariMap = [
+          'Monday' => 'Senin',
+          'Tuesday' => 'Selasa', 
+          'Wednesday' => 'Rabu',
+          'Thursday' => 'Kamis',
+          'Friday' => 'Jumat',
+          'Saturday' => 'Sabtu',
+          'Sunday' => 'Minggu'
+      ];
+      $hariIndonesia = isset($hariMap[$hariIni]) ? $hariMap[$hariIni] : $hariIni;
+      
+      // Query jadwal guru untuk hari ini, diurutkan berdasarkan waktu mulai
+      $queryJadwal = mysqli_query($conn, "
+          SELECT j.*, m.namaMapel
+          FROM jadwalmapel j
+          JOIN mapel m ON j.kodeMapel = m.kodeMapel
+          JOIN dataguru dg ON j.nipGuru = dg.NIP
+          WHERE dg.idAkun = '$idAkun'
+            AND j.hari = '$hariIndonesia'
+            AND j.jamMulai > '$waktuSekarang'
+          ORDER BY j.jamMulai ASC
+          LIMIT 1
+      ");
+
+      
+      if ($queryJadwal && mysqli_num_rows($queryJadwal) > 0) {
+          $jadwal = mysqli_fetch_assoc($queryJadwal);
+          $pelajaranSelanjutnya = $jadwal['namaMapel'] . " (Kelas " . $jadwal['Kelas'] . ")";
+      }
+  }
   ?>
   <h2>Halo! Selamat Datang, <?= htmlspecialchars($namaGuru) ?></h2>
-  <p>Jadwal pelajaran selanjutnya: <b><?= htmlspecialchars($pelajaranSelanjutnya) ?></b></p>
+  <p>Jadwal mengajar selanjutnya: <b><?= htmlspecialchars($pelajaranSelanjutnya) ?></b></p>
 </section>
 
 
 <!-- MENU TOMBOL -->
 
 <div class="btn-container">
-    <a href="?page=tambahMateri"><button class="btn">Tambah Materi</button></a>
+    <a href="?page=uploudMateri"><button class="btn">Tambah Materi</button></a>
 
-    <?php if ($halaman == 'tambahMateri') { ?>
-        <div class="content"><?php include 'tambahMateri.php'; ?></div>
+    <?php if ($halaman == 'uploudMateri') { ?>
+        <div class="content"><?php include 'uploudMateri.php'; ?></div>
     <?php } ?>
 
     <a href="?page=buatTugas"><button class="btn">Buat Tugas</button></a>

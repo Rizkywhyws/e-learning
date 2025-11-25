@@ -1,12 +1,28 @@
 <?php
-//file getTugasGuru.php
-include "../../config/db.php";
 session_start();
+//file getTugasGuru.php
+include "../../config/session.php";
+include "../../config/db.php";
 
-// Ambil NIP guru dari akun login
-$idAkun = $_SESSION['idAkun'];
-$qGuru = mysqli_query($conn, "SELECT NIP FROM dataguru WHERE idAkun='$idAkun'");
-$nipGuru = mysqli_fetch_assoc($qGuru)['NIP'];
+// Cek login
+if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'guru') {
+    http_response_code(401);
+    echo '<tr><td colspan="6" style="color:red;">Unauthorized</td></tr>';
+    exit;
+}
+
+
+// Ambil NIP guru dari session
+$nipGuru = isset($_SESSION['nip']) ? $_SESSION['nip'] : '';
+
+// Jika NIP tidak ada di session, ambil dari database
+if (empty($nipGuru)) {
+    $idAkun = $_SESSION['user_id'];
+    $qGuru = mysqli_query($conn, "SELECT NIP FROM dataguru WHERE idAkun='$idAkun'");
+    $dataGuru = mysqli_fetch_assoc($qGuru);
+    $nipGuru = isset($dataGuru['NIP']) ? $dataGuru['NIP'] : '';
+}
+
 
 // Ambil parameter dari AJAX
 $kodeMapel = mysqli_real_escape_string($conn, $_GET['mapel']);
