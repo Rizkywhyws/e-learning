@@ -268,7 +268,8 @@ function openForm(type, event, idMateri, kodeMapel) {
     closePopup();
 
     if (type === 'tugas') {
-        loadTugas(kodeMapel, idMateri);
+        // PERBAIKAN: Hanya kirim idMateri
+        loadTugas(idMateri);
     } else if (type === 'materi') {
         loadMateri(idMateri);
     }
@@ -309,8 +310,9 @@ function loadMateri(idMateri) {
         });
 }
 
-function loadTugas(kodeMapel, idMateri) {
-    fetch('backend/getTugas.php?kodeMapel=' + kodeMapel + '&idMateri=' + idMateri)
+function loadTugas(idMateri) { // PERBAIKAN: Hanya terima idMateri
+    // PERBAIKAN: Hanya kirim idMateri ke getTugas.php
+    fetch('backend/getTugas.php?idMateri=' + idMateri)
         .then(response => response.json())
         .then(data => {
             if(data.success) {
@@ -346,14 +348,16 @@ function loadTugas(kodeMapel, idMateri) {
                     
                     // Tampilkan file yang sudah diupload
                     if(data.filePathSiswa) {
-                        let fileName = data.filePathSiswa.split('/').pop();
-                        uploadedFileBox.innerHTML = `
-                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #e8f5e9; border-radius: 8px; border: 1px solid #81c784;">
-                                <span style="color: #2e7d32; font-weight: 500;">📄 ${fileName}</span>
-                                <a href="${data.filePathSiswa}" target="_blank" style="color: #1976d2; text-decoration: none; font-size: 12px;">Lihat File</a>
-                            </div>
-                        `;
-                        uploadedFileBox.style.display = 'block';
+                    let fileName = data.filePathSiswa.split('/').pop();
+                    // PERBAIKAN: Tambahkan /elearning-app/ di depan path
+                    let fullUrl = '/elearning-app' + data.filePathSiswa;
+                    uploadedFileBox.innerHTML = `
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #e8f5e9; border-radius: 8px; border: 1px solid #81c784;">
+                            <span style="color: #2e7d32; font-weight: 500;">📄 ${fileName}</span>
+                            <a href="${fullUrl}" target="_blank" style="color: #1976d2; text-decoration: none; font-size: 12px;">Lihat File</a>
+                        </div>
+                    `;
+                    uploadedFileBox.style.display = 'block';
                     } else {
                         uploadedFileBox.style.display = 'none';
                     }
@@ -444,40 +448,84 @@ function submitTugas() {
         formData.append('isUpdate', '1');
     }
     
+    // Tampilkan loading
+    const btnKumpul = document.querySelector('.btn-kumpul');
+    const originalText = btnKumpul.textContent;
+    btnKumpul.disabled = true;
+    btnKumpul.textContent = 'Mengirim...';
+    
     fetch('backend/submitTugas.php', {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+        // CEK STATUS HTTP DULU
+        console.log('HTTP Status:', response.status);
+        
+        // Ambil response sebagai text dulu untuk debug
+        return response.text().then(text => {
+            console.log('Response Text:', text);
+            
+            // Coba parse sebagai JSON
+            try {
+                return JSON.parse(text);
+            } catch(e) {
+                console.error('JSON Parse Error:', e);
+                console.error('Response:', text);
+                throw new Error('Server response bukan JSON valid: ' + text.substring(0, 200));
+            }
+        });
+    })
     .then(data => {
+        console.log('Parsed Data:', data);
+        
         if(data.success) {
-
             // Update kolom status
-            document.getElementById('tugasStatus').value = data.status;  // <-- statusWaktu
+            document.getElementById('tugasStatus').value = data.status;
             document.getElementById('tugasDikirimPada').value = data.dikirimPada;
             document.querySelector('.status-label').textContent = 'Selesai';
             document.querySelector('.status-label').style.backgroundColor = '#bbf7d0';
             document.querySelector('.status-label').style.color = '#064e3b';
 
-            // Munculkan file yang diupdate
+            // Update hidden field untuk tracking
+            document.getElementById('idPengumpulanHidden').value = data.idPengumpulan;
+
+            // Munculkan file yang diupload
             if (data.fileName) {
+                let fullUrl = '/elearning-app' + data.filePathSiswa;
                 document.getElementById('uploadedFileBox').innerHTML = `
                     <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #e8f5e9; border-radius: 8px; border: 1px solid #81c784;">
                         <span style="color: #2e7d32; font-weight: 500;">📄 ${data.fileName}</span>
-                        <a href="${data.filePathSiswa}" target="_blank" style="color: #1976d2; text-decoration: none; font-size: 12px;">Lihat File</a>
+                        <a href="${fullUrl}" target="_blank" style="color: #1976d2; text-decoration: none; font-size: 12px;">Lihat File</a>
                     </div>
                 `;
                 document.getElementById('uploadedFileBox').style.display = 'block';
             }
 
-            alert(idPengumpulan ? 'Tugas berhasil diperbarui!' : 'Tugas berhasil dikumpulkan!');
+            // Reset file input
+            fileInput.value = '';
+            document.getElementById('fileName').textContent = 'Tidak ada file yang diupload';
+
+            // Ubah tombol menjadi update mode
+            btnKumpul.textContent = 'PERBARUI TUGAS';
+            btnKumpul.style.backgroundColor = '#fff3cd';
+            btnKumpul.style.color = '#856404';
+
+            alert(data.message);
         } else {
-        alert('Gagal mengumpulkan tugas: ' + data.message);
+            alert('Gagal mengumpulkan tugas: ' + data.message);
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        alert('Terjadi kesalahan saat mengumpulkan tugas');
+        console.error('Full Error:', error);
+        alert('Terjadi kesalahan: ' + error.message);
+    })
+    .finally(() => {
+        // Restore button
+        btnKumpul.disabled = false;
+        if(btnKumpul.textContent === 'Mengirim...') {
+            btnKumpul.textContent = originalText;
+        }
     });
 }
 </script>

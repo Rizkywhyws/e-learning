@@ -5,31 +5,26 @@ include('../../config/db.php');
 
 header('Content-Type: application/json');
 
-// Validasi parameter
+// Validasi parameter - HANYA idMateri yang dibutuhkan
 if (!isset($_GET['idMateri'])) {
     echo json_encode(array('success' => false, 'message' => 'Parameter tidak lengkap. idMateri diperlukan.'));
     exit;
 }
 
-// Ambil idMateri dari GET
-$idMateri = mysqli_real_escape_string($conn, $_GET['idMateri']);
+$idMateri  = mysqli_real_escape_string($conn, $_GET['idMateri']);
 
-// Ubah baris 16-17 dari:
-$idAkun = isset($_SESSION['idAkun']) ? $_SESSION['idAkun'] : 'A0004';
-
-// Menjadi:
+// Ambil idAkun dari session
 $idAkun = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
 
 if (!$idAkun) {
     echo json_encode(array('success' => false, 'message' => 'Session expired'));
     exit;
 }
+
 $NIS = isset($_SESSION['NIS']) ? $_SESSION['NIS'] : null;
 
 // Jika belum ada NIS di session, ambil dari idAkun
 if (!$NIS) {
-    $idAkun = isset($_SESSION['idAkun']) ? $_SESSION['idAkun'] : 'SW83675';
-
     $queryNIS = "SELECT NIS FROM datasiswa WHERE idAkun = '$idAkun'";
     $resultNIS = mysqli_query($conn, $queryNIS);
 
@@ -43,24 +38,19 @@ if (!$NIS) {
     }
 }
 
-// ================= DEBUG: CEK idMateri =================
-error_log("DEBUG getTugas.php - idMateri yang diterima: " . $idMateri);
-
 // ================= QUERY TUGAS =================
 $query = "
 SELECT 
     t.idTugas, t.judul, t.deskripsi, t.deadline, t.createdAt, t.filePath,
-    m.kodeMapel,
+    m.kodeMapel, -- Ambil dari tabel materi
     mp.namaMapel,
     m.judul AS judulMateri
 FROM tugas t
-INNER JOIN materi m ON t.idMateri = m.idMateri
-INNER JOIN mapel mp ON m.kodeMapel = mp.kodeMapel
+INNER JOIN materi m ON t.idMateri = m.idMateri -- Hubungan utama antara tugas dan materi
+INNER JOIN mapel mp ON m.kodeMapel = mp.kodeMapel -- Hubungan antara materi dan mapel
 WHERE t.idMateri = '$idMateri'
 LIMIT 1
 ";
-
-error_log("DEBUG Query: " . $query); // Log query
 
 $result = mysqli_query($conn, $query);
 
@@ -68,8 +58,6 @@ if (!$result) {
     echo json_encode(array('success' => false, 'message' => 'Query error: ' . mysqli_error($conn)));
     exit;
 }
-
-error_log("DEBUG Jumlah rows: " . mysqli_num_rows($result)); // Log hasil
 
 if (mysqli_num_rows($result) > 0) {
     $data = mysqli_fetch_assoc($result);
@@ -96,6 +84,7 @@ if (mysqli_num_rows($result) > 0) {
         $statusTugas = 'selesai';
         $dikirimPada = date('d F Y, H:i', strtotime($peng['submittedAt']));
 
+        // ubah nama bulan bahasa inggris -> indonesia
         $bulanIndo = array(
             'January' => 'Januari', 'February' => 'Februari', 'March' => 'Maret',
             'April' => 'April', 'May' => 'Mei', 'June' => 'Juni',
@@ -132,7 +121,7 @@ if (mysqli_num_rows($result) > 0) {
     foreach ($bulanIndo as $en => $id) { $deadline = str_replace($en, $id, $deadline); }
 
     $filePath = $data['filePath'];
-    $fileURL = !empty($filePath) ? "/" . $filePath : "";
+    $fileURL = "/" . $filePath;
 
     echo json_encode(array(
         'success' => true,
@@ -147,25 +136,12 @@ if (mysqli_num_rows($result) > 0) {
         'nilai' => $nilai,
         'statusWaktu' => $statusWaktu,
         'filePath' => $fileURL,
-        'filePathSiswa' => $filePathSiswa,
-        'idPengumpulan' => $idPengumpulan
+        'filePathSiswa' => $filePathSiswa,  // File yang diupload siswa
+        'idPengumpulan' => $idPengumpulan   // ID pengumpulan untuk update
     ));
 
 } else {
-    // DEBUG: Cek apakah ada tugas dengan idMateri ini
-    $debugQuery = "SELECT idTugas, idMateri FROM tugas";
-    $debugResult = mysqli_query($conn, $debugQuery);
-    $allTugas = [];
-    while($row = mysqli_fetch_assoc($debugResult)) {
-        $allTugas[] = $row;
-    }
-    
-    echo json_encode(array(
-        'success' => false, 
-        'message' => 'Tidak ada tugas untuk materi ini',
-        'debug_idMateri' => $idMateri,
-        'debug_semua_tugas' => $allTugas  // Untuk debugging
-    ));
+    echo json_encode(array('success' => false, 'message' => 'Tidak ada tugas untuk materi ini'));
 }
 
 mysqli_close($conn);
