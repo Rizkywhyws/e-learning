@@ -1,8 +1,17 @@
 <?php
 //file getDetailTugas.php
-header('Content-Type: application/json'); // PENTING: Set header JSON
+session_start();
 
+// Cek login
+if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'guru') {
+    http_response_code(401);
+    echo json_encode(['error' => 'Unauthorized']);
+    exit;
+}
+
+header('Content-Type: application/json');
 include "../../config/db.php";
+
 
 $idTugas = isset($_GET['idTugas']) ? $_GET['idTugas'] : '';
 
