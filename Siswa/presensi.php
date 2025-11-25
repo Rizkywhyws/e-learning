@@ -205,9 +205,8 @@ if ($nisSiswa) {
 
 <div class="menu-row">
     <div class="dropdown">
-        <button class="dropbtn"><i class="fa-solid fa-database"></i> Data Master <i class="fa-solid fa-chevron-down dropdown-arrow"></i></button>
+        <button class="dropbtn"><i class="fa-solid fa-user"></i> Profil <i class="fa-solid fa-chevron-down dropdown-arrow"></i></button>
         <div class="dropdown-content">
-            <a href="dashboard.php"><i class="fa-solid fa-user"></i> Dashboard</a>
             <a href="#"><i class="fa-solid fa-users"></i> Profil Saya</a>
         </div>
     </div>
@@ -224,6 +223,12 @@ if ($nisSiswa) {
         <div class="dropdown-content">
             <a href="mataPelajaran.php"><i class="fa-solid fa-book-open"></i> Mapel</a>
             <a href="#"><i class="fa-solid fa-pen-to-square"></i> Quiz</a>
+        </div>
+    </div>
+    <div class="dropdown">
+        <button class="dropbtn"><i class="fa-solid fa-house"></i> Dashboard</button>
+        <div class="dropdown-content">
+        <a href="dashboard.php"><i class="fa-solid fa-gauge"></i>Dashboard Utama</a>
         </div>
     </div>
     <div class="dropdown">
