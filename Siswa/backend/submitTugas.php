@@ -30,6 +30,14 @@ $NIS = isset($_SESSION['NIS']) ? $_SESSION['NIS'] : null;
 if (!$NIS) {
     // Ambil NIS dari idAkun jika belum ada di session
     $idAkun = isset($_SESSION['idAkun']) ? $_SESSION['idAkun'] : 'A0004';
+
+    // Menjadi:
+    $idAkun = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
+
+    if (!$idAkun) {
+        echo json_encode(['success' => false, 'message' => 'Session expired']);
+        exit;
+    }
     $queryNIS = "SELECT NIS FROM datasiswa WHERE idAkun = '$idAkun'";
     $resultNIS = mysqli_query($conn, $queryNIS);
     
@@ -103,7 +111,7 @@ if (!in_array($fileExtension, $allowedExtensions)) {
 $uniqueFileName = $NIS . '_' . $idTugas . '_' . time() . '.' . $fileExtension;
 
 // Tentukan folder upload
-$uploadDir = '../uploads/tugas/';
+$uploadDir = '/uploads/tugas/';
 
 // Buat folder jika belum ada
 if (!file_exists($uploadDir)) {
@@ -119,7 +127,7 @@ if (!move_uploaded_file($fileTmpName, $uploadPath)) {
 }
 
 // Path relatif untuk disimpan ke database
-$filePathDB = 'uploads/tugas/' . $uniqueFileName;
+$filePathDB = '/uploads/tugas/' . $uniqueFileName;
 
 // ==================== PROSES UPDATE ATAU INSERT ====================
 $submittedAtDB = date('Y-m-d H:i:s', $submittedAt);
@@ -134,7 +142,7 @@ if ($isUpdate && $idPengumpulan) {
     
     if ($resultOldFile && mysqli_num_rows($resultOldFile) > 0) {
         $dataOldFile = mysqli_fetch_assoc($resultOldFile);
-        $oldFilePath = '../' . $dataOldFile['filePath'];
+        $oldFilePath = '../../' . $dataOldFile['filePath'];
         
         // Hapus file lama jika ada
         if (file_exists($oldFilePath)) {
