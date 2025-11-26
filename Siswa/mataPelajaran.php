@@ -437,13 +437,11 @@ function submitTugas() {
     formData.append('idTugas', idTugas);
     formData.append('file', fileInput.files[0]);
     
-    // Jika ada idPengumpulan, berarti ini adalah update
     if(idPengumpulan) {
         formData.append('idPengumpulan', idPengumpulan);
         formData.append('isUpdate', '1');
     }
     
-    // Tampilkan loading
     const btnKumpul = document.querySelector('.btn-kumpul');
     const originalText = btnKumpul.textContent;
     btnKumpul.disabled = true;
@@ -453,26 +451,24 @@ function submitTugas() {
         method: 'POST',
         body: formData
     })
-    .then(response => {
-        // CEK STATUS HTTP DULU
-        console.log('HTTP Status:', response.status);
-        
-        // Ambil response sebagai text dulu untuk debug
-        return response.text().then(text => {
-            console.log('Response Text:', text);
-            
-            // Coba parse sebagai JSON
-            try {
-                return JSON.parse(text);
-            } catch(e) {
-                console.error('JSON Parse Error:', e);
-                console.error('Response:', text);
-                throw new Error('Server response bukan JSON valid: ' + text.substring(0, 200));
-            }
-        });
+    .then(response => response.text())
+    .then(text => {
+        console.log('Raw Response:', text);
+        try {
+            return JSON.parse(text);
+        } catch(e) {
+            throw new Error('Server response bukan JSON: ' + text.substring(0, 200));
+        }
     })
     .then(data => {
         console.log('Parsed Data:', data);
+        
+        // CEK DEBUG INFO
+        if(data.debug) {
+            console.log('Upload Path:', data.debug.uploadPath);
+            console.log('File Exists:', data.debug.fileExists);
+            console.log('File Path DB:', data.debug.filePathDB);
+        }
         
         if(data.success) {
             // Update kolom status
@@ -482,12 +478,15 @@ function submitTugas() {
             document.querySelector('.status-label').style.backgroundColor = '#bbf7d0';
             document.querySelector('.status-label').style.color = '#064e3b';
 
-            // Update hidden field untuk tracking
             document.getElementById('idPengumpulanHidden').value = data.idPengumpulan;
 
-            // Munculkan file yang diupload
+            // PERBAIKAN URL - Buat URL yang BENAR
             if (data.fileName) {
-                let fullUrl = '/elearning-app' + data.filePathSiswa;
+                // Format: /elearning-app/uploads/tugas/filename.pdf
+                let fullUrl = '/elearning-app/' + data.filePathSiswa;
+                
+                console.log('File URL:', fullUrl); // Debug
+                
                 document.getElementById('uploadedFileBox').innerHTML = `
                     <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #e8f5e9; border-radius: 8px; border: 1px solid #81c784;">
                         <span style="color: #2e7d32; font-weight: 500;">📄 ${data.fileName}</span>
@@ -497,26 +496,23 @@ function submitTugas() {
                 document.getElementById('uploadedFileBox').style.display = 'block';
             }
 
-            // Reset file input
             fileInput.value = '';
             document.getElementById('fileName').textContent = 'Tidak ada file yang diupload';
 
-            // Ubah tombol menjadi update mode
             btnKumpul.textContent = 'PERBARUI TUGAS';
             btnKumpul.style.backgroundColor = '#fff3cd';
             btnKumpul.style.color = '#856404';
 
             alert(data.message);
         } else {
-            alert('Gagal mengumpulkan tugas: ' + data.message);
+            alert('Gagal: ' + data.message);
         }
     })
     .catch(error => {
-        console.error('Full Error:', error);
+        console.error('Error:', error);
         alert('Terjadi kesalahan: ' + error.message);
     })
     .finally(() => {
-        // Restore button
         btnKumpul.disabled = false;
         if(btnKumpul.textContent === 'Mengirim...') {
             btnKumpul.textContent = originalText;
