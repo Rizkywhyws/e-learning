@@ -110,5 +110,16 @@ while ($bp = mysqli_fetch_assoc($qBuatPresensi)) {
     </table>
 </div>
 
+<<<<<<< HEAD
+<div class="legend">
+    <span class="h">Hadir</span>
+    <span class="a">Alpa</span>
+    <span class="s">Sakit</span>
+    <span class="i">Izin</span>
+    <span class="n">Tidak Ada</span>
+</div>
+
+=======
+>>>>>>> 86bcade9daf2ae36d9f7c2f555f1a53d61fb52ad
 </body>
 </html>

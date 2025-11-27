@@ -148,7 +148,6 @@ const modal = document.getElementById("mapelModal");
 const closeModal = document.querySelector(".close");
 const cancelBtn = document.getElementById("cancelBtn");
 const mapelForm = document.getElementById("mapelForm");
-
 const ipNama = document.getElementById("namaMapel");
 const ipGuru = document.getElementById("nipGuru");
 const ipOriginal = document.getElementById("original_kode");

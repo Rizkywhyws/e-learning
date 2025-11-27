@@ -18,7 +18,7 @@ body {
 }
 
 /* ===================================
-   ✅ STICKY HEADER - INI YANG PENTING!
+   ✅ STICKY HEADER
 ====================================*/
 .sticky-header {
   position: fixed !important;
@@ -32,7 +32,7 @@ body {
 }
 
 /* ===================================
-   HEADER (logo di tengah)
+   HEADER
 ====================================*/
 header {
   display: flex;
@@ -40,7 +40,6 @@ header {
   justify-content: center;
   padding: 15px 40px;
   background-color: #f1f5fc;
-  margin: 0;
 }
 
 .logo {
@@ -55,7 +54,7 @@ header {
 }
 
 /* ===================================
-   MENU ROW (dropdown bar)
+   MENU ROW
 ====================================*/
 .menu-row {
   display: flex;
@@ -71,14 +70,13 @@ header {
 }
 
 /* ===================================
-   DROPDOWN CONTAINER
+   DROPDOWN
 ====================================*/
 .dropdown {
   position: relative;
   display: inline-block;
 }
 
-/* Dropdown button */
 .dropbtn {
   background: transparent;
   border: none;
@@ -93,15 +91,10 @@ header {
   gap: 6px;
 }
 
-.dropbtn i {
-  color: #2e7dff;
-}
-
 .dropbtn:hover {
   background: rgba(46, 125, 255, 0.1);
 }
 
-/* Dropdown content */
 .dropdown-content {
   display: none;
   position: absolute;
@@ -125,20 +118,15 @@ header {
   align-items: center;
 }
 
-.dropdown-content a i {
-  color: #2e7dff;
-}
-
 .dropdown-content a:hover {
   background-color: #e8f0ff;
 }
 
 /* ===================================
-   ✅ MAIN CONTENT - BERI PADDING TOP!
+   MAIN
 ====================================*/
 main {
   padding-top: 180px !important;
-  margin: 0;
 }
 
 /* ===================================
@@ -147,8 +135,8 @@ main {
 .welcome-box {
   background-color: #b5ccff;
   text-align: center;
-  padding: 50px;
-  border-radius: 10px;
+  padding: 40px 20px;      /* FIXED */
+  border-radius: 20px;     /* FIXED */
   margin: 20px auto 10px;
   width: 90%;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.299);
@@ -159,10 +147,6 @@ main {
   font-size: 30px;
   font-weight: 700;
   margin-top: -9px;
-}
-
-.welcome-box span {
-  font-weight: 600;
 }
 
 .welcome-box p {
@@ -216,7 +200,6 @@ main {
   font-weight: 700;
   margin-top: 50px;
   margin-bottom: 30px;
-  margin-left: -10px;
   text-align: center;
 }
 
@@ -256,107 +239,32 @@ main {
   font-weight: 700;
 }
 
-/* Warna border card */
-.card.guru {
-  border: 6px solid #ff7b7b;
-}
-.card.siswa {
-  border: 6px solid #ffd84c;
-}
-.card.mapel {
-  border: 6px solid #66d977;
-}
-.card.jadwal {
-  border: 6px solid #4db6ff;
-}
+/* ===================================
+   CARD COLORS
+====================================*/
+.card.guru { border: 6px solid #ff7b7b; }
+.card.siswa { border: 6px solid #ffd84c; }
+.card.mapel { border: 6px solid #66d977; }
+.card.jadwal { border: 6px solid #4db6ff; }
 
 /* ===================================
    DATA SECTION
 ====================================*/
 .data-section {
   padding-top: 20px;
-  margin: 0;
   padding-bottom: 50px;
 }
 
 /* ===================================
-   TABLE CONTAINER & FILTER
+   TABLES
 ====================================*/
 .table-container {
   width: 90%;
   margin: 15px auto;
 }
 
-.filter-container {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 10px;
-  padding-right: 10px;
-}
-
-.filter-select {
-  padding: 8px 16px;
-  border: 2px solid #2e7dff;
-  border-radius: 20px;
-  background: white;
-  color: #2e7dff;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  outline: none;
-  transition: 0.3s;
-}
-
-.filter-select:hover {
-  background: #e8f0ff;
-}
-
-.filter-select:focus {
-  border-color: #1a5cd7;
-}
-
-/* ===================================
-   DATA TABS
-====================================*/
-.data-tabs {
-  display: flex;
-  gap: 10px;
-  padding: 10px 20px;
-  background: #d5ebff;
-  border: 2px solid #2e7dff;
-  border-radius: 40px;
-  margin: 20px auto;
-  justify-content: center;
-  align-items: center;
-  width: fit-content;
-}
-
-.data-tabs button {
-  background: transparent;
-  border: none;
-  font-size: 14px;
-  font-weight: 600;
-  color: #2e7dff;
-  padding: 8px 14px;
-  cursor: pointer;
-  border-radius: 20px;
-}
-
-.data-tabs button:hover {
-  background: rgba(46, 125, 255, 0.12);
-}
-
-.data-tabs .active {
-  background: #2e7dff;
-  color: #ffffff;
-}
-
-/* ===================================
-   TABLE
-====================================*/
 .data-table {
-  width: 90%;
-  margin: 15px auto;
+  width: 100%;
   border-collapse: collapse;
   background: #f5f9ff;
   border-radius: 10px;
@@ -364,34 +272,22 @@ main {
   border: 3px solid #2e7dff;
 }
 
-/* Tabel di dalam container */
-.table-container .data-table {
-  width: 100%;
-  margin: 0;
-}
-
 .data-table thead {
   background: #bcd4ff;
 }
 
-.data-table th {
+.data-table th,
+.data-table td {
   padding: 14px;
   text-align: center;
-  font-weight: 600;
   border-right: 2px solid #c4d6f6;
-  color: #000;
+  border-bottom: 2px solid #c4d6f6;
 }
 
+/* Hide last border */
 .data-table th:last-child,
 .data-table td:last-child {
   border-right: none;
-}
-
-.data-table td {
-  padding: 16px 14px;
-  border-bottom: 2px solid #c4d6f6;
-  border-right: 2px solid #c4d6f6;
-  text-align: center;
 }
 
 /* ===================================

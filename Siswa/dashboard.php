@@ -104,11 +104,6 @@ if ($kelasSiswa) {
     }
 }
 
-// --- TAMBAHAN LOGIKA UNTUK TIMELINE DAN SEKARANG ---
-
-// --- TAMBAHAN LOGIKA UNTUK TIMELINE DAN SEKARANG ---
-
-// --- TAMBAHAN LOGIKA UNTUK TIMELINE DAN SEKARANG ---
 
 $timelineItems = [];
 $sekarangMapel = '';
@@ -251,24 +246,25 @@ if ($kelasSiswa) {
 
         // Cek status presensi
         if ($nisSiswa) { // Pastikan NIS tersedia
-            $sqlCekPresensi = "
-                SELECT COUNT(*) as total
-                FROM presensi_siswa ps
-                WHERE ps.NIS = ? 
-                  AND ps.tanggal = CURDATE()
-                  AND ps.idJadwalMapel = ?
-            ";
-            $stmtCekPresensi = $conn->prepare($sqlCekPresensi);
-            $stmtCekPresensi->bind_param("ss", $nisSiswa, $idJadwalSekarang);
-            $stmtCekPresensi->execute();
-            $resultCekPresensi = $stmtCekPresensi->get_result();
-            $rowCekPresensi = $resultCekPresensi->fetch_assoc();
+    $sqlCekPresensi = "
+        SELECT COUNT(*) as total
+        FROM presensisiswa ps
+        WHERE ps.NIS = ? 
+          AND DATE(ps.waktuPresensi) = CURDATE()
+          AND ps.idBuatPresensi = ?
+    ";
+    $stmtCekPresensi = $conn->prepare($sqlCekPresensi);
+    $stmtCekPresensi->bind_param("ss", $nisSiswa, $idJadwalSekarang); // <-- Perhatikan: Menggunakan idBuatPresensi
+    $stmtCekPresensi->execute();
+    $resultCekPresensi = $stmtCekPresensi->get_result();
+    $rowCekPresensi = $resultCekPresensi->fetch_assoc();
 
-            if ($rowCekPresensi['total'] > 0) {
-                $sekarangStatus = 'Anda sudah melakukan presensi';
-            } else {
-                $sekarangStatus = 'Anda belum melakukan presensi';
-            }
+    if ($rowCekPresensi['total'] > 0) {
+        $sekarangStatus = 'Anda sudah melakukan presensi';
+    } else {
+        $sekarangStatus = 'Anda belum melakukan presensi';
+    }
+
         } else {
             $sekarangStatus = 'Tidak dapat memeriksa presensi (NIS tidak ditemukan).';
         }
@@ -430,6 +426,7 @@ if ($kelasSiswa) {
           </tbody>
         </table>
       </div>
+>>>>>>> 86bcade9daf2ae36d9f7c2f555f1a53d61fb52ad
     </div>
 
     <!-- KALENDER -->

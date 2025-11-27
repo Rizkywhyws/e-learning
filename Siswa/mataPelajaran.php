@@ -162,6 +162,7 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
         $pelajaranSelanjutnya = "Tidak ada jadwal";
     }
 
+
     ?>
     <h2>Halo! Selamat Datang, <?= htmlspecialchars($namaSiswa) ?></h2>
     <p>Jadwal Pelajaran selanjutnya <?= htmlspecialchars($pelajaranSelanjutnya) ?></p>
@@ -184,6 +185,7 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
                 // Query untuk mendapatkan materi dari mata pelajaran ini
                 $kodeMapel = $mapel['kodeMapel'];
                 
+
                 $queryMateri = "SELECT m.idMateri, m.judul, m.createdAt, m.deskripsi, m.filePath, m.linkVideo
                                 FROM materi m
                                 WHERE m.kodeMapel = '$kodeMapel'
@@ -211,7 +213,6 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
                     
                     if($resultTugasBelum) {
                         $dataTugasBelum = mysqli_fetch_assoc($resultTugasBelum);
-                        
                         if($dataTugasBelum['total'] > 0 && $dataTugasBelum['belum'] > 0) {
                             $statusWarna = 'merah';
                         } else {
@@ -236,7 +237,6 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
 
 <!-- Rest of the HTML remains the same... -->
 <!-- Script, popup forms, etc. -->
-
 <!-- === Script interaktif untuk mapel === -->
 <script>
 function toggleMateri(card) {
@@ -343,6 +343,7 @@ function loadTugas(idMateri) { // PERBAIKAN: Hanya terima idMateri
                     
                     // Tampilkan file yang sudah diupload
                     if(data.filePathSiswa) {
+
                     let fileName = data.filePathSiswa.split('/').pop();
                     // PERBAIKAN: Tambahkan /elearning-app/ di depan path
                     let fullUrl = '/elearning-app' + data.filePathSiswa;
@@ -436,16 +437,10 @@ function submitTugas() {
     const formData = new FormData();
     formData.append('idTugas', idTugas);
     formData.append('file', fileInput.files[0]);
-    
     if(idPengumpulan) {
         formData.append('idPengumpulan', idPengumpulan);
         formData.append('isUpdate', '1');
     }
-    
-    const btnKumpul = document.querySelector('.btn-kumpul');
-    const originalText = btnKumpul.textContent;
-    btnKumpul.disabled = true;
-    btnKumpul.textContent = 'Mengirim...';
     
     fetch('backend/submitTugas.php', {
         method: 'POST',
@@ -477,7 +472,6 @@ function submitTugas() {
             document.querySelector('.status-label').textContent = 'Selesai';
             document.querySelector('.status-label').style.backgroundColor = '#bbf7d0';
             document.querySelector('.status-label').style.color = '#064e3b';
-
             document.getElementById('idPengumpulanHidden').value = data.idPengumpulan;
 
             // PERBAIKAN URL - Buat URL yang BENAR
@@ -495,7 +489,6 @@ function submitTugas() {
                 `;
                 document.getElementById('uploadedFileBox').style.display = 'block';
             }
-
             fileInput.value = '';
             document.getElementById('fileName').textContent = 'Tidak ada file yang diupload';
 

@@ -1,5 +1,6 @@
 <?php
-//file getDetailTugas.php
+// file: getDetailTugas.php
+
 session_start();
 
 // Cek login
@@ -10,21 +11,19 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'guru') {
 }
 
 header('Content-Type: application/json');
-include "../../config/db.php";
 
+require_once "../../config/db.php";
 
-$idTugas = isset($_GET['idTugas']) ? $_GET['idTugas'] : '';
+// Validasi idTugas
+$idTugas = $_GET['idTugas'] ?? '';
 
-if (!$idTugas) {
+if (empty($idTugas)) {
     echo json_encode(['error' => 'idTugas kosong']);
     exit;
 }
 
-// Escape untuk keamanan
-$idTugas = mysqli_real_escape_string($conn, $idTugas);
-
-// Query diperbaiki - ambil kelas dari jadwalmapel (bisa multiple kelas)
-$q = mysqli_query($conn, "
+// Gunakan prepared statement untuk keamanan
+$sql = "
     SELECT 
         t.idTugas, 
         t.kodeMapel, 
@@ -33,24 +32,40 @@ $q = mysqli_query($conn, "
         t.deskripsi, 
         t.deadline, 
         t.filePath,
-        GROUP_CONCAT(DISTINCT jm.kelas ORDER BY jm.kelas SEPARATOR ', ') as kelas
+        GROUP_CONCAT(DISTINCT jm.kelas ORDER BY jm.kelas SEPARATOR ', ') AS kelas
     FROM tugas t
     JOIN mapel m ON t.kodeMapel = m.kodeMapel
-    LEFT JOIN jadwalmapel jm ON jm.kodeMapel = t.kodeMapel AND jm.nipGuru = t.NIP
-    WHERE t.idTugas = '$idTugas'
+    LEFT JOIN jadwalmapel jm 
+        ON jm.kodeMapel = t.kodeMapel 
+        AND jm.nipGuru = t.NIP
+    WHERE t.idTugas = ?
     GROUP BY t.idTugas
     LIMIT 1
-");
+";
 
-if (!$q) {
-    echo json_encode(['error' => 'Query error: ' . mysqli_error($conn)]);
+$stmt = $conn->prepare($sql);
+
+if (!$stmt) {
+    echo json_encode(['error' => 'Prepare error: ' . $conn->error]);
     exit;
 }
 
-if (mysqli_num_rows($q) > 0) {
-    $data = mysqli_fetch_assoc($q);
-    echo json_encode($data);
-} else {
+$stmt->bind_param("s", $idTugas);
+$stmt->execute();
+
+$res = $stmt->get_result();
+
+if ($res->num_rows === 0) {
     echo json_encode(['error' => 'Data tidak ditemukan untuk ID: ' . $idTugas]);
+    exit;
 }
+
+$data = $res->fetch_assoc();
+
+// Kirim hasil
+echo json_encode($data);
+
+// Cleanup
+$stmt->close();
+$conn->close();
 ?>

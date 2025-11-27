@@ -4,7 +4,6 @@ session_start();
 include('../../config/db.php');
 
 header('Content-Type: application/json');
-
 // Validasi parameter - HANYA idMateri yang dibutuhkan
 if (!isset($_GET['idMateri'])) {
     echo json_encode(array('success' => false, 'message' => 'Parameter tidak lengkap. idMateri diperlukan.'));
@@ -20,7 +19,6 @@ if (!$idAkun) {
     echo json_encode(array('success' => false, 'message' => 'Session expired'));
     exit;
 }
-
 $NIS = isset($_SESSION['NIS']) ? $_SESSION['NIS'] : null;
 
 // Jika belum ada NIS di session, ambil dari idAkun
@@ -49,6 +47,7 @@ FROM tugas t
 INNER JOIN materi m ON t.idMateri = m.idMateri -- Hubungan utama antara tugas dan materi
 INNER JOIN mapel mp ON m.kodeMapel = mp.kodeMapel -- Hubungan antara materi dan mapel
 WHERE t.idMateri = '$idMateri'
+>>>>>>> 86bcade9daf2ae36d9f7c2f555f1a53d61fb52ad
 LIMIT 1
 ";
 

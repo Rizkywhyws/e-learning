@@ -1,12 +1,12 @@
 <?php
-require_once "../../config/db.php"; 
+require_once "../../config/db.php";
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 // Fungsi generate kode mapel acak unik
 function generateKodeMapel($conn) {
     do {
-        $kode = strtoupper(substr(bin2hex(random_bytes(3)), 0, 7)); // 6 char random
+        $kode = strtoupper(substr(bin2hex(random_bytes(3)), 0, 7)); // kode acak 6-7 char
         $check = $conn->prepare("SELECT kodeMapel FROM mapel WHERE kodeMapel = ?");
         $check->bind_param("s", $kode);
         $check->execute();
@@ -23,6 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $namaMapel = trim($_POST["namaMapel"]);
     $nipGuru   = isset($_POST["nipGuru"]) ? trim($_POST["nipGuru"]) : "";
 
+    // Validasi wajib
     if (empty($namaMapel)) {
         echo "<script>alert('Nama Mapel wajib diisi!'); history.back();</script>";
         exit;
@@ -46,7 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $last_id = $row['last_id'];
 
         if ($last_id) {
-            $num = (int)substr($last_id, 2) + 1;
+            $num = (int) substr($last_id, 2) + 1;
             $new_id = 'GM' . str_pad($num, 3, '0', STR_PAD_LEFT);
         } else {
             $new_id = 'GM001';
@@ -61,4 +62,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     echo "<script>alert('Mapel berhasil ditambahkan!'); window.location.href='../kelolamapel.php';</script>";
     exit;
 }
+
+// Jika akses selain POST
+header("Location: ../kelolamapel.php");
+exit;
 ?>

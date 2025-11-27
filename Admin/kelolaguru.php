@@ -1,6 +1,6 @@
 <?php
 require_once "../config/db.php";
-include '../config/session.php';
+include "../config/session.php"; // tetap disertakan untuk keamanan login
 
 // Ambil data guru + akun
 $data = $conn->query("
@@ -216,14 +216,14 @@ $data = $conn->query("
       modal.style.display = "none";
   };
 
-  // Close modal saat klik di luar modal
+  // Close modal saat klik luar modal
   window.onclick = (event) => {
       if (event.target == modal) {
           modal.style.display = "none";
       }
   };
 
-  // Hapus guru (GET)
+  // Hapus guru
   btnDelete.onclick = async () => {
       if (!selectedRow) return;
       const nip = selectedRow.dataset.nip;
@@ -266,5 +266,6 @@ $data = $conn->query("
     });
   });
   </script>
+
 </body>
 </html>

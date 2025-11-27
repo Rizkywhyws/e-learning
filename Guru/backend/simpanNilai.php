@@ -1,6 +1,7 @@
 <?php
-//simpanNilai.php
+// file: simpanNilai.php
 session_start();
+include "../../config/db.php";
 
 // ========== PROTEKSI LOGIN ==========
 if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'guru') {
@@ -9,8 +10,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'guru') {
     exit;
 }
 
-include "../../config/db.php";
-
+// ========== VALIDASI idTugas ==========
 $idTugas = isset($_POST['idTugas']) ? mysqli_real_escape_string($conn, $_POST['idTugas']) : '';
 
 if (empty($idTugas)) {
@@ -18,31 +18,32 @@ if (empty($idTugas)) {
     exit;
 }
 
+// ========== VALIDASI DATA NILAI ==========
 if (!isset($_POST['nilai']) || !is_array($_POST['nilai'])) {
     echo "❌ Data nilai tidak valid";
     exit;
 }
 
-// Update nilai untuk setiap siswa
 $berhasil = 0;
 $gagal = 0;
 
-foreach($_POST['nilai'] as $nis => $nilai) {
-    // Escape input untuk keamanan
-    $nis = mysqli_real_escape_string($conn, $nis);
+// ========== PROSES UPDATE NILAI ==========
+foreach ($_POST['nilai'] as $nis => $nilai) {
+    $nis   = mysqli_real_escape_string($conn, $nis);
     $nilai = mysqli_real_escape_string($conn, $nilai);
-    
-    // Validasi nilai (0-100)
-    if (!is_numeric($nilai) || $nilai < 0 || $nilai > 100) {
+
+    // Validasi range nilai
+    if ($nilai === '' || !is_numeric($nilai) || $nilai < 0 || $nilai > 100) {
+        $gagal++;
         continue;
     }
-    
+
     $update = mysqli_query($conn, "
-        UPDATE pengumpulantugas 
+        UPDATE pengumpulantugas
         SET nilai='$nilai', status='selesai'
         WHERE idTugas='$idTugas' AND NIS='$nis'
     ");
-    
+
     if ($update && mysqli_affected_rows($conn) > 0) {
         $berhasil++;
     } else {
@@ -50,11 +51,10 @@ foreach($_POST['nilai'] as $nis => $nilai) {
     }
 }
 
+// ========== RESPONSE ==========
 if ($berhasil > 0) {
     echo "✅ Berhasil menyimpan $berhasil nilai!";
-    if ($gagal > 0) {
-        echo " ($gagal nilai tidak berubah)";
-    }
+    if ($gagal > 0) echo " ($gagal gagal atau tidak berubah)";
 } else {
     echo "⚠️ Tidak ada nilai yang diupdate";
 }

@@ -11,7 +11,6 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || $_SESSI
 $idAkun = $_SESSION['user_id']; // Sesuaikan dengan cek_login.php
 $namaGuru = isset($_SESSION['nama']) ? $_SESSION['nama'] : 'Guru';
 $nipGuru = isset($_SESSION['nip']) ? $_SESSION['nip'] : '';
-
 $halaman = isset($_GET['page']) ? $_GET['page'] : '';
 ?>
 
@@ -124,6 +123,7 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
   ?>
   <h2>Halo! Selamat Datang, <?= htmlspecialchars($namaGuru) ?></h2>
   <p>Jadwal mengajar selanjutnya: <b><?= htmlspecialchars($pelajaranSelanjutnya) ?></b></p>
+>>>>>>> 86bcade9daf2ae36d9f7c2f555f1a53d61fb52ad
 </section>
 
 
@@ -134,6 +134,7 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
 
     <?php if ($halaman == 'uploudMateri') { ?>
         <div class="content"><?php include 'uploudMateri.php'; ?></div>
+>>>>>>> 86bcade9daf2ae36d9f7c2f555f1a53d61fb52ad
     <?php } ?>
 
     <a href="?page=buatTugas"><button class="btn">Buat Tugas</button></a>
