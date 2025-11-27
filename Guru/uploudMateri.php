@@ -1,7 +1,5 @@
 <?php
 include_once("../config/db.php");
-session_start();
-
 // Cek apakah guru sudah login
 if (!isset($_SESSION['nip']) || $_SESSION['role'] !== 'guru') {
   echo json_encode(["status" => "error", "message" => "Anda harus login sebagai guru!"]);

@@ -1,23 +1,47 @@
 <?php
-//file getTugasGuru.php
-include "../../config/db.php";
+// file: getTugasGuru.php
 session_start();
+include "../../config/db.php";
 
-// Ambil NIP guru dari akun login
-$idAkun = $_SESSION['idAkun'];
-$qGuru = mysqli_query($conn, "SELECT NIP FROM dataguru WHERE idAkun='$idAkun'");
-$nipGuru = mysqli_fetch_assoc($qGuru)['NIP'];
+// ========== CEK LOGIN ==========
+if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'guru') {
+    http_response_code(401);
+    echo '<tr><td colspan="6" style="color:red; text-align:center;">Unauthorized</td></tr>';
+    exit;
+}
 
-// Ambil parameter dari AJAX
-$kodeMapel = mysqli_real_escape_string($conn, $_GET['mapel']);
-$kelas = mysqli_real_escape_string($conn, $_GET['kelas']);
-$no = 1;
+// ========== AMBIL NIP GURU ==========
+$nipGuru = $_SESSION['nip'] ?? null;
 
-// Ambil tugas berdasarkan mapel & kelas melalui relasi jadwalmapel
+if (!$nipGuru) {
+    // fallback ambil dari DB
+    $idAkun = $_SESSION['user_id'];
+    $qGuru = mysqli_query($conn, "SELECT NIP FROM dataguru WHERE idAkun='$idAkun'");
+    $guru = mysqli_fetch_assoc($qGuru);
+    $nipGuru = $guru['NIP'] ?? null;
+}
+
+if (!$nipGuru) {
+    echo '<tr><td colspan="6" style="color:red;">NIP Guru tidak ditemukan</td></tr>';
+    exit;
+}
+
+// ========== AMBIL PARAMETER GET ==========
+$kodeMapel = mysqli_real_escape_string($conn, $_GET['mapel'] ?? '');
+$kelas      = mysqli_real_escape_string($conn, $_GET['kelas'] ?? '');
+
+if (!$kodeMapel || !$kelas) {
+    echo '<tr><td colspan="6" style="text-align:center; color:red;">Mapel atau kelas tidak valid!</td></tr>';
+    exit;
+}
+
+// ========== QUERY AMBIL TUGAS ==========
 $tugasRes = mysqli_query($conn, "
     SELECT t.*
     FROM tugas t
-    JOIN jadwalmapel jm ON jm.kodeMapel = t.kodeMapel AND jm.nipGuru = t.NIP
+    JOIN jadwalmapel jm 
+        ON jm.kodeMapel = t.kodeMapel 
+       AND jm.nipGuru = t.NIP
     WHERE t.NIP = '$nipGuru'
       AND t.kodeMapel = '$kodeMapel'
       AND jm.kelas = '$kelas'
@@ -29,27 +53,36 @@ if (!$tugasRes) {
     exit;
 }
 
+// ========== TAMPILKAN DATA ==========
+$no = 1;
+
 if (mysqli_num_rows($tugasRes) > 0) {
     while ($t = mysqli_fetch_assoc($tugasRes)) {
-        // Format file column
+
+        // File column
         $fileColumn = "-";
         if (!empty($t['filePath'])) {
             $fileName = basename($t['filePath']);
-            $fileColumn = "<a href='{$t['filePath']}' target='_blank' style='color: #4c6ef5; text-decoration: none;'>📎 {$fileName}</a>";
+            $absolutePath = "http://localhost/elearning-app/" . ltrim($t['filePath'], '/');
+
+            $fileColumn = "
+                <a href='$absolutePath' target='_blank' style='color:#4c6ef5; text-decoration:none;'>
+                    📎 $fileName
+                </a>";
         }
-        
+
         echo "
-        <tr data-id='{$t['idTugas']}'>
-            <td>{$no}</td>
-            <td>{$t['judul']}</td>
-            <td style='max-width:400px;'>{$t['deskripsi']}</td>
-            <td>{$t['deadline']}</td>
-            <td>{$fileColumn}</td>
-            <td>{$t['createdAt']}</td>
-        </tr>";
+            <tr data-id='{$t['idTugas']}'>
+                <td>{$no}</td>
+                <td>" . htmlspecialchars($t['judul']) . "</td>
+                <td style='max-width:400px;'>" . htmlspecialchars($t['deskripsi']) . "</td>
+                <td>{$t['deadline']}</td>
+                <td>{$fileColumn}</td>
+                <td>{$t['createdAt']}</td>
+            </tr>";
         $no++;
     }
 } else {
-    echo "<tr><td colspan='6' style='text-align:center; color:#999;'>Tidak ada tugas untuk kombinasi ini.</td></tr>";
+    echo "<tr><td colspan='6' style='text-align:center; color:#888;'>Tidak ada tugas untuk mapel & kelas ini.</td></tr>";
 }
 ?>

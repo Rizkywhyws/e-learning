@@ -1,6 +1,6 @@
 <?php
-session_start();
 include('../config/db.php');
+include '../config/session.php';
 
 // Cek apakah guru sudah login
 if (!isset($_SESSION['nip']) || $_SESSION['role'] !== 'guru') {
@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     async function loadQuizOptions(){
         quizSel.innerHTML = '<option value="">-- Pilih Quiz --</option>';
         if(!mapelSel.value || !kelasSel.value) return;
-        const data = await api(base+get_quiz_by_filter&mapel=${mapelSel.value}&kelas=${kelasSel.value});
+        const data = await api(`base+get_quiz_by_filter&mapel=${mapelSel.value}&kelas=${kelasSel.value}`);
         if(data.error) return alertMsg(data.error);
         if(data.message) return alertMsg(data.message);
         data.forEach(q=>{
@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
         if(data.length>0){
             const s = data[0];
             selectedNIS = s.NIS;
-            alertMsg(Siswa ditemukan: ${s.nama} (${s.kelas} - ${s.jurusan}));
+            alertMsg(`Siswa ditemukan: ${s.nama} (${s.kelas} - ${s.jurusan})`);
         }
     });
 
@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
         qText.textContent='Memuat soal...';
         aBox.textContent='';
         nilaiInput.value='';
-        const data=await api(base+load_question&idQuiz=${state.idQuiz}&NIS=${state.NIS}&idx=${state.idx});
+        const data=await api(`base+load_question&idQuiz=${state.idQuiz}&NIS=${state.NIS}&idx=${state.idx}`);
         if(data.error){alertMsg(data.error); qText.textContent='Error: '+data.error; return;}
         qText.textContent=data.question;
         aBox.textContent=data.jawaban || '(Siswa belum mengisi jawaban)';

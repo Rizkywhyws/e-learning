@@ -1,5 +1,6 @@
 <?php
 require_once "../config/db.php";
+include '../config/session.php';
 
 // Ambil data jadwal beserta nama mapel dan guru
 $data = $conn->query("
@@ -29,307 +30,239 @@ $data = $conn->query("
   <link rel="stylesheet" href="css/kelolamapel.css?v=<?php echo time(); ?>">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    .filter-box {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin-bottom: 15px;
+      margin-right: 50px;
+      gap: 10px;
+    }
+    .filter-box label {
+      font-weight: 600;
+      color: #333;
+    }
+    .filter-box select {
+      padding: 8px 8px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+      min-width: 100px;
+      cursor: pointer;
+    }
+    .filter-box select:focus {
+      outline: none;
+      border-color: #4CAF50;
+    }
+  </style>
+
 </head>
 <body>
 
-<header>
-  <div class="logo">
-    <img src="../assets/logo-elearning.png" alt="E-School Logo">
-  </div>
-</header>
+<?php include 'sidebarAdmin.php'; ?>
 
-<div class="menu-row">
-  <div class="dropdown">
-    <button class="dropbtn"><i class="fa-solid fa-database"></i> Data Master</button>
-    <div class="dropdown-content">
-      <a href="kelolaguru.php"><i class="fa-solid fa-chalkboard-user"></i> Kelola Guru</a>
-      <a href="kelolasiswa.php"><i class="fa-solid fa-user-graduate"></i> Kelola Siswa</a>
-    </div>
-  </div>
+<div class="content">
+  <h1>Kelola Jadwal Mata Pelajaran</h1>
 
-  <div class="dropdown">
-    <button class="dropbtn"><i class="fa-solid fa-school"></i> Pembelajaran</button>
-    <div class="dropdown-content">
-      <a href="kelolamapel.php"><i class="fa-solid fa-book"></i> Kelola Mapel</a>
-      <a href="kelolajadwal.php"><i class="fa-solid fa-calendar-days"></i> Kelola Jadwal</a>
-    </div>
-  </div>
+  <!-- FILTER -->
+  <div class="filter-box">
+    <label for="filterHari">Filter Hari:</label>
+    <select id="filterHari">
+      <option value="all">Semua Hari</option>
+      <option value="Senin">Senin</option>
+      <option value="Selasa">Selasa</option>
+      <option value="Rabu">Rabu</option>
+      <option value="Kamis">Kamis</option>
+      <option value="Jumat">Jumat</option>
+      <option value="Sabtu">Sabtu</option>
+    </select>
 
-  <div class="dropdown">
-    <button class="dropbtn"><i class="fa-solid fa-house"></i> Dashboard</button>
-    <div class="dropdown-content">
-      <a href="dashboard.php"><i class="fa-solid fa-gauge"></i> Dashboard Utama</a>
-    </div>
-  </div>
-</div>
-
-<main>
-  <section class="welcome-box">
-    <h2>Halo! Selamat Datang, <span>Rizky</span></h2>
-    <p>Kelola jadwal pelajaran sesuai kelas dan guru pengampu.</p>
-  </section>
-
-  <div class="search-bar">
-    <input type="text" placeholder="Search...">
-    <button><i class="fa-solid fa-magnifying-glass"></i></button>
-  </div>
-</main>
-
-<section class="data-section">
-  <div class="action-buttons">
-    <button id="btnAdd" class="btn green"><i class="fa fa-plus"></i> Add Jadwal</button>
-    <button id="btnEdit" class="btn yellow" disabled><i class="fa fa-pen"></i> Edit Jadwal</button>
-    <button id="btnDelete" class="btn red" disabled><i class="fa fa-trash"></i> Delete Jadwal</button>
+    <label for="searchInput">Cari:</label>
+    <input type="text" id="searchInput" placeholder="Cari kelas / mapel / guru..." style="padding: 7px 10px; border-radius: 5px; border:1px solid #ddd;">
   </div>
 
-  <table class="data-table" id="jadwalTable">
+  <button class="add-btn" id="btnTambah" onclick="openModal()">+ Tambah Jadwal</button>
+
+  <table id="jadwalTable">
     <thead>
       <tr>
-        <th>Pilih</th>
         <th>Kode Mapel</th>
         <th>Nama Mapel</th>
-        <th>Guru</th>
+        <th>Nama Guru</th>
         <th>Hari</th>
         <th>Jam Mulai</th>
         <th>Durasi (menit)</th>
         <th>Ruangan</th>
         <th>Kelas</th>
+        <th>Aksi</th>
       </tr>
     </thead>
-    <tbody>
+    <tbody id="jadwalBody">
       <?php while ($row = $data->fetch_assoc()): ?>
-      <tr 
-        data-id="<?= $row['idJadwalMapel'] ?>"
-        data-mapel="<?= $row['kodeMapel'] ?>"
-        data-guru="<?= $row['nipGuru'] ?>"
-        data-hari="<?= $row['hari'] ?>"
-        data-jam="<?= $row['jamMulai'] ?>"
-        data-durasi="<?= $row['durasi'] ?>"
-        data-ruangan="<?= $row['ruangan'] ?>"
-        data-kelas="<?= $row['kelas'] ?>"
-      >
-        <td><input type="checkbox" class="row-check"></td>
-        <td><?= $row['kodeMapel'] ?></td>
-        <td><?= $row['namaMapel'] ?></td>
-        <td><?= $row['namaGuru'] ?: '-' ?></td>
-        <td><?= $row['hari'] ?></td>
-        <td><?= $row['jamMulai'] ?></td>
-        <td><?= $row['durasi'] ?></td>
-        <td><?= $row['ruangan'] ?></td>
-        <td><?= $row['kelas'] ?></td>
-      </tr>
+        <tr data-hari="<?= $row['hari'] ?>">
+          <td><?= $row['kodeMapel'] ?></td>
+          <td><?= $row['namaMapel'] ?></td>
+          <td><?= $row['namaGuru'] ?></td>
+          <td><?= $row['hari'] ?></td>
+          <td><?= $row['jamMulai'] ?></td>
+          <td><?= $row['durasi'] ?></td>
+          <td><?= $row['ruangan'] ?></td>
+          <td><?= $row['kelas'] ?></td>
+          <td>
+            <button class="edit-btn" onclick='editJadwal(<?= json_encode($row) ?>)'>Edit</button>
+            <button class="delete-btn" onclick="hapusJadwal(<?= $row['idJadwalMapel'] ?>)">Hapus</button>
+          </td>
+        </tr>
       <?php endwhile; ?>
     </tbody>
   </table>
+</div>
 
-</section>
+<!-- MODAL FORM TAMBAH/EDIT -->
+<div class="modal" id="modalForm">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
 
-<!-- MODAL -->
-<div id="jadwalModal" class="modal">
-  <div class="modal-content modal-large">
-    <span class="close">&times;</span>
-    <h3 id="formTitle">Add Jadwal</h3>
+    <h2 id="modalTitle">Tambah Jadwal</h2>
 
-    <form id="jadwalForm" method="POST" action="backend/add-jadwalmapel.php">
-      <input type="hidden" name="idJadwal" id="idJadwal">
+    <form id="formJadwal">
+      <input type="hidden" id="idJadwalMapel">
 
-      <div class="row">
-        <label>Kode Mapel</label>
-        <select name="kodeMapel" id="kodeMapel" required>
-          <option value="">-- Pilih Mapel --</option>
-          <?php
-          $mapelList = $conn->query("
-            SELECT m.kodeMapel, m.namaMapel, gm.nipGuru, g.nama AS namaGuru
-            FROM mapel m
-            LEFT JOIN gurumapel gm ON m.kodeMapel = gm.kodeMapel
-            LEFT JOIN dataguru g ON gm.nipGuru = g.NIP
-          ");
-          while ($m = $mapelList->fetch_assoc()):
-          ?>
-          <option value="<?= $m['kodeMapel'] ?>" 
-                  data-guru="<?= $m['nipGuru'] ?>" 
-                  data-nama-guru="<?= $m['namaGuru'] ?: 'Belum ada guru' ?>">
-            <?= $m['namaMapel'] ?>
-          </option>
-          <?php endwhile; ?>
-        </select>
-      </div>
+      <label>Kode Mapel</label>
+      <select id="kodeMapel" required>
+        <option value="">Pilih Mapel</option>
+        <?php
+          $mapel = $conn->query("SELECT * FROM mapel ORDER BY namaMapel ASC");
+          while ($m = $mapel->fetch_assoc()):
+        ?>
+        <option value="<?= $m['kodeMapel']; ?>"><?= $m['namaMapel']; ?></option>
+        <?php endwhile; ?>
+      </select>
 
-      <div class="row">
-        <label>Guru Pengampu (Otomatis)</label>
-        <input type="text" id="namaGuruDisplay" readonly placeholder="Pilih mapel terlebih dahulu" style="background-color: #f0f0f0; cursor: not-allowed;">
-        <input type="hidden" name="nipGuru" id="nipGuru">
-      </div>
+      <label>Guru</label>
+      <select id="nipGuru" required>
+        <option value="">Pilih Guru</option>
+        <?php
+          $guru = $conn->query("SELECT NIP, nama FROM dataguru ORDER BY nama ASC");
+          while ($g = $guru->fetch_assoc()):
+        ?>
+        <option value="<?= $g['NIP']; ?>"><?= $g['nama']; ?></option>
+        <?php endwhile; ?>
+      </select>
 
-      <div class="row">
-        <label>Hari</label>
-        <select name="hari" id="hari" required>
-          <option value="">-- Pilih Hari --</option>
-          <?php
-          $hariList = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-          foreach ($hariList as $h) echo "<option value='$h'>$h</option>";
-          ?>
-        </select>
-      </div>
+      <label>Hari</label>
+      <select id="hari" required>
+        <option value="Senin">Senin</option>
+        <option value="Selasa">Selasa</option>
+        <option value="Rabu">Rabu</option>
+        <option value="Kamis">Kamis</option>
+        <option value="Jumat">Jumat</option>
+        <option value="Sabtu">Sabtu</option>
+      </select>
 
-      <div class="row">
-        <label>Jam Mulai</label>
-        <input type="time" name="jamMulai" id="jamMulai" required>
-      </div>
+      <label>Jam Mulai</label>
+      <input type="time" id="jamMulai" required>
 
-      <div class="row">
-        <label>Durasi (menit)</label>
-        <input type="number" name="durasi" id="durasi" min="10" required>
-      </div>
+      <label>Durasi (menit)</label>
+      <input type="number" id="durasi" required placeholder="Masukkan durasi">
 
-      <div class="row">
-        <label>Ruangan</label>
-        <input type="text" name="ruangan" id="ruangan" maxlength="20">
-      </div>
+      <label>Ruangan</label>
+      <input type="text" id="ruangan" required placeholder="Cth: R-102">
 
-      <div class="row">
-        <label>Kelas</label>
-        <select name="kelas" id="kelas" required>
-          <option value="">-- Pilih Kelas --</option>
-          <?php
-          $kelasList = ['X-1','X-2','XI-1','XI-2','XII-1','XII-2'];
-          foreach ($kelasList as $k) echo "<option value='$k'>$k</option>";
-          ?>
-        </select>
-      </div>
+      <label>Kelas</label>
+      <select id="kelas" required>
+        <option value="X">X</option>
+        <option value="XI">XI</option>
+        <option value="XII">XII</option>
+      </select>
 
-      <div class="form-actions">
-        <button class="btn green" type="submit"><i class="fa-solid fa-floppy-disk"></i> Submit</button>
-        <button type="button" id="cancelBtn" class="btn">Cancel</button>
-      </div>
+      <button type="submit" class="save-btn">Simpan</button>
     </form>
   </div>
 </div>
 
 <script>
-const rows = document.querySelectorAll("#jadwalTable tbody tr");
-const btnEdit = document.getElementById("btnEdit");
-const btnDelete = document.getElementById("btnDelete");
-const btnAdd = document.getElementById("btnAdd");
-const modal = document.getElementById("jadwalModal");
-const closeModal = document.querySelector(".close");
-const cancelBtn = document.getElementById("cancelBtn");
-const jadwalForm = document.getElementById("jadwalForm");
+// Open Modal
+function openModal() {
+  document.getElementById("modalTitle").innerText = "Tambah Jadwal";
+  document.getElementById("formJadwal").reset();
+  document.getElementById("idJadwalMapel").value = "";
+  document.getElementById("modalForm").style.display = "block";
+}
 
-const ipId = document.getElementById("idJadwal");
-const ipMapel = document.getElementById("kodeMapel");
-const ipGuru = document.getElementById("nipGuru");
-const ipNamaGuruDisplay = document.getElementById("namaGuruDisplay");
-const ipHari = document.getElementById("hari");
-const ipJam = document.getElementById("jamMulai");
-const ipDurasi = document.getElementById("durasi");
-const ipRuangan = document.getElementById("ruangan");
-const ipKelas = document.getElementById("kelas");
+// Close Modal
+function closeModal() {
+  document.getElementById("modalForm").style.display = "none";
+}
 
-let selectedRow = null;
+// Edit
+function editJadwal(data) {
+  openModal();
+  document.getElementById("modalTitle").innerText = "Edit Jadwal";
 
-// Otomatis isi guru saat memilih mapel
-ipMapel.addEventListener("change", function() {
-  const selectedOption = this.options[this.selectedIndex];
-  const guruNip = selectedOption.getAttribute("data-guru");
-  const guruNama = selectedOption.getAttribute("data-nama-guru");
-  
-  ipGuru.value = guruNip || "";
-  ipNamaGuruDisplay.value = guruNama || "Belum ada guru pengampu";
-  
-  if (!guruNip) {
-    ipNamaGuruDisplay.style.color = "#d9534f";
-  } else {
-    ipNamaGuruDisplay.style.color = "#333";
-  }
-});
+  document.getElementById("idJadwalMapel").value = data.idJadwalMapel;
+  document.getElementById("kodeMapel").value = data.kodeMapel;
+  document.getElementById("nipGuru").value = data.nipGuru;
+  document.getElementById("hari").value = data.hari;
+  document.getElementById("jamMulai").value = data.jamMulai;
+  document.getElementById("durasi").value = data.durasi;
+  document.getElementById("ruangan").value = data.ruangan;
+  document.getElementById("kelas").value = data.kelas;
+}
 
-rows.forEach(row => {
-  row.addEventListener("click", () => {
-    rows.forEach(r => r.classList.remove("selected"));
-    row.classList.add("selected");
-    selectedRow = row;
-    btnEdit.disabled = false;
-    btnDelete.disabled = false;
+// Submit Form (Tambah/Edit)
+document.getElementById("formJadwal").addEventListener("submit", async function(e) {
+  e.preventDefault();
+
+  const formData = new FormData();
+  formData.append("idJadwalMapel", document.getElementById("idJadwalMapel").value);
+  formData.append("kodeMapel", document.getElementById("kodeMapel").value);
+  formData.append("nipGuru", document.getElementById("nipGuru").value);
+  formData.append("hari", document.getElementById("hari").value);
+  formData.append("jamMulai", document.getElementById("jamMulai").value);
+  formData.append("durasi", document.getElementById("durasi").value);
+  formData.append("ruangan", document.getElementById("ruangan").value);
+  formData.append("kelas", document.getElementById("kelas").value);
+
+  const response = await fetch("backend/simpanJadwal.php", {
+    method: "POST",
+    body: formData
   });
+
+  const result = await response.json();
+  alert(result.message);
+
+  if (result.success) location.reload();
 });
 
-// Buka modal untuk Add
-btnAdd.onclick = () => {
-  jadwalForm.action = "backend/add-jadwalmapel.php";
-  document.getElementById("formTitle").innerText = "Add Jadwal";
-  ipId.value = "";
-  jadwalForm.reset();
-  ipNamaGuruDisplay.value = "Pilih mapel terlebih dahulu";
-  ipNamaGuruDisplay.style.color = "#999";
-  modal.style.display = "block";
-};
+// Hapus Jadwal
+function hapusJadwal(id) {
+  if (!confirm("Yakin ingin menghapus jadwal ini?")) return;
 
-// Buka modal untuk Edit
-btnEdit.onclick = () => {
-  if (!selectedRow) return;
-  jadwalForm.action = "backend/edit-jadwalmapel.php";
-  document.getElementById("formTitle").innerText = "Edit Jadwal";
-
-  ipId.value = selectedRow.dataset.id;
-  ipMapel.value = selectedRow.dataset.mapel;
-  ipHari.value = selectedRow.dataset.hari;
-  ipJam.value = selectedRow.dataset.jam;
-  ipDurasi.value = selectedRow.dataset.durasi;
-  ipRuangan.value = selectedRow.dataset.ruangan;
-  ipKelas.value = selectedRow.dataset.kelas;
-  
-  // Trigger change event untuk isi guru otomatis
-  const event = new Event('change');
-  ipMapel.dispatchEvent(event);
-  
-  modal.style.display = "block";
-};
-
-// Tutup modal
-closeModal.onclick = () => {
-  modal.style.display = "none";
-};
-
-cancelBtn.onclick = () => {
-  modal.style.display = "none";
-};
-
-// Tutup modal jika klik di luar modal
-window.onclick = (event) => {
-  if (event.target == modal) {
-    modal.style.display = "none";
-  }
-};
-
-// Delete
-btnDelete.onclick = () => {
-  if (!selectedRow) return;
-  if (confirm("Yakin ingin menghapus jadwal ini?")) {
-    const id = selectedRow.dataset.id;
-    window.location.href = "backend/delete-jadwalmapel.php?id=" + id;
-  }
-};
-</script>
-
-<script>
-// Dropdown handler
-document.addEventListener("DOMContentLoaded", function () {
-  const dropdownButtons = document.querySelectorAll(".dropbtn");
-
-  dropdownButtons.forEach(btn => {
-    btn.addEventListener("click", function (e) {
-      e.stopPropagation();
-      const menu = this.nextElementSibling;
-      document.querySelectorAll(".dropdown-content").forEach(dc => {
-        if (dc !== menu) dc.style.display = "none";
-      });
-      menu.style.display = menu.style.display === "block" ? "none" : "block";
+  fetch("backend/hapusJadwal.php?id=" + id)
+    .then(res => res.json())
+    .then(data => {
+      alert(data.message);
+      if (data.success) location.reload();
     });
-  });
+}
 
-  document.addEventListener("click", () => {
-    document.querySelectorAll(".dropdown-content").forEach(dc => dc.style.display = "none");
+// Filter hari
+document.getElementById("filterHari").addEventListener("change", function() {
+  let value = this.value.toLowerCase();
+  document.querySelectorAll("#jadwalBody tr").forEach(tr => {
+    let hari = tr.getAttribute("data-hari").toLowerCase();
+    tr.style.display = value === "all" || hari === value ? "" : "none";
+  });
+});
+
+// Search
+document.getElementById("searchInput").addEventListener("keyup", function() {
+  let keyword = this.value.toLowerCase();
+  document.querySelectorAll("#jadwalBody tr").forEach(tr => {
+    tr.style.display = tr.innerText.toLowerCase().includes(keyword) ? "" : "none";
   });
 });
 </script>

@@ -2,27 +2,37 @@
 //file mataPelajaran.php
 session_start();
 
-// Set session login otomatis
-$_SESSION['idAkun'] = 'SW83675';
- 
 // Include koneksi database
+include('../config/session.php');
+checkLogin();  
 include('../config/db.php');
 
-// Ambil data siswa yang login
-$idAkun = $_SESSION['idAkun'];
+// PERBAIKAN: Ambil idAkun dari session yang benar
+$idAkun = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
 
-// Query untuk mendapatkan NIS dari idAkun
-$querySiswa = "SELECT NIS, nama FROM datasiswa WHERE idAkun = '$idAkun'";
+// Jika session tidak ada, redirect ke login
+if (!$idAkun) {
+    header('Location: ../Auth/login.php');
+    exit;
+}
+
+// Query siswa SEKALIGUS ambil NIS, nama, kelas
+$querySiswa = "SELECT NIS, nama, kelas FROM datasiswa WHERE idAkun = '$idAkun'";
 $resultSiswa = mysqli_query($conn, $querySiswa);
+
+// Tambahkan validasi
+if (!$resultSiswa || mysqli_num_rows($resultSiswa) == 0) {
+    die("Data siswa tidak ditemukan!");
+}
+
 $dataSiswa = mysqli_fetch_assoc($resultSiswa);
+
 $NIS = $dataSiswa['NIS'];
 $namaSiswa = $dataSiswa['nama'];
+$kelasSiswa = $dataSiswa['kelas'];
 
-// Query untuk mendapatkan kelas siswa
-$queryKelas = "SELECT kelas FROM datasiswa WHERE NIS = '$NIS'";
-$resultKelas = mysqli_query($conn, $queryKelas);
-$dataKelas = mysqli_fetch_assoc($resultKelas);
-$kelasSiswa = $dataKelas['kelas'];
+// Simpan NIS ke session untuk digunakan di file lain
+$_SESSION['NIS'] = $NIS;
 
 // Query untuk mendapatkan mata pelajaran dari kelas siswa
 $queryMapel = "SELECT DISTINCT m.kodeMapel, m.namaMapel 
@@ -60,16 +70,16 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
     <img src="../assets/logo-elearning.png" class="logo" alt="E-School">
 
     <!-- MENU ROW -->
-    <div class="menu-row">
+    <di class="menu-row">
 
       <div class="dropdown">
         <button class="dropbtn">
-          <i class="fa-solid fa-database"></i>
+          <i class="fa-solid fa-user"></i>
           Profil
           <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
         </button>
         <div class="dropdown-content">
-          <a href="#"><i class="fa-solid fa-user"></i> Profil</a>
+          <a href="#"><i class="fa-solid fa-user"></i> Profil Saya</a>
         </div>
       </div>
 
@@ -91,18 +101,24 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
           <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
         </button>
         <div class="dropdown-content">
-          <a href="#"><i class="fa-solid fa-book-open"></i> Materi</a>
-          <a href="#"><i class="fa-solid fa-file-lines"></i> Tugas</a>
-          <a href="#"><i class="fa-solid fa-pen-to-square"></i> Quiz</a>
+          <a href="#"><i class="fa-solid fa-book-open"></i> Mapel</a>
+          <a href="../Siswa/ngerjakanQuiz.php"><i class="fa-solid fa-pen-to-square"></i> Quiz</a>
         </div>
       </div>
-      <div class="dropdown">
+       <div class="dropdown">
         <button class="dropbtn"><i class="fa-solid fa-house"></i> Dashboard</button>
-         <div class="dropdown-content">
-        <a href="dashboard.php"><i class="fa-solid fa-gauge"></i> Dashboard Utama</a>
+        <div class="dropdown-content">
+        <a href="dashboard.php"><i class="fa-solid fa-gauge"></i>Dashboard Utama</a>
         </div>
-  </div>
+    </div>
       
+      <!-- Tambahkan tombol logout -->
+      <div class="dropdown">
+        <button class="dropbtn">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <a href="../Auth/logout.php" onclick="return confirm('Yakin ingin logout?')"style="text-decoration:none; color:#2e7dff;"> Logout</a>
+        </button>
+      </div>
 
     </div>
   </header>
@@ -112,7 +128,7 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
 <div class="welcome-box">
     <?php
     // Query untuk mendapatkan pelajaran selanjutnya (contoh: dari jadwal hari ini)
-    $hariIni = date('l'); // Nama hari dalam bahasa Inggris
+    $hariIni = date('l');
     $hariIndo = [
         'Monday' => 'Senin',
         'Tuesday' => 'Selasa',
@@ -123,20 +139,30 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
         'Sunday' => 'Minggu'
     ];
     $hari = $hariIndo[$hariIni];
-    
-    $queryJadwal = "SELECT m.namaMapel 
-                    FROM jadwalmapel jm 
-                    INNER JOIN mapel m ON jm.kodeMapel = m.kodeMapel 
-                    WHERE jm.Kelas = '$kelasSiswa' AND jm.hari = '$hari' 
-                    ORDER BY jm.jamMulai ASC LIMIT 1";
+
+    $jamSekarang = date('H:i:s');
+
+    $queryJadwal = "
+        SELECT m.namaMapel, jm.jamMulai
+        FROM jadwalmapel jm
+        INNER JOIN mapel m ON jm.kodeMapel = m.kodeMapel
+        WHERE jm.Kelas = '$kelasSiswa'
+        AND jm.hari = '$hari'
+        AND jm.jamMulai > '$jamSekarang'
+        ORDER BY jm.jamMulai ASC
+        LIMIT 1
+    ";
+
     $resultJadwal = mysqli_query($conn, $queryJadwal);
-    
-    if($resultJadwal && mysqli_num_rows($resultJadwal) > 0) {
+
+    if ($resultJadwal && mysqli_num_rows($resultJadwal) > 0) {
         $dataJadwal = mysqli_fetch_assoc($resultJadwal);
         $pelajaranSelanjutnya = $dataJadwal['namaMapel'];
     } else {
         $pelajaranSelanjutnya = "Tidak ada jadwal";
     }
+
+
     ?>
     <h2>Halo! Selamat Datang, <?= htmlspecialchars($namaSiswa) ?></h2>
     <p>Jadwal Pelajaran selanjutnya <?= htmlspecialchars($pelajaranSelanjutnya) ?></p>
@@ -159,25 +185,22 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
                 // Query untuk mendapatkan materi dari mata pelajaran ini
                 $kodeMapel = $mapel['kodeMapel'];
                 
-                // PERBAIKAN: Query sesuai dengan struktur tabel materi
+
                 $queryMateri = "SELECT m.idMateri, m.judul, m.createdAt, m.deskripsi, m.filePath, m.linkVideo
                                 FROM materi m
                                 WHERE m.kodeMapel = '$kodeMapel'
                                 ORDER BY m.createdAt DESC";
                 $resultMateri = mysqli_query($conn, $queryMateri);
                 
-                // Error handling untuk query materi
                 if (!$resultMateri) {
                     echo "<p style='color:red;'>Error query materi: " . mysqli_error($conn) . "</p>";
                     continue;
                 }
                 
                 while($materi = mysqli_fetch_assoc($resultMateri)):
-                    // PERBAIKAN: Cek apakah ada tugas untuk materi ini yang belum dikumpulkan
-                    // Relasi: tugas berelasi dengan materi melalui idMateri
                     $idMateri = $materi['idMateri'];
                     
-                    // Query untuk cek: apakah ada tugas DAN belum dikumpulkan
+                    // Query untuk cek tugas
                     $queryTugasBelum = "SELECT 
                                             COUNT(CASE WHEN pt.idPengumpulan IS NULL THEN 1 END) as belum,
                                             COUNT(t.idTugas) as total
@@ -186,14 +209,10 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
                                         WHERE t.idMateri = '$idMateri'";
                     $resultTugasBelum = mysqli_query($conn, $queryTugasBelum);
                     
-                    $statusWarna = 'biru'; // default biru
+                    $statusWarna = 'biru';
                     
                     if($resultTugasBelum) {
                         $dataTugasBelum = mysqli_fetch_assoc($resultTugasBelum);
-                        
-                        // Logika warna:
-                        // - Merah: Ada tugas (total > 0) DAN ada yang belum dikumpulkan (belum > 0)
-                        // - Biru: Tidak ada tugas (total = 0) ATAU semua tugas sudah dikumpulkan (belum = 0)
                         if($dataTugasBelum['total'] > 0 && $dataTugasBelum['belum'] > 0) {
                             $statusWarna = 'merah';
                         } else {
@@ -216,6 +235,8 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
     </div>
 </section>
 
+<!-- Rest of the HTML remains the same... -->
+<!-- Script, popup forms, etc. -->
 <!-- === Script interaktif untuk mapel === -->
 <script>
 function toggleMateri(card) {
@@ -242,7 +263,8 @@ function openForm(type, event, idMateri, kodeMapel) {
     closePopup();
 
     if (type === 'tugas') {
-        loadTugas(kodeMapel, idMateri);
+        // PERBAIKAN: Hanya kirim idMateri
+        loadTugas(idMateri);
     } else if (type === 'materi') {
         loadMateri(idMateri);
     }
@@ -283,8 +305,9 @@ function loadMateri(idMateri) {
         });
 }
 
-function loadTugas(kodeMapel, idMateri) {
-    fetch('backend/getTugas.php?kodeMapel=' + kodeMapel + '&idMateri=' + idMateri)
+function loadTugas(idMateri) { // PERBAIKAN: Hanya terima idMateri
+    // PERBAIKAN: Hanya kirim idMateri ke getTugas.php
+    fetch('backend/getTugas.php?idMateri=' + idMateri)
         .then(response => response.json())
         .then(data => {
             if(data.success) {
@@ -320,14 +343,17 @@ function loadTugas(kodeMapel, idMateri) {
                     
                     // Tampilkan file yang sudah diupload
                     if(data.filePathSiswa) {
-                        let fileName = data.filePathSiswa.split('/').pop();
-                        uploadedFileBox.innerHTML = `
-                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #e8f5e9; border-radius: 8px; border: 1px solid #81c784;">
-                                <span style="color: #2e7d32; font-weight: 500;">📄 ${fileName}</span>
-                                <a href="${data.filePathSiswa}" target="_blank" style="color: #1976d2; text-decoration: none; font-size: 12px;">Lihat File</a>
-                            </div>
-                        `;
-                        uploadedFileBox.style.display = 'block';
+
+                    let fileName = data.filePathSiswa.split('/').pop();
+                    // PERBAIKAN: Tambahkan /elearning-app/ di depan path
+                    let fullUrl = '/elearning-app' + data.filePathSiswa;
+                    uploadedFileBox.innerHTML = `
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #e8f5e9; border-radius: 8px; border: 1px solid #81c784;">
+                            <span style="color: #2e7d32; font-weight: 500;">📄 ${fileName}</span>
+                            <a href="${fullUrl}" target="_blank" style="color: #1976d2; text-decoration: none; font-size: 12px;">Lihat File</a>
+                        </div>
+                    `;
+                    uploadedFileBox.style.display = 'block';
                     } else {
                         uploadedFileBox.style.display = 'none';
                     }
@@ -411,8 +437,6 @@ function submitTugas() {
     const formData = new FormData();
     formData.append('idTugas', idTugas);
     formData.append('file', fileInput.files[0]);
-    
-    // Jika ada idPengumpulan, berarti ini adalah update
     if(idPengumpulan) {
         formData.append('idPengumpulan', idPengumpulan);
         formData.append('isUpdate', '1');
@@ -422,36 +446,70 @@ function submitTugas() {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
+    .then(response => response.text())
+    .then(text => {
+        console.log('Raw Response:', text);
+        try {
+            return JSON.parse(text);
+        } catch(e) {
+            throw new Error('Server response bukan JSON: ' + text.substring(0, 200));
+        }
+    })
     .then(data => {
+        console.log('Parsed Data:', data);
+        
+        // CEK DEBUG INFO
+        if(data.debug) {
+            console.log('Upload Path:', data.debug.uploadPath);
+            console.log('File Exists:', data.debug.fileExists);
+            console.log('File Path DB:', data.debug.filePathDB);
+        }
+        
         if(data.success) {
-
             // Update kolom status
-            document.getElementById('tugasStatus').value = data.status;  // <-- statusWaktu
+            document.getElementById('tugasStatus').value = data.status;
             document.getElementById('tugasDikirimPada').value = data.dikirimPada;
             document.querySelector('.status-label').textContent = 'Selesai';
             document.querySelector('.status-label').style.backgroundColor = '#bbf7d0';
             document.querySelector('.status-label').style.color = '#064e3b';
+            document.getElementById('idPengumpulanHidden').value = data.idPengumpulan;
 
-            // Munculkan file yang diupdate
+            // PERBAIKAN URL - Buat URL yang BENAR
             if (data.fileName) {
+                // Format: /elearning-app/uploads/tugas/filename.pdf
+                let fullUrl = '/elearning-app/' + data.filePathSiswa;
+                
+                console.log('File URL:', fullUrl); // Debug
+                
                 document.getElementById('uploadedFileBox').innerHTML = `
                     <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #e8f5e9; border-radius: 8px; border: 1px solid #81c784;">
                         <span style="color: #2e7d32; font-weight: 500;">📄 ${data.fileName}</span>
-                        <a href="${data.filePathSiswa}" target="_blank" style="color: #1976d2; text-decoration: none; font-size: 12px;">Lihat File</a>
+                        <a href="${fullUrl}" target="_blank" style="color: #1976d2; text-decoration: none; font-size: 12px;">Lihat File</a>
                     </div>
                 `;
                 document.getElementById('uploadedFileBox').style.display = 'block';
             }
+            fileInput.value = '';
+            document.getElementById('fileName').textContent = 'Tidak ada file yang diupload';
 
-            alert(idPengumpulan ? 'Tugas berhasil diperbarui!' : 'Tugas berhasil dikumpulkan!');
+            btnKumpul.textContent = 'PERBARUI TUGAS';
+            btnKumpul.style.backgroundColor = '#fff3cd';
+            btnKumpul.style.color = '#856404';
+
+            alert(data.message);
         } else {
-        alert('Gagal mengumpulkan tugas: ' + data.message);
+            alert('Gagal: ' + data.message);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Terjadi kesalahan saat mengumpulkan tugas');
+        alert('Terjadi kesalahan: ' + error.message);
+    })
+    .finally(() => {
+        btnKumpul.disabled = false;
+        if(btnKumpul.textContent === 'Mengirim...') {
+            btnKumpul.textContent = originalText;
+        }
     });
 }
 </script>

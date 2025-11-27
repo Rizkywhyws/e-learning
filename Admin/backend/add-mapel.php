@@ -1,62 +1,69 @@
 <?php
-require_once "../../config/db.php"; // pastikan path ini benar
+require_once "../../config/db.php";
 
-// Aktifkan laporan error untuk debugging
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
+// Fungsi generate kode mapel acak unik
+function generateKodeMapel($conn) {
+    do {
+        $kode = strtoupper(substr(bin2hex(random_bytes(3)), 0, 7)); // kode acak 6-7 char
+        $check = $conn->prepare("SELECT kodeMapel FROM mapel WHERE kodeMapel = ?");
+        $check->bind_param("s", $kode);
+        $check->execute();
+        $check->store_result();
+        $exists = $check->num_rows > 0;
+        $check->close();
+    } while ($exists);
+
+    return $kode;
+}
+
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    // Ambil data dari form
-    $kodeMapel = trim($_POST["kodeMapel"]);
+
     $namaMapel = trim($_POST["namaMapel"]);
     $nipGuru   = isset($_POST["nipGuru"]) ? trim($_POST["nipGuru"]) : "";
 
-    // Validasi dasar
-    if (empty($kodeMapel) || empty($namaMapel)) {
-        echo "<script>alert('Kode dan Nama Mapel wajib diisi!'); history.back();</script>";
+    // Validasi wajib
+    if (empty($namaMapel)) {
+        echo "<script>alert('Nama Mapel wajib diisi!'); history.back();</script>";
         exit;
     }
 
-    // Cek apakah kode mapel sudah ada
-    $check = $conn->prepare("SELECT kodeMapel FROM mapel WHERE kodeMapel = ?");
-    $check->bind_param("s", $kodeMapel);
-    $check->execute();
-    $check->store_result();
+    // buat kodeMapel acak
+    $kodeMapel = generateKodeMapel($conn);
 
-    if ($check->num_rows > 0) {
-        $check->close();
-        echo "<script>alert('Kode Mapel sudah terdaftar!'); history.back();</script>";
-        exit;
-    }
-    $check->close();
-
-    // Simpan ke tabel mapel
+    // insert mapel
     $stmt = $conn->prepare("INSERT INTO mapel (kodeMapel, namaMapel) VALUES (?, ?)");
     $stmt->bind_param("ss", $kodeMapel, $namaMapel);
     $stmt->execute();
+    $stmt->close();
 
-    // Jika ada guru pengampu, masukkan ke tabel gurumapel
+    // Tambah guru pengampu jika diisi
     if (!empty($nipGuru)) {
-    // Buat ID otomatis
-    $result = $conn->query("SELECT MAX(id) AS last_id FROM gurumapel");
-    $row = $result->fetch_assoc();
-    $last_id = $row['last_id'];
 
-    if ($last_id) {
-        $num = (int)substr($last_id, 2) + 1;
-        $new_id = 'GM' . str_pad($num, 3, '0', STR_PAD_LEFT);
-    } else {
-        $new_id = 'GM001';
+        // ID otomatis GM001, GM002, dst.
+        $result = $conn->query("SELECT MAX(id) AS last_id FROM gurumapel");
+        $row = $result->fetch_assoc();
+        $last_id = $row['last_id'];
+
+        if ($last_id) {
+            $num = (int) substr($last_id, 2) + 1;
+            $new_id = 'GM' . str_pad($num, 3, '0', STR_PAD_LEFT);
+        } else {
+            $new_id = 'GM001';
+        }
+
+        $stmt2 = $conn->prepare("INSERT INTO gurumapel (id, kodeMapel, nipGuru) VALUES (?, ?, ?)");
+        $stmt2->bind_param("sss", $new_id, $kodeMapel, $nipGuru);
+        $stmt2->execute();
+        $stmt2->close();
     }
 
-    // Insert data
-    $stmt2 = $conn->prepare("INSERT INTO gurumapel (id, kodeMapel, nipGuru) VALUES (?, ?, ?)");
-    $stmt2->bind_param("sss", $new_id, $kodeMapel, $nipGuru);
-    $stmt2->execute();
-    $stmt2->close();
-}
     echo "<script>alert('Mapel berhasil ditambahkan!'); window.location.href='../kelolamapel.php';</script>";
-} else {
-    header("Location: ../kelolamapel.php");
     exit;
 }
+
+// Jika akses selain POST
+header("Location: ../kelolamapel.php");
+exit;
 ?>

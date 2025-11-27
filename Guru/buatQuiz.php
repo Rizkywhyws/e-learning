@@ -8,30 +8,41 @@ if (!isset($_SESSION['nip']) || $_SESSION['role'] !== 'guru') {
   exit;
 }
 
-$nipGuru = $_SESSION['nip']; // Ambil NIP dari session
+$nipGuru = $_SESSION['nip']; // Ambil NIP guru dari session
 
-// Simpan quiz ke database
+
+// ========================
+// PROSES SIMPAN QUIZ
+// ========================
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $kodeMapel = $_POST['kodeMapel'];
   $judul = $_POST['judul'];
   $deskripsi = $_POST['deskripsi'];
   $waktuMulai = $_POST['waktuMulai'];
+  $waktuSelesai = $_POST['waktuSelesai'];
   $tipeQuiz = $_POST['tipeQuiz'];
   $kelas = $_POST['kelas'];
+
+  if (empty($tipeQuiz)) {
+    echo "<script>alert('Pilih tipe quiz terlebih dahulu!');</script>";
+    exit;
+  }
 
   // Generate ID quiz otomatis
   $idQuiz = "QZ" . rand(1000, 9999);
 
-  $query = "INSERT INTO quiz (idQuiz, kodeMapel, NIP, judul, deskripsi, waktuMulai, kelas)
-            VALUES ('$idQuiz', '$kodeMapel', '$nipGuru', '$judul', '$deskripsi', '$waktuMulai', '$kelas')";
+  $query = "INSERT INTO quiz (idQuiz, kodeMapel, NIP, judul, deskripsi, waktuMulai, waktuSelesai, kelas)
+            VALUES ('$idQuiz', '$kodeMapel', '$nipGuru', '$judul', '$deskripsi', '$waktuMulai', '$waktuSelesai', '$kelas')";
 
   if ($conn->query($query)) {
     echo "<script>
       alert('Quiz berhasil dibuat!');
       window.location='buatSoal.php?idQuiz=$idQuiz&type=$tipeQuiz';
     </script>";
+    exit;
   } else {
     echo "<script>alert('Gagal menyimpan quiz: " . $conn->error . "');</script>";
+    exit;
   }
 }
 ?>
@@ -41,21 +52,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="form-container">
   <h2>Tambah / Buat Quiz</h2>
 
-  <form action="" method="POST" enctype="multipart/form-data">
+  <form action="" method="POST" enctype="multipart/form-data" id="quizForm">
     
-    <!-- Pilih Mapel (hanya yang diampu guru ini) -->
+    <input type="hidden" id="tipeQuizHidden" name="tipeQuiz">
+
+    <!-- Pilih Mapel -->
     <label for="kodeMapel">Mata Pelajaran</label>
     <select id="kodeMapel" name="kodeMapel" required>
       <option value="">-- Pilih Mata Pelajaran --</option>
       <?php
-        // Ambil mapel yang diampu guru ini dari jadwalmapel
         $queryMapel = "SELECT DISTINCT m.kodeMapel, m.namaMapel 
                        FROM jadwalmapel jm
                        JOIN mapel m ON jm.kodeMapel = m.kodeMapel
                        WHERE jm.nipGuru = '$nipGuru'
                        ORDER BY m.namaMapel ASC";
         $mapel = $conn->query($queryMapel);
-        
+
         if ($mapel && $mapel->num_rows > 0) {
           while ($row = $mapel->fetch_assoc()) {
             echo "<option value='{$row['kodeMapel']}'>{$row['namaMapel']}</option>";
@@ -66,18 +78,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       ?>
     </select>
 
-    <!-- Pilih Kelas (hanya yang diajar guru ini) -->
+    <!-- Pilih Kelas -->
     <label for="kelas">Kelas</label>
     <select id="kelas" name="kelas" required>
       <option value="">-- Pilih Kelas --</option>
       <?php
-        // Ambil kelas yang diajar guru ini dari jadwalmapel
-        $queryKelas = "SELECT DISTINCT kelas 
-                       FROM jadwalmapel 
-                       WHERE nipGuru = '$nipGuru'
-                       ORDER BY kelas ASC";
-        $kelasResult = $conn->query($queryKelas);
-        
+        $qKelas = "SELECT DISTINCT kelas 
+                   FROM jadwalmapel 
+                   WHERE nipGuru = '$nipGuru'
+                   ORDER BY kelas ASC";
+
+        $kelasResult = $conn->query($qKelas);
+
         if ($kelasResult && $kelasResult->num_rows > 0) {
           while ($row = $kelasResult->fetch_assoc()) {
             echo "<option value='{$row['kelas']}'>{$row['kelas']}</option>";
@@ -88,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       ?>
     </select>
 
-    <!-- Judul Quiz -->
+    <!-- Judul -->
     <label for="judul">Judul Quiz</label>
     <input type="text" id="judul" name="judul" placeholder="Masukkan judul quiz..." required>
 
@@ -100,37 +112,96 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <label for="waktuMulai">Waktu Mulai</label>
     <input type="datetime-local" id="waktuMulai" name="waktuMulai" required>
 
+    <!-- Waktu Selesai -->
+    <label for="waktuSelesai">Waktu Selesai</label>
+    <input type="datetime-local" id="waktuSelesai" name="waktuSelesai" required>
+
     <!-- Pilih Jenis Quiz -->
     <div class="upload-box">
       <label>Pilih Jenis Quiz</label><br>
       <div class="type-options">
-        <button type="submit" name="tipeQuiz" value="pilgan" class="save-btn">📘 Pilihan Ganda</button>
-        <button type="submit" name="tipeQuiz" value="multiselect" class="save-btn">📝 Multiselect</button>
-        <button type="submit" name="tipeQuiz" value="esai" class="save-btn">✏ Esai</button>
+        <button type="button" onclick="pilihTipeQuiz('pilihan ganda')" class="save-btn">📘 Pilihan Ganda</button>
+        <button type="button" onclick="pilihTipeQuiz('multi-select')" class="save-btn">📝 Multiselect</button>
+        <button type="button" onclick="pilihTipeQuiz('esai')" class="save-btn">✏ Esai</button>
       </div>
     </div>
+
   </form>
 </div>
 
 <script>
-  // Atur waktu minimal datetime-local
   const waktuMulaiInput = document.getElementById("waktuMulai");
+  const waktuSelesaiInput = document.getElementById("waktuSelesai");
+  const quizForm = document.getElementById("quizForm");
+  const tipeQuizHidden = document.getElementById("tipeQuizHidden");
 
+  // Set minimal waktu = sekarang
   function setMinDateTime() {
     const now = new Date();
     const tzOffset = now.getTimezoneOffset() * 60000;
-    const localISOTime = new Date(now - tzOffset).toISOString().slice(0, 16);
-    waktuMulaiInput.min = localISOTime;
+    const localISO = new Date(now - tzOffset).toISOString().slice(0, 16);
+
+    waktuMulaiInput.min = localISO;
+    waktuSelesaiInput.min = localISO;
   }
 
   setMinDateTime();
 
-  document.querySelector("form").addEventListener("submit", function (e) {
-    const selected = new Date(waktuMulaiInput.value);
+  function pilihTipeQuiz(tipe) {
+
+    if (!quizForm.checkValidity()) {
+      quizForm.reportValidity();
+      return;
+    }
+
+    const mulai = new Date(waktuMulaiInput.value);
+    const selesai = new Date(waktuSelesaiInput.value);
     const now = new Date();
-    if (selected.getTime() < now.getTime()) {
-      e.preventDefault();
-      alert("Tanggal dan waktu tidak boleh di masa lalu!");
+
+    if (mulai.getTime() < now.getTime()) {
+      alert("Waktu mulai tidak boleh di masa lalu!");
+      return;
+    }
+
+    if (selesai.getTime() <= mulai.getTime()) {
+      alert("Waktu selesai harus setelah waktu mulai!");
+      return;
+    }
+
+    tipeQuizHidden.value = tipe;
+    quizForm.submit();
+  }
+
+  waktuMulaiInput.addEventListener("change", () => {
+    const mulai = new Date(waktuMulaiInput.value);
+    const now = new Date();
+
+    if (mulai < now) {
+      alert("Waktu mulai tidak boleh di masa lalu!");
+      waktuMulaiInput.value = "";
+      return;
+    }
+
+    waktuSelesaiInput.min = waktuMulaiInput.value;
+
+    if (waktuSelesaiInput.value && new Date(waktuSelesaiInput.value) <= mulai) {
+      waktuSelesaiInput.value = "";
+    }
+  });
+
+  waktuSelesaiInput.addEventListener("change", () => {
+    const mulai = new Date(waktuMulaiInput.value);
+    const selesai = new Date(waktuSelesaiInput.value);
+
+    if (!waktuMulaiInput.value) {
+      alert("Pilih waktu mulai terlebih dahulu!");
+      waktuSelesaiInput.value = "";
+      return;
+    }
+
+    if (selesai <= mulai) {
+      alert("Waktu selesai harus setelah waktu mulai!");
+      waktuSelesaiInput.value = "";
     }
   });
 </script>

@@ -3,7 +3,14 @@ include_once("../config/db.php");
 session_start();
 
 $idQuiz = isset($_GET['idQuiz']) ? $_GET['idQuiz'] : '';
-$type = isset($_GET['type']) ? $_GET['type'] : 'pilgan';
+$type = isset($_GET['type']) ? $_GET['type'] : 'pilihan ganda';
+
+// Mapping untuk display
+$typeDisplay = [
+  'pilihan ganda' => 'Pilihan Ganda',
+  'multi-select' => 'Multi-Select',
+  'esai' => 'Esai'
+];
 
 // Fungsi ambil semua soal
 function getSoal($conn, $idQuiz) {
@@ -31,12 +38,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'tambah') {
   $opsi_d = $jawaban[3] ?? '';
   $opsi_e = $jawaban[4] ?? '';
 
-  $jawabanPilgan = ($typeSoal == 'pilgan') ? $jawabanBenar : '';
-  $jawabanMulti  = ($typeSoal == 'multiselect') ? $jawabanBenar : '';
+  $jawabanPilgan = ($typeSoal == 'pilihan ganda') ? chr(65 + (int)$jawabanBenar) : '';
+  $jawabanMulti  = ($typeSoal == 'multi-select') ? $jawabanBenar : '';
 
-  mysqli_query($conn, "INSERT INTO soalquiz (idSoal, idQuiz, pertanyaan, type, opsi_a, opsi_b, opsi_c, opsi_d, opsi_e, jawabanPilgan, jawabanMulti)
-    VALUES ('$idSoal', '$idQuiz', '$pertanyaan', '$typeSoal', '$opsi_a', '$opsi_b', '$opsi_c', '$opsi_d', '$opsi_e', '$jawabanPilgan', '$jawabanMulti')");
-  
+  mysqli_query($conn, "INSERT INTO soalquiz 
+    (idSoal, idQuiz, pertanyaan, type, opsi_a, opsi_b, opsi_c, opsi_d, opsi_e, jawabanPilgan, jawabanMulti)
+    VALUES ('$idSoal', '$idQuiz', '$pertanyaan', '$typeSoal', '$opsi_a', '$opsi_b', '$opsi_c', '$opsi_d', '$opsi_e',
+    '$jawabanPilgan', '$jawabanMulti')");
+
   echo json_encode(["success" => true, "message" => "Soal berhasil ditambahkan!"]);
   exit;
 }
@@ -55,11 +64,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'update') {
   $opsi_d = $jawaban[3] ?? '';
   $opsi_e = $jawaban[4] ?? '';
 
-  $jawabanPilgan = ($typeSoal == 'pilgan') ? $jawabanBenar : '';
-  $jawabanMulti  = ($typeSoal == 'multiselect') ? $jawabanBenar : '';
+  $jawabanPilgan = ($typeSoal == 'pilihan ganda')
+      ? chr(65 + (int)$jawabanBenar)
+      : '';
+
+  $jawabanMulti  = ($typeSoal == 'multi-select') ? $jawabanBenar : '';
 
   mysqli_query($conn, "UPDATE soalquiz 
-    SET pertanyaan='$pertanyaan', type='$typeSoal', opsi_a='$opsi_a', opsi_b='$opsi_b', opsi_c='$opsi_c', opsi_d='$opsi_d', opsi_e='$opsi_e',
+    SET pertanyaan='$pertanyaan', type='$typeSoal',
+        opsi_a='$opsi_a', opsi_b='$opsi_b', opsi_c='$opsi_c',
+        opsi_d='$opsi_d', opsi_e='$opsi_e',
         jawabanPilgan='$jawabanPilgan', jawabanMulti='$jawabanMulti'
     WHERE idSoal='$idSoal'");
 
@@ -83,7 +97,7 @@ $daftarSoal = getSoal($conn, $idQuiz);
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Buat Soal - <?= ucfirst($type) ?></title>
+<title>Buat Soal - <?= $typeDisplay[$type] ?? ucfirst($type) ?></title>
 <link rel="stylesheet" href="css/buatSoal.css">
 <style>
 .soal-item {background:#f8f8f8; padding:10px; margin-bottom:10px; border-radius:10px;}
@@ -91,13 +105,43 @@ $daftarSoal = getSoal($conn, $idQuiz);
 button.hapus {background:red; color:white; border:none; padding:4px 10px; border-radius:5px; cursor:pointer;}
 button.edit {background:orange; color:white; border:none; padding:4px 10px; border-radius:5px; cursor:pointer; margin-right:5px;}
 button:hover {opacity:0.85;}
+
+.right-side { position: relative; }
+
+.btn-selesai-container {
+  text-align: center;
+  margin-top: 30px;
+  padding: 20px 0;
+}
+
+.btn-selesai {
+  padding: 14px 40px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  transition: all 0.3s;
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+}
+
+.btn-selesai:hover {
+  background: linear-gradient(135deg, #45a049, #3d8b40);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(76, 175, 80, 0.4);
+}
 </style>
 </head>
 <body>
 <div class="main-container">
+
   <div class="left-side">
-    <h2 id="form-title">Buat Soal <?= ucfirst($type) ?></h2>
+    <h2 id="form-title">Buat Soal <?= $typeDisplay[$type] ?? ucfirst($type) ?></h2>
+
     <input type="hidden" id="idsoal">
+
     <label>Pertanyaan</label>
     <textarea id="pertanyaan" rows="4" placeholder="Tulis pertanyaan di sini..."></textarea>
 
@@ -120,26 +164,41 @@ button:hover {opacity:0.85;}
     </div>
   </div>
 
+
   <div class="right-side">
     <h2>Daftar Soal</h2>
     <div id="list-soal">
-      <?php foreach ($daftarSoal as $i => $soal): ?>
-        <div class="soal-item" data-id="<?= $soal['idSoal'] ?>" data-index="<?= $i+1 ?>">
-          <p><b><?= $i+1 ?>.</b> <?= htmlspecialchars($soal['pertanyaan']) ?> (<?= htmlspecialchars($soal['type']) ?>)</p>
-          <?php if ($soal['type'] != 'esai'): ?>
-            <ul>
-              <?php foreach (['opsi_a','opsi_b','opsi_c','opsi_d','opsi_e'] as $key):
-                if ($soal[$key]): ?>
-                  <li><?= strtoupper(substr($key, -1)) ?>. <?= htmlspecialchars($soal[$key]) ?></li>
+
+      <?php if (empty($daftarSoal)): ?>
+        <p style="color:#999; text-align:center; padding:20px;">Belum ada soal. Silakan tambahkan soal baru.</p>
+
+      <?php else: ?>
+        <?php foreach ($daftarSoal as $i => $soal): ?>
+          <div class="soal-item" data-id="<?= $soal['idSoal'] ?>" data-index="<?= $i+1 ?>">
+            <p><b><?= $i+1 ?>.</b> <?= htmlspecialchars($soal['pertanyaan']) ?> (<?= htmlspecialchars($soal['type']) ?>)</p>
+
+            <?php if ($soal['type'] != 'esai'): ?>
+              <ul>
+                <?php foreach (['opsi_a','opsi_b','opsi_c','opsi_d','opsi_e'] as $key):
+                  if (!empty($soal[$key])): ?>
+                    <li><?= strtoupper(substr($key, -1)) ?>. <?= htmlspecialchars($soal[$key]) ?></li>
                 <?php endif; endforeach; ?>
-            </ul>
-          <?php endif; ?>
-          <button class="edit" onclick='editSoal(<?= json_encode($soal) ?>)'>Edit</button>
-          <button class="hapus" onclick="hapusSoal('<?= $soal['idSoal'] ?>', this)">Hapus</button>
-        </div>
-      <?php endforeach; ?>
+              </ul>
+            <?php endif; ?>
+
+            <button class="edit" onclick='editSoal(<?= json_encode($soal) ?>)'>Edit</button>
+            <button class="hapus" onclick="hapusSoal('<?= $soal['idSoal'] ?>', this)">Hapus</button>
+          </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
+
+    </div>
+
+    <div class="btn-selesai-container">
+      <button class="btn-selesai" onclick="selesai()">✅ Selesai</button>
     </div>
   </div>
+
 </div>
 
 <script>
@@ -148,22 +207,24 @@ const quizType = "<?= $type ?>";
 const idQuiz = "<?= $idQuiz ?>";
 let isEditMode = false;
 
-// Toggle pilihan benar
+// Toggle jawaban benar
 function toggleCheck(el) {
   const all = [...document.querySelectorAll('.check-box')];
   const index = all.indexOf(el);
-  if (quizType === 'pilgan') {
+
+  if (quizType === 'pilihan ganda') {
     all.forEach(cb => cb.classList.remove('checked'));
     el.classList.add('checked');
     selectedAnswers = [index];
-  } else if (quizType === 'multiselect') {
+  } 
+  else if (quizType === 'multi-select') {
     el.classList.toggle('checked');
     if (el.classList.contains('checked')) selectedAnswers.push(index);
     else selectedAnswers = selectedAnswers.filter(i => i !== index);
   }
 }
 
-// Tambah / Update Soal
+// Tambah atau update soal
 function tambahSoal() {
   const pertanyaan = document.getElementById('pertanyaan').value.trim();
   const inputs = [...document.querySelectorAll('.jawaban-item input')];
@@ -172,6 +233,7 @@ function tambahSoal() {
   const idSoal = document.getElementById('idsoal').value;
 
   if (!pertanyaan) return alert('Tulis pertanyaan dulu!');
+
   if (quizType !== 'esai') {
     if (jawaban.some(j => !j)) return alert('Lengkapi semua opsi jawaban!');
     if (selectedAnswers.length === 0) return alert('Pilih minimal satu jawaban benar!');
@@ -184,13 +246,14 @@ function tambahSoal() {
   data.append('type', quizType);
   data.append('id_quiz', idQuiz);
   data.append('action', isEditMode ? 'update' : 'tambah');
+
   if (isEditMode) data.append('idsoal', idSoal);
 
   fetch('', { method: 'POST', body: data })
     .then(res => res.json())
     .then(res => {
       alert(res.message);
-      location.reload(); // biar index & type update tanpa undefined
+      location.reload();
     })
     .catch(err => console.error(err));
 }
@@ -205,26 +268,43 @@ function editSoal(soal) {
 
   const inputs = document.querySelectorAll('.jawaban-item input');
   const checks = document.querySelectorAll('.check-box');
-  const jawabanBenar = soal.type === 'pilgan' ? soal.jawabanPilgan : soal.jawabanMulti;
-  selectedAnswers = jawabanBenar ? jawabanBenar.split(',').map(n => parseInt(n)) : [];
+
+  let jawabanBenar = soal.type === 'pilihan ganda' 
+    ? soal.jawabanPilgan 
+    : soal.jawabanMulti;
+
+  // Pilihan ganda (A/B/C → index)
+  if (soal.type === 'pilihan ganda' && jawabanBenar) {
+    selectedAnswers = [jawabanBenar.charCodeAt(0) - 65];
+  } 
+  else {
+    selectedAnswers = jawabanBenar ? jawabanBenar.split(',').map(n => parseInt(n)) : [];
+  }
 
   ['opsi_a','opsi_b','opsi_c','opsi_d','opsi_e'].forEach((k, i) => {
-    inputs[i].value = soal[k] ?? '';
-    if (selectedAnswers.includes(i)) checks[i].classList.add('checked');
-    else checks[i].classList.remove('checked');
+    if (inputs[i]) {
+      inputs[i].value = soal[k] ?? '';
+      if (selectedAnswers.includes(i)) checks[i].classList.add('checked');
+      else checks[i].classList.remove('checked');
+    }
   });
 }
 
 // Hapus soal
 function hapusSoal(idSoal, btn) {
   if (!confirm('Hapus soal ini?')) return;
+
   const data = new FormData();
   data.append('action', 'hapus');
   data.append('idsoal', idSoal);
+
   fetch('', { method: 'POST', body: data })
     .then(r => r.json())
     .then(r => {
-      if (r.success) btn.closest('.soal-item').remove();
+      if (r.success) {
+        alert('Soal berhasil dihapus!');
+        btn.closest('.soal-item').remove();
+      }
     });
 }
 
@@ -235,9 +315,17 @@ function resetForm() {
   document.querySelectorAll('.check-box').forEach(cb => cb.classList.remove('checked'));
   selectedAnswers = [];
   isEditMode = false;
-  document.getElementById('form-title').textContent = 'Buat Soal <?= ucfirst($type) ?>';
+
+  document.getElementById('form-title').textContent = 'Buat Soal <?= $typeDisplay[$type] ?? ucfirst($type) ?>';
   document.getElementById('btnAction').textContent = 'Tambah Soal';
+  document.getElementById('idsoal').value = '';
+}
+
+// Tombol Selesai
+function selesai() {
+  window.location.href = 'pengelolaanPembelajaran.php';
 }
 </script>
+
 </body>
 </html>

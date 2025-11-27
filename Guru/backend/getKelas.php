@@ -1,11 +1,26 @@
 <?php
 //file getKelas.php
-include "../../config/db.php";
 session_start();
 
-$idAkun = $_SESSION['idAkun'];
-$queryGuru = mysqli_query($conn, "SELECT NIP FROM dataguru WHERE idAkun = '$idAkun'");
-$nipGuru = mysqli_fetch_assoc($queryGuru)['NIP'];
+// Cek login
+if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'guru') {
+    http_response_code(401);
+    echo json_encode(['error' => 'Unauthorized']);
+    exit;
+}
+
+include "../../config/db.php";
+
+$nipGuru = isset($_SESSION['nip']) ? $_SESSION['nip'] : '';
+
+// Jika NIP tidak ada di session, ambil dari database
+if (empty($nipGuru)) {
+    $idAkun = $_SESSION['user_id'];
+    $queryGuru = mysqli_query($conn, "SELECT NIP FROM dataguru WHERE idAkun = '$idAkun'");
+    $dataGuru = mysqli_fetch_assoc($queryGuru);
+    $nipGuru = isset($dataGuru['NIP']) ? $dataGuru['NIP'] : '';
+}
+
 
 $kodeMapel = $_GET['kodeMapel'];
 $result = mysqli_query($conn, "

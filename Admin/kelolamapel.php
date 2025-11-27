@@ -1,5 +1,6 @@
 <?php
 require_once "../config/db.php";
+include '../config/session.php';
 
 // Ambil data mapel + guru pengampu (jika ada)
 $data = $conn->query("
@@ -113,11 +114,6 @@ $data = $conn->query("
       <input type="hidden" name="original_kode" id="original_kode">
 
       <div class="row">
-        <label>Kode Mapel</label>
-        <input type="text" id="kodeMapel" name="kodeMapel" maxlength="8" required>
-      </div>
-
-      <div class="row">
         <label>Nama Mapel</label>
         <input type="text" id="namaMapel" name="namaMapel" required>
       </div>
@@ -152,8 +148,6 @@ const modal = document.getElementById("mapelModal");
 const closeModal = document.querySelector(".close");
 const cancelBtn = document.getElementById("cancelBtn");
 const mapelForm = document.getElementById("mapelForm");
-
-const ipKode = document.getElementById("kodeMapel");
 const ipNama = document.getElementById("namaMapel");
 const ipGuru = document.getElementById("nipGuru");
 const ipOriginal = document.getElementById("original_kode");
@@ -175,7 +169,6 @@ btnAdd.onclick = () => {
   mapelForm.action = "backend/add-mapel.php";
   document.getElementById("formTitle").innerText = "Add Mapel";
   ipOriginal.value = "";
-  ipKode.value = "";
   ipNama.value = "";
   ipGuru.value = "";
   modal.style.display = "block";
@@ -187,7 +180,6 @@ btnEdit.onclick = () => {
   mapelForm.action = "backend/edit-mapel.php";
   document.getElementById("formTitle").innerText = "Edit Mapel";
   ipOriginal.value = selectedRow.dataset.kode;
-  ipKode.value = selectedRow.dataset.kode;
   ipNama.value = selectedRow.dataset.nama;
   ipGuru.value = selectedRow.dataset.guru;
   modal.style.display = "block";

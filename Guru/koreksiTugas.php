@@ -1,11 +1,25 @@
 <?php
+//session_start();
+
+// ========== PROTEKSI LOGIN & ROLE ==========
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || $_SESSION['role'] !== 'guru') {
+    header('Location: ../Auth/login.php');
+    exit;
+}
+
 include "../config/db.php";
-session_start();
 
-// ==================== INISIALISASI SESSION LOGIN ====================
-$_SESSION['idAkun'] = "GR32481"; // akun aktif
+// ========== AMBIL DATA DARI SESSION ==========
+$idAkun = $_SESSION['user_id']; // Gunakan user_id dari login
+$nipGuru = isset($_SESSION['nip']) ? $_SESSION['nip'] : '';
 
-
+// Jika NIP tidak ada di session, ambil dari database
+if (empty($nipGuru)) {
+    $qGuru = mysqli_query($conn, "SELECT NIP FROM dataguru WHERE idAkun='$idAkun'");
+    $dataGuru = mysqli_fetch_assoc($qGuru);
+    $nipGuru = isset($dataGuru['NIP']) ? $dataGuru['NIP'] : '';
+    $_SESSION['nip'] = $nipGuru; // Simpan ke session
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -29,9 +43,6 @@ $_SESSION['idAkun'] = "GR32481"; // akun aktif
             <option value="">-- Pilih Mata Pelajaran --</option>
             <?php
             // Ambil mapel dari database (yang diajar guru login)
-            $idAkun = $_SESSION['idAkun'];
-            $qGuru = mysqli_query($conn, "SELECT NIP FROM dataguru WHERE idAkun='$idAkun'");
-            $nipGuru = mysqli_fetch_assoc($qGuru)['NIP'];
             $qMapel = mysqli_query($conn, "
                 SELECT DISTINCT m.kodeMapel, m.namaMapel 
                 FROM mapel m

@@ -1,14 +1,26 @@
 <?php
 include '../config/db.php';
+include '../config/session.php';
 
 // ===========================
-//  SET NIS MANUAL (sementara)
+//  CEK LOGIN
 // ===========================
-$nis = '484525355'; // GANTI NIS SISWA DI SINI
+if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'siswa') {
+    header("Location: ../Auth/login.php");
+    exit;
+}
 
-// Ambil data siswa
-$qSiswa = mysqli_query($conn, "SELECT * FROM datasiswa WHERE NIS='$nis'");
+$idAkun = $_SESSION['user_id'];   // Ini idAkun
+
+// Ambil data siswa BERDASARKAN idAkun
+$qSiswa = mysqli_query($conn, "SELECT * FROM datasiswa WHERE idAkun='$idAkun'");
 $siswa = mysqli_fetch_assoc($qSiswa);
+
+if (!$siswa) {
+    die("Error: Data siswa tidak ditemukan untuk idAkun: $idAkun");
+}
+
+$nis = $siswa['NIS'];  // Baru ambil NIS dari hasil query
 $kelas = $siswa['kelas'];
 
 // Ambil mapel berdasarkan kelas
@@ -98,6 +110,7 @@ while ($bp = mysqli_fetch_assoc($qBuatPresensi)) {
     </table>
 </div>
 
+<<<<<<< HEAD
 <div class="legend">
     <span class="h">Hadir</span>
     <span class="a">Alpa</span>
@@ -106,5 +119,7 @@ while ($bp = mysqli_fetch_assoc($qBuatPresensi)) {
     <span class="n">Tidak Ada</span>
 </div>
 
+=======
+>>>>>>> 86bcade9daf2ae36d9f7c2f555f1a53d61fb52ad
 </body>
 </html>

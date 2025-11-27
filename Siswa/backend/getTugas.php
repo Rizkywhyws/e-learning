@@ -4,22 +4,25 @@ session_start();
 include('../../config/db.php');
 
 header('Content-Type: application/json');
-
-// Validasi parameter
-if (!isset($_GET['kodeMapel']) || !isset($_GET['idMateri'])) {
-    echo json_encode(array('success' => false, 'message' => 'Parameter tidak lengkap'));
+// Validasi parameter - HANYA idMateri yang dibutuhkan
+if (!isset($_GET['idMateri'])) {
+    echo json_encode(array('success' => false, 'message' => 'Parameter tidak lengkap. idMateri diperlukan.'));
     exit;
 }
 
-$kodeMapel = mysqli_real_escape_string($conn, $_GET['kodeMapel']);
 $idMateri  = mysqli_real_escape_string($conn, $_GET['idMateri']);
 
+// Ambil idAkun dari session
+$idAkun = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
+
+if (!$idAkun) {
+    echo json_encode(array('success' => false, 'message' => 'Session expired'));
+    exit;
+}
 $NIS = isset($_SESSION['NIS']) ? $_SESSION['NIS'] : null;
 
 // Jika belum ada NIS di session, ambil dari idAkun
 if (!$NIS) {
-    $idAkun = isset($_SESSION['idAkun']) ? $_SESSION['idAkun'] : 'A0004';
-
     $queryNIS = "SELECT NIS FROM datasiswa WHERE idAkun = '$idAkun'";
     $resultNIS = mysqli_query($conn, $queryNIS);
 
@@ -37,11 +40,14 @@ if (!$NIS) {
 $query = "
 SELECT 
     t.idTugas, t.judul, t.deskripsi, t.deadline, t.createdAt, t.filePath,
-    mp.namaMapel, m.judul AS judulMateri
+    m.kodeMapel, -- Ambil dari tabel materi
+    mp.namaMapel,
+    m.judul AS judulMateri
 FROM tugas t
-INNER JOIN mapel mp ON t.kodeMapel = mp.kodeMapel
-INNER JOIN materi m ON t.idMateri = m.idMateri
-WHERE t.kodeMapel = '$kodeMapel' AND t.idMateri = '$idMateri'
+INNER JOIN materi m ON t.idMateri = m.idMateri -- Hubungan utama antara tugas dan materi
+INNER JOIN mapel mp ON m.kodeMapel = mp.kodeMapel -- Hubungan antara materi dan mapel
+WHERE t.idMateri = '$idMateri'
+>>>>>>> 86bcade9daf2ae36d9f7c2f555f1a53d61fb52ad
 LIMIT 1
 ";
 
