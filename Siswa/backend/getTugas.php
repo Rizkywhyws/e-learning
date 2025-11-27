@@ -4,13 +4,14 @@ session_start();
 include('../../config/db.php');
 
 header('Content-Type: application/json');
+
 // Validasi parameter - HANYA idMateri yang dibutuhkan
 if (!isset($_GET['idMateri'])) {
     echo json_encode(array('success' => false, 'message' => 'Parameter tidak lengkap. idMateri diperlukan.'));
     exit;
 }
 
-$idMateri  = mysqli_real_escape_string($conn, $_GET['idMateri']);
+$idMateri = mysqli_real_escape_string($conn, $_GET['idMateri']);
 
 // Ambil idAkun dari session
 $idAkun = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
@@ -19,6 +20,7 @@ if (!$idAkun) {
     echo json_encode(array('success' => false, 'message' => 'Session expired'));
     exit;
 }
+
 $NIS = isset($_SESSION['NIS']) ? $_SESSION['NIS'] : null;
 
 // Jika belum ada NIS di session, ambil dari idAkun
@@ -39,15 +41,19 @@ if (!$NIS) {
 // ================= QUERY TUGAS =================
 $query = "
 SELECT 
-    t.idTugas, t.judul, t.deskripsi, t.deadline, t.createdAt, t.filePath,
-    m.kodeMapel, -- Ambil dari tabel materi
+    t.idTugas, 
+    t.judul, 
+    t.deskripsi, 
+    t.deadline, 
+    t.createdAt, 
+    t.filePath,
+    m.kodeMapel,
     mp.namaMapel,
     m.judul AS judulMateri
 FROM tugas t
-INNER JOIN materi m ON t.idMateri = m.idMateri -- Hubungan utama antara tugas dan materi
-INNER JOIN mapel mp ON m.kodeMapel = mp.kodeMapel -- Hubungan antara materi dan mapel
+INNER JOIN materi m ON t.idMateri = m.idMateri
+INNER JOIN mapel mp ON m.kodeMapel = mp.kodeMapel
 WHERE t.idMateri = '$idMateri'
->>>>>>> 86bcade9daf2ae36d9f7c2f555f1a53d61fb52ad
 LIMIT 1
 ";
 
@@ -112,15 +118,22 @@ if (mysqli_num_rows($result) > 0) {
         'July' => 'Juli', 'August' => 'Agustus', 'September' => 'September',
         'October' => 'Oktober', 'November' => 'November', 'December' => 'Desember'
     );
-    foreach ($hariIndo as $en => $id) { $tanggal = str_replace($en, $id, $tanggal); }
-    foreach ($bulanIndo as $en => $id) { $tanggal = str_replace($en, $id, $tanggal); }
+    foreach ($hariIndo as $en => $id) { 
+        $tanggal = str_replace($en, $id, $tanggal); 
+    }
+    foreach ($bulanIndo as $en => $id) { 
+        $tanggal = str_replace($en, $id, $tanggal); 
+    }
 
     // Deadline
     $deadline = date('d F Y, H:i', strtotime($data['deadline']));
-    foreach ($bulanIndo as $en => $id) { $deadline = str_replace($en, $id, $deadline); }
+    foreach ($bulanIndo as $en => $id) { 
+        $deadline = str_replace($en, $id, $deadline); 
+    }
 
+    // Fix path file
     $filePath = $data['filePath'];
-    $fileURL = "/" . $filePath;
+    $fileURL = !empty($filePath) ? "/" . ltrim($filePath, '/') : '';
 
     echo json_encode(array(
         'success' => true,
@@ -135,12 +148,12 @@ if (mysqli_num_rows($result) > 0) {
         'nilai' => $nilai,
         'statusWaktu' => $statusWaktu,
         'filePath' => $fileURL,
-        'filePathSiswa' => $filePathSiswa,  // File yang diupload siswa
-        'idPengumpulan' => $idPengumpulan   // ID pengumpulan untuk update
+        'filePathSiswa' => $filePathSiswa,
+        'idPengumpulan' => $idPengumpulan
     ));
 
 } else {
-    echo json_encode(array('success' => false, 'message' => 'Tidak ada tugas untuk materi ini'));
+    echo json_encode(array('success' => false, 'isEmpty' => true, 'message' => 'Tidak ada tugas untuk materi ini'));
 }
 
 mysqli_close($conn);

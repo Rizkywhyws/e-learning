@@ -39,12 +39,11 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
     <div class="menu-row">
       <div class="dropdown">
         <button class="dropbtn">
-          <i class="fa-solid fa-database"></i> Data Master
+          <i class="fa-solid fa-user"></i> Profil
           <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
         </button>
         <div class="dropdown-content">
-          <a href="#"><i class="fa-solid fa-user-tie"></i> Kelola Guru</a>
-          <a href="#"><i class="fa-solid fa-user-graduate"></i> Kelola Siswa</a>
+          <a href="#"><i class="fa-solid fa-user-tie"></i> Profil Saya</a>
         </div>
       </div>
 
@@ -54,8 +53,8 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
           <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
         </button>
         <div class="dropdown-content">
-          <a href="#"><i class="fa-solid fa-list-check"></i> Lihat Presensi</a>
-          <a href="#"><i class="fa-solid fa-pen-clip"></i> Buat Presensi</a>
+          <a href="../Guru/presensiSiswa.php"><i class="fa-solid fa-list-check"></i> Lihat Presensi</a>
+          <a href="../Guru/presensiSiswa.php"><i class="fa-solid fa-pen-clip"></i> Buat Presensi</a>
         </div>
       </div>
 
@@ -63,6 +62,13 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
         <i class="fa-solid fa-school"></i>
         <a href="pengelolaanPembelajaran.php" style="text-decoration: none; color: #2e7dff;">Pengelolaan Pembelajaran</a>
       </button>
+
+      <div class="dropdown">
+        <button class="dropbtn">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <a href="../Auth/logout.php" onclick="return confirm('Yakin ingin logout?')"style="text-decoration:none; color:#2e7dff;"> Logout</a>
+        </button>
+      </div>
     </div>
   </header>
 </div>
@@ -123,7 +129,6 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
   ?>
   <h2>Halo! Selamat Datang, <?= htmlspecialchars($namaGuru) ?></h2>
   <p>Jadwal mengajar selanjutnya: <b><?= htmlspecialchars($pelajaranSelanjutnya) ?></b></p>
->>>>>>> 86bcade9daf2ae36d9f7c2f555f1a53d61fb52ad
 </section>
 
 
@@ -134,7 +139,6 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
 
     <?php if ($halaman == 'uploudMateri') { ?>
         <div class="content"><?php include 'uploudMateri.php'; ?></div>
->>>>>>> 86bcade9daf2ae36d9f7c2f555f1a53d61fb52ad
     <?php } ?>
 
     <a href="?page=buatTugas"><button class="btn">Buat Tugas</button></a>

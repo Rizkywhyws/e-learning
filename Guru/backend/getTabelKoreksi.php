@@ -97,9 +97,8 @@ echo "
 $no = 1;
 while ($r = mysqli_fetch_assoc($q)) {
 
-    $file = $r['filePath'] 
-        ? "<a href='{$r['filePath']}' target='_blank' class='file-link'>Lihat File</a>" 
-        : "-";
+    // Gunakan absolute path dari root
+    $file = $r['filePath'] ? "<a href='/elearning-app/{$r['filePath']}' target='_blank' class='file-link'>Lihat File</a>" : "-";
 
     $disabled = $r['status'] == 'Kosong' ? 'disabled' : '';
     $nilaiValue = $r['nilai'] ? $r['nilai'] : '';

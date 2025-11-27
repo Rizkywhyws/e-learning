@@ -47,8 +47,9 @@ if ($user = mysqli_fetch_assoc($result)) {
             $qGuru->execute();
             $guru = $qGuru->get_result()->fetch_assoc();
 
-            $_SESSION['nama'] = $guru['nama'] ?? $user['email'];
-            $_SESSION['nip']  = $guru['nip'] ?? null;
+            $_SESSION['nama'] = isset($guru['nama']) ? $guru['nama'] : $user['email'];
+            $_SESSION['nip'] = isset($guru['nip']) ? $guru['nip'] : null;
+            $_SESSION['nipGuru'] = isset($guru['nip']) ? $guru['nip'] : null;
 
             $redirect = '../Guru/dashboard.php';
 
