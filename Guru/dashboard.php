@@ -2,7 +2,7 @@
 require_once '../config/session.php';
 require_once '../config/db.php';
 
-// Pastikan user sudah login dan rolenya siswa
+// Pastikan user sudah login dan rolenya guru
 checkLogin();
 checkRole(['guru']);
 ?>
@@ -11,29 +11,57 @@ $namaGuru = $_SESSION['nama'] ?? 'Guru';
 $nipGuru  = $_SESSION['nipGuru'] ?? null;
 $kelasMengajar = 'Belum ada jadwal';
 
-// Ambil jadwal selanjutnya (misal hari ini)
+// --- MODIFIKASI: HAPUS LOGIKA JADWAL SELANJUTNYA ---
+// Kita tidak lagi mencari jadwal hari ini yang akan datang.
+// Sebagai gantinya, kita bisa menampilkan jumlah total jadwal atau kelas yang diajar.
 if ($nipGuru) {
-    $hariIni = date('l'); // contoh: Monday, Tuesday...
-    // ubah ke format Indonesia
-    $mapHari = [
-        'Sunday' => 'Minggu',
-        'Monday' => 'Senin',
-        'Tuesday' => 'Selasa',
-        'Wednesday' => 'Rabu',
-        'Thursday' => 'Kamis',
-        'Friday' => 'Jumat',
-        'Saturday' => 'Sabtu'
-    ];
-    $hariIndo = $mapHari[$hariIni];
+    // Query untuk menghitung jumlah jadwal atau kelas unik yang diajar
+    $queryCount = $conn->prepare("
+        SELECT COUNT(*) as totalJadwal, GROUP_CONCAT(DISTINCT kelas ORDER BY kelas SEPARATOR ', ') as kelasList
+        FROM jadwalmapel 
+        WHERE nipGuru = ?
+    ");
+    $queryCount->bind_param("s", $nipGuru);
+    $queryCount->execute();
+    $resultCount = $queryCount->get_result();
+    $rowCount = $resultCount->fetch_assoc();
 
-    $query = $conn->prepare("SELECT kelas, jamMulai, ruangan FROM jadwalmapel WHERE nipGuru = ? AND hari = ? LIMIT 1");
-    $query->bind_param("ss", $nipGuru, $hariIndo);
-    $query->execute();
-    $result = $query->get_result();
-
-    if ($row = $result->fetch_assoc()) {
-        $kelasMengajar = "{$row['kelas']} ({$row['ruangan']}) — {$row['jamMulai']}";
+    if ($rowCount['totalJadwal'] > 0) {
+        $kelasMengajar = "Mengajar di kelas " . htmlspecialchars($rowCount['kelasList']) . " (" . $rowCount['totalJadwal'] . " jadwal)";
     }
+}
+
+// --- HITUNG TUGAS BELUM DINILAI ---
+$tugasBelumDinilai = 0;
+if ($nipGuru) {
+    $queryTugas = $conn->prepare("
+        SELECT COUNT(*) as total
+        FROM pengumpulantugas pt
+        JOIN tugas t ON pt.idTugas = t.idTugas
+        WHERE TRIM(t.NIP) = TRIM(?) AND pt.status = 'selesai' AND pt.nilai IS NULL
+    ");
+    $queryTugas->bind_param("s", $nipGuru);
+    $queryTugas->execute();
+    $resultTugas = $queryTugas->get_result();
+    $rowTugas = $resultTugas->fetch_assoc();
+    $tugasBelumDinilai = $rowTugas['total'] ?? 0;
+}
+
+// --- HITUNG QUIZ BELUM DINILAI (SEMUA JENIS) ---
+$quizBelumDinilai = 0;
+if ($nipGuru) {
+    // Karena tabel hasilquiz tidak memiliki kolom 'jenis', kita hitung semua quiz yang belum dinilai
+    $queryQuiz = $conn->prepare("
+        SELECT COUNT(*) as total
+        FROM hasilquiz hq
+        JOIN quiz q ON hq.idQuiz = q.idQuiz
+        WHERE q.NIP = ? AND hq.nilai IS NULL
+    ");
+    $queryQuiz->bind_param("s", $nipGuru);
+    $queryQuiz->execute();
+    $resultQuiz = $queryQuiz->get_result();
+    $rowQuiz = $resultQuiz->fetch_assoc();
+    $quizBelumDinilai = $rowQuiz['total'] ?? 0;
 }
 ?>
 <!DOCTYPE html>
@@ -46,7 +74,6 @@ if ($nipGuru) {
   <link rel="stylesheet" href="css/dashboard.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -94,7 +121,7 @@ if ($nipGuru) {
   <!-- WELCOME -->
   <section class="welcome-box">
   <h2>Halo! Selamat Datang, <?= htmlspecialchars($namaGuru) ?></h2>
-  <p>Jadwal mengajar selanjutnya ada di kelas <b><?= htmlspecialchars($kelasMengajar) ?></b></p>
+  <p>Jadwal mengajar Anda: <b><?= htmlspecialchars($kelasMengajar) ?></b></p>
   </section>
 
   <!-- SEARCH -->
@@ -102,9 +129,11 @@ if ($nipGuru) {
     <input type="text" placeholder="Search...">
     <button><i class="fa-solid fa-magnifying-glass"></i></button>
   </div>
-  <!-- GRAFIK SECTION -->
-  <section class="grafik-section">
-    <h3>Grafik Pembelajaran</h3>
+
+  <!-- JADWAL SECTION -->
+<!-- JADWAL SECTION -->
+<section class="grafik-section">
+    <h3>Jadwal Pelajaran</h3>
 
     <div class="grafik-container">
       <!-- KIRI -->
@@ -112,9 +141,12 @@ if ($nipGuru) {
         <div class="card-row">
           <div class="card-box">
             <div class="card-label">Tugas Belum Dinilai</div>
+            <div class="card-value"><?= htmlspecialchars($tugasBelumDinilai) ?></div>
           </div>
           <div class="card-box">
             <div class="card-label">Quiz Belum Dinilai</div>
+            <div class="card-value"><?= htmlspecialchars($quizBelumDinilai) ?></div>
+            
           </div>
         </div>
 
@@ -138,14 +170,85 @@ if ($nipGuru) {
         </div>
       </div>
 
-      <!-- KANAN -->
+      <!-- KANAN - JADWAL -->
       <div class="right-panel">
-        <div class="chart-box">
-          <canvas id="lineChart"></canvas>
+        <div class="jadwal-table-box">
+          <div class="table-scroll">
+            <table class="jadwal-table">
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Hari</th>
+                  <th>Jam</th>
+                  <th>Mata Pelajaran</th>
+                  <th>Guru Pengajar</th>
+                  <th>Ruangan</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php
+                // --- MODIFIKASI: AMBIL SEMUA JADWAL DARI DATABASE ---
+                // Query untuk mengambil semua jadwal, gabungkan dengan nama guru dari tabel dataguru
+                // Dan hitung jamSelesai dari jamMulai + durasi
+                $queryJadwal = $conn->prepare("
+                    SELECT 
+                        jm.idJadwalMapel, 
+                        jm.kodeMapel, 
+                        jm.hari, 
+                        jm.jamMulai, 
+                        jm.durasi, -- Ambil durasi
+                        jm.ruangan, 
+                        jm.kelas, 
+                        m.namaMapel,
+                        dg.nama AS namaGuru -- Ambil nama guru dari tabel dataguru
+                    FROM jadwalmapel jm
+                    LEFT JOIN mapel m ON jm.kodeMapel = m.kodeMapel
+                    LEFT JOIN dataguru dg ON jm.nipGuru = dg.NIP -- JOIN dengan tabel dataguru
+                    ORDER BY 
+                        FIELD(jm.hari, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'),
+                        jm.jamMulai ASC
+                ");
+                $queryJadwal->execute();
+                $resultJadwal = $queryJadwal->get_result();
+                
+                if ($resultJadwal->num_rows > 0) {
+                    $no = 1;
+                    while ($jadwal = $resultJadwal->fetch_assoc()) {
+                        $namaMapel = $jadwal['namaMapel'] ?? $jadwal['kodeMapel'];
+                        $namaGuru = $jadwal['namaGuru'] ?? 'Guru Tidak Dikenal';
+
+                        // --- HITUNG JAM SELESAI ---
+                        // Konversi jamMulai ke format waktu (DateTime)
+                        $jamMulai = new DateTime($jadwal['jamMulai']);
+                        // Tambahkan durasi (dalam menit)
+                        $jamMulai->add(new DateInterval('PT' . $jadwal['durasi'] . 'M'));
+                        // Format kembali ke string 'H:i:s'
+                        $jamSelesai = $jamMulai->format('H:i:s');
+                        // --- AKHIR HITUNG JAM SELESAI ---
+
+                        echo "<tr>";
+                        echo "<td>{$no}</td>";
+                        echo "<td>" . htmlspecialchars($jadwal['hari']) . "</td>";
+                        echo "<td>" . htmlspecialchars($jadwal['jamMulai']) . " - " . htmlspecialchars($jamSelesai) . "</td>";
+                        echo "<td>" . htmlspecialchars($namaMapel) . "</td>";
+                        echo "<td>" . htmlspecialchars($namaGuru) . "</td>";
+                        echo "<td>" . htmlspecialchars($jadwal['ruangan']) . "</td>";
+                        echo "</tr>";
+                        $no++;
+                    }
+                } else {
+                    echo "<tr><td colspan='6' class='no-data-row'>Belum ada jadwal mengajar</td></tr>";
+                }
+                ?>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
   </section>
+
+
 
   <!-- TABEL -->
   <section class="tabel-section">
@@ -185,33 +288,6 @@ if ($nipGuru) {
     document.addEventListener("click", () => {
       document.querySelectorAll(".dropdown-content").forEach(dc => dc.style.display = "none");
     });
-  });
-  </script>
-
-  <!-- SCRIPT CHART -->
-  <script>
-  const ctx = document.getElementById("lineChart").getContext("2d");
-  new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"],
-      datasets: [{
-        label: "Nilai Rata-rata",
-        data: [80, 85, 90, 88, 92],
-        backgroundColor: "rgba(46, 125, 255, 0.6)",
-        borderColor: "#2e7dff",
-        borderWidth: 2
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false }
-      },
-      scales: {
-        y: { beginAtZero: true }
-      }
-    }
   });
   </script>
 
@@ -269,7 +345,7 @@ if ($nipGuru) {
   });
 
   generateCalendar(currentYear, currentMonth);
-</script>
+  </script>
 
 </body>
 </html>

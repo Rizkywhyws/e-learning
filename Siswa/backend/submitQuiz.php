@@ -28,18 +28,16 @@ $waktuMulai = mysqli_real_escape_string($conn, $_POST['waktuMulai']);
 $waktuSelesai = mysqli_real_escape_string($conn, $_POST['waktuSelesai']);
 $jawaban = $_POST['jawaban'];
 
-// Cek apakah sudah pernah submit
-$queryCheck = "SELECT COUNT(*) as sudah FROM jawabanquiz WHERE idQuiz = ? AND NIS = ?";
-$stmtCheck = mysqli_prepare($conn, $queryCheck);
-mysqli_stmt_bind_param($stmtCheck, "ss", $idQuiz, $NIS);
-mysqli_stmt_execute($stmtCheck);
-$resultCheck = mysqli_stmt_get_result($stmtCheck);
-$dataCheck = mysqli_fetch_assoc($resultCheck);
+// ===============================
+// PERBAIKAN UTAMA: HAPUS DATA LAMA SEBELUM SUBMIT
+// ===============================
+$queryDelete = "DELETE FROM jawabanquiz WHERE idQuiz = ? AND NIS = ?";
+$stmtDelete = mysqli_prepare($conn, $queryDelete);
+mysqli_stmt_bind_param($stmtDelete, "ss", $idQuiz, $NIS);
+mysqli_stmt_execute($stmtDelete);
 
-if($dataCheck['sudah'] > 0) {
-    header('Location: ../pembahasanQuiz.php?idQuiz=' . $idQuiz);
-    exit;
-}
+// Jangan cek lagi apakah sudah submit, karena kita sudah hapus datanya
+// Jadi langsung lanjut ke proses insert
 
 // Mulai transaction
 mysqli_begin_transaction($conn);
@@ -62,7 +60,9 @@ try {
             $dataSoal = mysqli_fetch_assoc($resultSoal);
             $tipeSoal = strtolower(trim($dataSoal['type']));
             
-            $jawabanPilgan = null;
+            // Inisialisasi variabel untuk insert
+            $kolomJawabanPilgan = null;
+            $kolomJawabanMulti = null;
             $jawabanEsai = null;
             $nilaiSoal = null;
             
@@ -73,39 +73,55 @@ try {
                 
             } else {
                 // Pilgan atau Multi
-                $jawabanPilgan = mysqli_real_escape_string($conn, strtolower(trim($jawabanSiswa)));
-                
-                $jawabanBenarRaw = null;
+                $jawabanSiswaEscaped = mysqli_real_escape_string($conn, strtolower(trim($jawabanSiswa)));
+
                 if ($tipeSoal === 'pilgan' || $tipeSoal === 'pilihan ganda') {
+                    $kolomJawabanPilgan = $jawabanSiswaEscaped;
+                    $kolomJawabanMulti = null; // Kosongkan
+
                     $jawabanBenarRaw = trim($dataSoal['jawabanPilgan']);
+                    $jawabanBenar = strtolower($jawabanBenarRaw);
+
+                    // Konversi jawaban siswa dari huruf ke angka
+                    $jawabanSiswaAngka = -1;
+                    switch (strtolower($jawabanSiswa)) {
+                        case 'a': $jawabanSiswaAngka = 0; break;
+                        case 'b': $jawabanSiswaAngka = 1; break;
+                        case 'c': $jawabanSiswaAngka = 2; break;
+                        case 'd': $jawabanSiswaAngka = 3; break;
+                        case 'e': $jawabanSiswaAngka = 4; break;
+                    }
+
+                    // Konversi jawaban benar ke integer
+                    $jawabanBenarInt = intval($jawabanBenar);
+
+                    // PERBAIKAN: Logika penilaian untuk pilihan ganda
+                    if ($jawabanSiswaAngka >= 0 && $jawabanSiswaAngka <= 4) {
+                        if ($jawabanSiswaAngka === $jawabanBenarInt) {
+                            $totalBenar++;
+                            $nilaiSoal = 100;
+                        } else {
+                            $nilaiSoal = 0;
+                        }
+                    } else {
+                        $nilaiSoal = 0;
+                    }
                 } else {
+                    // Multi-select
+                    $kolomJawabanPilgan = null; // Kosongkan
+                    $kolomJawabanMulti = $jawabanSiswaEscaped;
+
                     $jawabanBenarRaw = trim($dataSoal['jawabanMulti']);
-                }
-                $jawabanBenar = strtolower($jawabanBenarRaw);
+                    $jawabanBenar = strtolower($jawabanBenarRaw);
 
-                // Konversi jawaban siswa dari huruf ke angka
-                $jawabanSiswaAngka = -1;
-                switch (strtolower($jawabanSiswa)) {
-                    case 'a': $jawabanSiswaAngka = 0; break;
-                    case 'b': $jawabanSiswaAngka = 1; break;
-                    case 'c': $jawabanSiswaAngka = 2; break;
-                    case 'd': $jawabanSiswaAngka = 3; break;
-                    case 'e': $jawabanSiswaAngka = 4; break;
-                }
-
-                // Konversi jawaban benar ke integer
-                $jawabanBenarInt = intval($jawabanBenar);
-
-                // PERBAIKAN: Logika penilaian yang benar
-                if ($jawabanSiswaAngka >= 0 && $jawabanSiswaAngka <= 4) {
-                    if ($jawabanSiswaAngka === $jawabanBenarInt) {
+                    // PERBAIKAN: Logika penilaian untuk multi-select
+                    // Bandingkan string jawaban siswa langsung dengan jawaban benar
+                    if ($jawabanSiswa === $jawabanBenar) {
                         $totalBenar++;
                         $nilaiSoal = 100;
                     } else {
                         $nilaiSoal = 0;
                     }
-                } else {
-                    $nilaiSoal = 0;
                 }
 
                 $totalSoalPilgan++;
@@ -143,16 +159,18 @@ try {
             mysqli_stmt_close($stmtLastId);
 
             // Insert jawaban
+            // PERBAIKAN: Gunakan kolom jawabanPilgan dan jawabanMulti yang benar
             $queryInsert = "INSERT INTO jawabanquiz 
-                           (idJawaban, idQuiz, idSoal, NIS, jawabanPilgan, jawabanEsai, nilai) 
-                           VALUES (?, ?, ?, ?, ?, ?, ?)";
+                           (idJawaban, idQuiz, idSoal, NIS, jawabanPilgan, jawabanMulti, jawabanEsai, nilai) 
+                           VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             $stmtInsert = mysqli_prepare($conn, $queryInsert);
-            mysqli_stmt_bind_param($stmtInsert, "sssssss", 
+            mysqli_stmt_bind_param($stmtInsert, "ssssssss", 
                 $idJawaban, 
                 $idQuiz, 
                 $idSoal, 
                 $NIS, 
-                $jawabanPilgan,
+                $kolomJawabanPilgan,
+                $kolomJawabanMulti,
                 $jawabanEsai,
                 $nilaiSoal
             );

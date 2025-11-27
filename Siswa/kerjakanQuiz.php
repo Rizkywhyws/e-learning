@@ -436,10 +436,10 @@ body {
         $typeNormalized = strtolower(trim($soal['type']));
 
         switch($typeNormalized) {
-            case 'pilgan':
+            case 'pilihan ganda':
                 echo '<i class="fas fa-check-circle"></i> Pilihan Ganda';
                 break;
-            case 'multi':
+            case 'multi-select':
                 echo '<i class="fas fa-list-check"></i> Pilihan Ganda Berganda';
                 break;
             case 'esai':
@@ -672,13 +672,22 @@ function updateMultiAnswer(checkbox) {
     
     let selectedValues = [];
     checkboxes.forEach(cb => {
-        selectedValues.push(cb.value);
+        // Konversi huruf ke angka: a=0, b=1, c=2, d=3, e=4
+        const letterToNumber = { 'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4 };
+        const number = letterToNumber[cb.value];
+        if (number !== undefined) {
+            selectedValues.push(number);
+        }
     });
     
-    // Update hidden input dengan jawaban yang digabung (misal: "abc")
+    // Urutkan dan gabungkan dengan koma
+    selectedValues.sort((a, b) => a - b); // Urutkan angka
+    const answerString = selectedValues.join(','); // Misal: "0,1" atau "1,2,3"
+    
+    // Update hidden input
     const hiddenInput = document.getElementById('multi-' + idSoal);
     if(hiddenInput) {
-        hiddenInput.value = selectedValues.sort().join('');
+        hiddenInput.value = answerString;
     }
 }
 

@@ -426,7 +426,6 @@ if ($kelasSiswa) {
           </tbody>
         </table>
       </div>
->>>>>>> 86bcade9daf2ae36d9f7c2f555f1a53d61fb52ad
     </div>
 
     <!-- KALENDER -->
