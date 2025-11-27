@@ -1,5 +1,6 @@
 <?php
 include_once("../config/db.php");
+session_start();
 
 // Cek apakah guru sudah login
 if (!isset($_SESSION['nip']) || $_SESSION['role'] !== 'guru') {
@@ -15,22 +16,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $judul = $_POST['judul'];
   $deskripsi = $_POST['deskripsi'];
   $waktuMulai = $_POST['waktuMulai'];
-  $tipeQuiz = $_POST['tipeQuiz'];
+  $waktuSelesai = $_POST['waktuSelesai'];
+  $tipeQuiz = $_POST['tipeQuiz'] ?? '';
   $kelas = $_POST['kelas'];
 
-  // Generate ID quiz otomatis
-  $idQuiz = "QZ" . rand(1000, 9999);
-
-  $query = "INSERT INTO quiz (idQuiz, kodeMapel, NIP, judul, deskripsi, waktuMulai, kelas)
-            VALUES ('$idQuiz', '$kodeMapel', '$nipGuru', '$judul', '$deskripsi', '$waktuMulai', '$kelas')";
-
-  if ($conn->query($query)) {
-    echo "<script>
-      alert('Quiz berhasil dibuat!');
-      window.location='buatSoal.php?idQuiz=$idQuiz&type=$tipeQuiz';
-    </script>";
+  // Validasi tipe quiz
+  if (empty($tipeQuiz)) {
+    echo "<script>alert('Pilih tipe quiz terlebih dahulu!');</script>";
   } else {
-    echo "<script>alert('Gagal menyimpan quiz: " . $conn->error . "');</script>";
+    // Generate ID quiz otomatis
+    $idQuiz = "QZ" . rand(1000, 9999);
+
+    $query = "INSERT INTO quiz (idQuiz, kodeMapel, NIP, judul, deskripsi, waktuMulai, waktuSelesai, kelas)
+              VALUES ('$idQuiz', '$kodeMapel', '$nipGuru', '$judul', '$deskripsi', '$waktuMulai', '$waktuSelesai', '$kelas')";
+
+    if ($conn->query($query)) {
+      echo "<script>
+        alert('Quiz berhasil dibuat!');
+        window.location='buatSoal.php?idQuiz=$idQuiz&type=$tipeQuiz';
+      </script>";
+    } else {
+      echo "<script>alert('Gagal menyimpan quiz: " . $conn->error . "');</script>";
+    }
   }
 }
 ?>
@@ -40,7 +47,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="form-container">
   <h2>Tambah / Buat Quiz</h2>
 
-  <form action="" method="POST" enctype="multipart/form-data">
+  <form action="" method="POST" enctype="multipart/form-data" id="quizForm">
+    
+    <!-- Hidden input untuk tipe quiz -->
+    <input type="hidden" id="tipeQuizHidden" name="tipeQuiz" value="">
     
     <!-- Pilih Mapel (hanya yang diampu guru ini) -->
     <label for="kodeMapel">Mata Pelajaran</label>
@@ -99,13 +109,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <label for="waktuMulai">Waktu Mulai</label>
     <input type="datetime-local" id="waktuMulai" name="waktuMulai" required>
 
+    <!-- Waktu Selesai -->
+    <label for="waktuSelesai">Waktu Selesai</label>
+    <input type="datetime-local" id="waktuSelesai" name="waktuSelesai" required>
+
     <!-- Pilih Jenis Quiz -->
     <div class="upload-box">
       <label>Pilih Jenis Quiz</label><br>
       <div class="type-options">
-        <button type="submit" name="tipeQuiz" value="pilgan" class="save-btn">📘 Pilihan Ganda</button>
-        <button type="submit" name="tipeQuiz" value="multiselect" class="save-btn">📝 Multiselect</button>
-        <button type="submit" name="tipeQuiz" value="esai" class="save-btn">✏ Esai</button>
+        <button type="button" onclick="pilihTipeQuiz('pilihan ganda')" class="save-btn">📘 Pilihan Ganda</button>
+        <button type="button" onclick="pilihTipeQuiz('multi-select')" class="save-btn">📝 Multiselect</button>
+        <button type="button" onclick="pilihTipeQuiz('esai')" class="save-btn">✏ Esai</button>
       </div>
     </div>
   </form>
@@ -114,22 +128,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <script>
   // Atur waktu minimal datetime-local
   const waktuMulaiInput = document.getElementById("waktuMulai");
+  const waktuSelesaiInput = document.getElementById("waktuSelesai");
+  const quizForm = document.getElementById("quizForm");
+  const tipeQuizHidden = document.getElementById("tipeQuizHidden");
 
   function setMinDateTime() {
     const now = new Date();
     const tzOffset = now.getTimezoneOffset() * 60000;
     const localISOTime = new Date(now - tzOffset).toISOString().slice(0, 16);
     waktuMulaiInput.min = localISOTime;
+    waktuSelesaiInput.min = localISOTime;
   }
 
   setMinDateTime();
 
-  document.querySelector("form").addEventListener("submit", function (e) {
-    const selected = new Date(waktuMulaiInput.value);
+  // Fungsi saat button tipe quiz diklik
+  function pilihTipeQuiz(tipe) {
+    // Validasi form dulu
+    if (!quizForm.checkValidity()) {
+      quizForm.reportValidity();
+      return;
+    }
+
+    const mulai = new Date(waktuMulaiInput.value);
+    const selesai = new Date(waktuSelesaiInput.value);
     const now = new Date();
-    if (selected.getTime() < now.getTime()) {
-      e.preventDefault();
-      alert("Tanggal dan waktu tidak boleh di masa lalu!");
+    
+    if (mulai.getTime() < now.getTime()) {
+      alert("Waktu mulai tidak boleh di masa lalu!");
+      return;
+    }
+    
+    if (!waktuSelesaiInput.value) {
+      alert("Waktu selesai harus diisi!");
+      return;
+    }
+    
+    if (selesai.getTime() <= mulai.getTime()) {
+      alert("Waktu selesai harus setelah waktu mulai!");
+      return;
+    }
+
+    // Set tipe quiz dan submit form
+    tipeQuizHidden.value = tipe;
+    quizForm.submit();
+  }
+
+  // Validasi waktu mulai tidak boleh di masa lalu
+  waktuMulaiInput.addEventListener('change', function() {
+    const mulai = new Date(waktuMulaiInput.value);
+    const now = new Date();
+    
+    if (mulai.getTime() < now.getTime()) {
+      alert("Waktu mulai tidak boleh di masa lalu!");
+      waktuMulaiInput.value = "";
+      return;
+    }
+    
+    // Set waktu selesai minimal = waktu mulai
+    waktuSelesaiInput.min = waktuMulaiInput.value;
+    
+    // Reset waktu selesai jika lebih kecil dari waktu mulai
+    if (waktuSelesaiInput.value && new Date(waktuSelesaiInput.value) <= mulai) {
+      waktuSelesaiInput.value = "";
+    }
+  });
+
+  // Validasi waktu selesai harus setelah waktu mulai
+  waktuSelesaiInput.addEventListener('change', function() {
+    const mulai = new Date(waktuMulaiInput.value);
+    const selesai = new Date(waktuSelesaiInput.value);
+    
+    if (!waktuMulaiInput.value) {
+      alert("Pilih waktu mulai terlebih dahulu!");
+      waktuSelesaiInput.value = "";
+      return;
+    }
+    
+    if (selesai.getTime() <= mulai.getTime()) {
+      alert("Waktu selesai harus setelah waktu mulai!");
+      waktuSelesaiInput.value = "";
+      return;
     }
   });
 </script>
