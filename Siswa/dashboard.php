@@ -110,6 +110,9 @@ $sekarangMapel = '';
 $sekarangJam = '';
 $sekarangStatus = 'Anda belum melakukan presensi';
 $sekarangGuru = '';
+$sekarangRuangan = ''; // Tambahkan variabel untuk ruangan
+$sekarangIdJadwal = ''; // Tambahkan variabel untuk idJadwal
+$absenStatus = ''; // Tambahkan variabel untuk status absen
 
 if ($kelasSiswa) {
     // 1. Ambil Daftar kodeMapel untuk kelas siswa
@@ -219,63 +222,202 @@ if ($kelasSiswa) {
     $timelineItems = array_slice($timelineItems, 0, 3);
 
     // === LOGIKA UNTUK BAGIAN "SEKARANG" ===
-    $sqlSekarang = "
-        SELECT m.namaMapel, jm.jamMulai, jm.durasi, g.nama AS namaGuru, jm.idJadwalMapel
-        FROM jadwalmapel jm
-        JOIN mapel m ON jm.kodeMapel = m.kodeMapel
-        LEFT JOIN dataguru g ON jm.nipGuru = g.NIP
-        WHERE jm.kelas = ?
-          AND jm.hari = ?
-          AND ? BETWEEN jm.jamMulai AND DATE_ADD(jm.jamMulai, INTERVAL jm.durasi MINUTE)
-        LIMIT 1
-    ";
+    // === LOGIKA UNTUK BAGIAN "SEKARANG" ===
+// Gabungkan jadwalmapel, buatpresensi, dan cek presensi siswa
+$sqlSekarang = "
+    SELECT 
+        m.namaMapel, 
+        jm.jamMulai, 
+        jm.durasi, 
+        g.nama AS namaGuru, 
+        jm.idJadwalMapel, 
+        jm.ruangan,
+        bp.idBuatPresensi -- Ambil idBuatPresensi jika ada
+    FROM jadwalmapel jm
+    JOIN mapel m ON jm.kodeMapel = m.kodeMapel
+    LEFT JOIN dataguru g ON jm.nipGuru = g.NIP
+    LEFT JOIN buatpresensi bp ON jm.idJadwalMapel = bp.idJadwalMapel AND DATE(bp.waktuDimulai) = CURDATE() -- ✅ Benar
+    WHERE jm.kelas = ?
+      AND jm.hari = ?
+      AND ? BETWEEN jm.jamMulai AND DATE_ADD(jm.jamMulai, INTERVAL jm.durasi MINUTE)
+    LIMIT 1
+";
 
-    $stmtSekarang = $conn->prepare($sqlSekarang);
-    $stmtSekarang->bind_param("sss", $kelasSiswa, $hariIndo, $jamSekarang);
-    $stmtSekarang->execute();
-    $resultSekarang = $stmtSekarang->get_result();
+$stmtSekarang = $conn->prepare($sqlSekarang);
+$stmtSekarang->bind_param("sss", $kelasSiswa, $hariIndo, $jamSekarang);
+$stmtSekarang->execute();
+$resultSekarang = $stmtSekarang->get_result();
 
-    if ($rowSekarang = $resultSekarang->fetch_assoc()) {
-        $sekarangMapel = $rowSekarang['namaMapel'];
-        $jamMulaiRaw = $rowSekarang['jamMulai'];
-        $durasi = intval($rowSekarang['durasi']);
-        $jamSelesaiRaw = date("H:i", strtotime("$jamMulaiRaw +$durasi minutes"));
-        $sekarangJam = "$jamMulaiRaw - $jamSelesaiRaw";
-        $sekarangGuru = $rowSekarang['namaGuru'] ?? 'Belum ditentukan';
-        $idJadwalSekarang = $rowSekarang['idJadwalMapel'];
+if ($rowSekarang = $resultSekarang->fetch_assoc()) {
+    $sekarangMapel = $rowSekarang['namaMapel'];
+    $jamMulaiRaw = $rowSekarang['jamMulai'];
+    $durasi = intval($rowSekarang['durasi']);
+    $jamSelesaiRaw = date("H:i", strtotime("$jamMulaiRaw +$durasi minutes"));
+    $sekarangJam = "$jamMulaiRaw - $jamSelesaiRaw";
+    $sekarangGuru = $rowSekarang['namaGuru'] ?? 'Belum ditentukan';
+    $sekarangRuangan = $rowSekarang['ruangan'] ?? 'Ruangan tidak diketahui';
+    $sekarangIdJadwal = $rowSekarang['idJadwalMapel'];
+    $idBuatPresensi = $rowSekarang['idBuatPresensi']; // Ambil idBuatPresensi
 
-        // Cek status presensi
-        if ($nisSiswa) { // Pastikan NIS tersedia
-    $sqlCekPresensi = "
-        SELECT COUNT(*) as total
-        FROM presensisiswa ps
-        WHERE ps.NIS = ? 
-          AND DATE(ps.waktuPresensi) = CURDATE()
-          AND ps.idBuatPresensi = ?
-    ";
-    $stmtCekPresensi = $conn->prepare($sqlCekPresensi);
-    $stmtCekPresensi->bind_param("ss", $nisSiswa, $idJadwalSekarang); // <-- Perhatikan: Menggunakan idBuatPresensi
-    $stmtCekPresensi->execute();
-    $resultCekPresensi = $stmtCekPresensi->get_result();
-    $rowCekPresensi = $resultCekPresensi->fetch_assoc();
+    // Cek status presensi SISWA hanya jika guru TELAH MEMBUAT PRESENSI
+    if ($nisSiswa && $idBuatPresensi) { // Pastikan NIS tersedia DAN idBuatPresensi ditemukan
+        $sqlCekPresensi = "
+            SELECT COUNT(*) as total
+            FROM presensisiswa ps
+            WHERE ps.NIS = ? 
+              AND ps.idBuatPresensi = ? -- Gunakan idBuatPresensi
+        ";
+        $stmtCekPresensi = $conn->prepare($sqlCekPresensi);
+        $stmtCekPresensi->bind_param("ss", $nisSiswa, $idBuatPresensi);
+        $stmtCekPresensi->execute();
+        $resultCekPresensi = $stmtCekPresensi->get_result();
+        $rowCekPresensi = $resultCekPresensi->fetch_assoc();
 
-    if ($rowCekPresensi['total'] > 0) {
-        $sekarangStatus = 'Anda sudah melakukan presensi';
-    } else {
-        $sekarangStatus = 'Anda belum melakukan presensi';
-    }
-
+        if ($rowCekPresensi['total'] > 0) {
+            $sekarangStatus = 'Anda sudah melakukan presensi';
+            $absenStatus = 'sudah_absen';
         } else {
-            $sekarangStatus = 'Tidak dapat memeriksa presensi (NIS tidak ditemukan).';
+            $sekarangStatus = 'Presensi sedang aktif, silakan absen'; // Ubah status
+            $absenStatus = 'belum_absen';
         }
-
+    } elseif ($nisSiswa && !$idBuatPresensi) {
+        // Guru belum membuat presensi untuk jadwal ini
+        $sekarangStatus = 'Presensi belum dibuka oleh guru';
+        $absenStatus = 'presensi_tidak_aktif'; // Tambahkan status baru
     } else {
-        // Jika tidak ada pelajaran yang sedang berlangsung
-        $sekarangMapel = 'Tidak ada pelajaran';
-        $sekarangJam = '';
-        $sekarangStatus = 'Tidak ada pelajaran saat ini';
-        $sekarangGuru = '';
+        // NIS tidak ditemukan
+        $sekarangStatus = 'Tidak dapat memeriksa presensi (NIS tidak ditemukan).';
+        $absenStatus = 'tidak_dapat_absen';
     }
+
+} else {
+    // Jika tidak ada pelajaran yang sedang berlangsung
+    $sekarangMapel = 'Tidak ada pelajaran';
+    $sekarangJam = '';
+    $sekarangStatus = 'Tidak ada pelajaran saat ini';
+    $sekarangGuru = '';
+    $sekarangRuangan = '';
+    $absenStatus = 'tidak_ada_pelajaran';
+}
+}
+
+// --- HITUNG STATISTIK PEMBELAJARAN SISWA ---
+$jumlahMateri = 0;
+$jumlahTugasDikumpulkan = 0;
+$jumlahQuizDikerjakan = 0;
+
+if ($nisSiswa && $kelasSiswa) {
+    // --- JUMLAH MATERI YANG SUDAH DILIHAT ---
+    // Asumsi: Ada tabel `materidilihat` atau `riwayat_materi` yang mencatat NIS dan idMateri
+    // Karena tidak ada tabel ini di kode Anda, kita asumsikan hanya hitung total materi yang tersedia untuk kelasnya.
+    // Jika ingin lebih akurat, buat tabel `riwayat_materi` nanti.
+    $sqlMateri = "
+        SELECT COUNT(*) as total
+        FROM materi m
+        JOIN mapel mp ON m.kodeMapel = mp.kodeMapel
+        WHERE mp.kodeMapel IN (
+            SELECT DISTINCT kodeMapel FROM jadwalmapel WHERE kelas = ?
+        )
+    ";
+    $stmtMateri = $conn->prepare($sqlMateri);
+    $stmtMateri->bind_param("s", $kelasSiswa);
+    $stmtMateri->execute();
+    $resultMateri = $stmtMateri->get_result();
+    $rowMateri = $resultMateri->fetch_assoc();
+    $jumlahMateri = $rowMateri['total'] ?? 0;
+
+    // --- JUMLAH TUGAS YANG SUDAH DIKUMPULKAN ---
+    $sqlTugasDikumpulkan = "
+        SELECT COUNT(*) as total
+        FROM pengumpulantugas pt
+        JOIN tugas t ON pt.idTugas = t.idTugas
+        WHERE pt.NIS = ? AND pt.status = 'selesai'
+    ";
+    $stmtTugasDikumpulkan = $conn->prepare($sqlTugasDikumpulkan);
+    $stmtTugasDikumpulkan->bind_param("s", $nisSiswa);
+    $stmtTugasDikumpulkan->execute();
+    $resultTugasDikumpulkan = $stmtTugasDikumpulkan->get_result();
+    $rowTugasDikumpulkan = $resultTugasDikumpulkan->fetch_assoc();
+    $jumlahTugasDikumpulkan = $rowTugasDikumpulkan['total'] ?? 0;
+
+    // --- JUMLAH QUIZ YANG SUDAH DIKERJAKAN ---
+    $sqlQuizDikerjakan = "
+        SELECT COUNT(*) as total
+        FROM hasilquiz hq
+        JOIN quiz q ON hq.idQuiz = q.idQuiz
+        WHERE hq.NIS = ?
+    ";
+    $stmtQuizDikerjakan = $conn->prepare($sqlQuizDikerjakan);
+    $stmtQuizDikerjakan->bind_param("s", $nisSiswa);
+    $stmtQuizDikerjakan->execute();
+    $resultQuizDikerjakan = $stmtQuizDikerjakan->get_result();
+    $rowQuizDikerjakan = $resultQuizDikerjakan->fetch_assoc();
+    $jumlahQuizDikerjakan = $rowQuizDikerjakan['total'] ?? 0;
+}
+
+// --- AKTIVITAS TERBARU ---
+$aktivitasItems = [];
+
+if ($nisSiswa) {
+    // Ambil 3 aktivitas terbaru dari pengumpulan tugas
+    $sqlAktivitasTugas = "
+        SELECT pt.submittedAt, t.judul AS nama, 'Tugas' AS jenis, m.namaMapel AS mapel
+        FROM pengumpulantugas pt
+        JOIN tugas t ON pt.idTugas = t.idTugas
+        JOIN mapel m ON t.kodeMapel = m.kodeMapel
+        WHERE pt.NIS = ? AND pt.status = 'selesai'
+        ORDER BY pt.submittedAt DESC
+        LIMIT 3
+    ";
+
+    $stmtAktivitasTugas = $conn->prepare($sqlAktivitasTugas);
+    $stmtAktivitasTugas->bind_param("s", $nisSiswa);
+    $stmtAktivitasTugas->execute();
+    $resultAktivitasTugas = $stmtAktivitasTugas->get_result();
+
+    while ($row = $resultAktivitasTugas->fetch_assoc()) {
+        $aktivitasItems[] = [
+            'jenis' => $row['jenis'],
+            'nama' => $row['nama'],
+            'mapel' => $row['mapel'],
+            'waktu' => date("Y-m-d H:i", strtotime($row['submittedAt']))
+        ];
+    }
+
+    // Ambil 3 aktivitas terbaru dari hasil quiz
+    $sqlAktivitasQuiz = "
+        SELECT hq.nilai, hq.tanggalSubmit, q.judul AS nama, 'Quiz' AS jenis, m.namaMapel AS mapel
+        FROM hasilquiz hq
+        JOIN quiz q ON hq.idQuiz = q.idQuiz
+        JOIN mapel m ON q.kodeMapel = m.kodeMapel
+        WHERE hq.NIS = ?
+        ORDER BY hq.tanggalSubmit DESC
+        LIMIT 3
+    ";
+
+    $stmtAktivitasQuiz = $conn->prepare($sqlAktivitasQuiz);
+    $stmtAktivitasQuiz->bind_param("s", $nisSiswa);
+    $stmtAktivitasQuiz->execute();
+    $resultAktivitasQuiz = $stmtAktivitasQuiz->get_result();
+
+    while ($row = $resultAktivitasQuiz->fetch_assoc()) {
+        $aktivitasItems[] = [
+            'jenis' => $row['jenis'],
+            'nama' => $row['nama'],
+            'mapel' => $row['mapel'],
+            'waktu' => date("Y-m-d H:i", strtotime($row['tanggalSubmit'])) // Gunakan kolom yang benar
+        ];
+    }
+
+    // Urutkan berdasarkan waktu (descending)
+    usort($aktivitasItems, function($a, $b) {
+        $timeA = strtotime($a['waktu']);
+        $timeB = strtotime($b['waktu']);
+        return $timeB <=> $timeA; // Descending
+    });
+
+    // Ambil maksimal 3 item
+    $aktivitasItems = array_slice($aktivitasItems, 0, 3);
 }
 ?>
 
@@ -289,8 +431,8 @@ if ($kelasSiswa) {
 
   <link rel="stylesheet" href="cssSiswa/dashboard.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css    ">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js    "></script>
 
 </head>
 
@@ -354,11 +496,6 @@ if ($kelasSiswa) {
   <p>Jadwal Pelajaran selanjutnya <b><?= htmlspecialchars($mapelSelanjutnya) ?></b></p>
   </section>
   
-  <!-- SEARCH -->
-  <div class="search-bar">
-    <input type="text" placeholder="Search...">
-    <button><i class="fa-solid fa-magnifying-glass"></i></button>
-  </div>
   <!-- GRID WRAPPER -->
   <section class="main-grid">
 
@@ -467,13 +604,26 @@ if ($kelasSiswa) {
         <h3>Sekarang</h3>
         <p class="lokasi">
           <i class="fa-solid fa-location-dot"></i>
-          Gedung Jurusan Teknologi Informasi (JTI)<br>
-          Politeknik Negeri Jember Jl. Mastrip No.164
+          SMKN 4 Jember<br>
+          Jl. Kartini No.1
         </p>
         <div class="sekarang-content">
           <div class="absen-area">
-            <span class="x">X</span>
-            <button class="absen-btn">Absen Sekarang</button>
+            <?php if ($absenStatus === 'belum_absen'): ?>
+              <span class="x">X</span>
+              <button class="absen-btn" onclick="openAbsenModal()">Absen Sekarang</button>
+            <?php elseif ($absenStatus === 'sudah_absen'): ?>
+              <span class="checkmark" style="color: green; font-size: 40px;">✓</span>
+              <p style="margin-top: 5px; font-size: 12px; color: #6c7a91;">Sudah Absen</p>
+            <?php elseif ($absenStatus === 'presensi_tidak_aktif'): ?>
+              <!-- Tampilkan ikon dan pesan bahwa presensi belum dibuka -->
+              <span class="x" style="color: #ccc; font-size: 40px;">⏱️</span> <!-- Atau ikon jam -->
+              <p style="margin-top: 5px; font-size: 12px; color: #6c7a91;">Presensi Belum Dibuka</p>
+            <?php else: ?>
+              <!-- Tidak ada pelajaran atau tidak bisa absen -->
+              <span class="x" style="color: #ccc; font-size: 40px;">—</span>
+              <p style="margin-top: 5px; font-size: 12px; color: #6c7a91;">Tidak ada pelajaran</p>
+            <?php endif; ?>
           </div>
           <div class="info-area">
             <p><i class="fa-solid fa-book"></i> <?= htmlspecialchars($sekarangMapel) ?></p>
@@ -481,6 +631,9 @@ if ($kelasSiswa) {
             <p class="status"><?= htmlspecialchars($sekarangStatus) ?></p>
             <?php if (!empty($sekarangGuru) && $sekarangGuru !== 'Belum ditentukan'): ?>
               <p class="guru"><i class="fa-solid fa-chalkboard-teacher"></i> Guru: <?= htmlspecialchars($sekarangGuru) ?></p>
+            <?php endif; ?>
+            <?php if (!empty($sekarangRuangan)): ?>
+              <p class="ruangan"><i class="fa-solid fa-door-closed"></i> Ruangan: <?= htmlspecialchars($sekarangRuangan) ?></p>
             <?php endif; ?>
           </div>
         </div>
@@ -498,38 +651,93 @@ if ($kelasSiswa) {
   </div>
     </div>
     
-    <div class="charts">
-    <!-- PROGRESS -->
+    <!-- STATISTIK PEMBELAJARAN -->
     <div class="box progress">
-      <h3>Progress</h3>
-      <div class="progress-item">
-        <label>Materi</label>
-        <div class="bar"><span style="width: 70%"></span></div>
+      <h3>Progress Pembelajaran</h3>
+      <div class="stat-item">
+        <div class="stat-icon"><i class="fa-solid fa-book-open"></i></div>
+        <div class="stat-content">
+          <span class="stat-label">Materi</span>
+          <span class="stat-value"><?= htmlspecialchars($jumlahMateri) ?></span>
+          <span class="stat-desc">Materi tersedia</span>
+        </div>
       </div>
-      <div class="progress-item">
-        <label>Tugas</label>
-        <div class="bar"><span style="width: 40%"></span></div>
+      <div class="stat-item">
+        <div class="stat-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+        <div class="stat-content">
+          <span class="stat-label">Tugas</span>
+          <span class="stat-value"><?= htmlspecialchars($jumlahTugasDikumpulkan) ?></span>
+          <span class="stat-desc">Dikumpulkan</span>
+        </div>
       </div>
-      <div class="progress-item">
-        <label>Quiz</label>
-        <div class="bar"><span style="width: 80%"></span></div>
+      <div class="stat-item">
+        <div class="stat-icon"><i class="fa-solid fa-clipboard-check"></i></div>
+        <div class="stat-content">
+          <span class="stat-label">Quiz</span>
+          <span class="stat-value"><?= htmlspecialchars($jumlahQuizDikerjakan) ?></span>
+          <span class="stat-desc">Dikerjakan</span>
+        </div>
       </div>
     </div>
 
-    <!-- GRAFIK -->
-    <div class="box chart1">
-      <h3>Nilai Per Mata Pelajaran</h3>
-      <img src="chart-placeholder.png" alt="Grafik" class="chart-img">
-    </div>
-
-    <!-- PIE CHART -->
-    <div class="box chart2">
-      <h3>Status Pengumpulan Tugas</h3>
-      <img src="pie-placeholder.png" alt="Pie" class="pie-img">
-    </div>
+    <!-- AKTIVITAS TERBARU -->
+    <div class="box aktivitas">
+      <h3>Aktivitas Terbaru</h3>
+      <div class="aktivitas-list">
+        <?php if (!empty($aktivitasItems)): ?>
+          <?php foreach ($aktivitasItems as $item): ?>
+            <div class="aktivitas-item">
+              <div class="aktivitas-icon">
+                <?php if ($item['jenis'] === 'Tugas'): ?>
+                  <i class="fa-solid fa-pen-to-square"></i>
+                <?php else: ?>
+                  <i class="fa-solid fa-clipboard-check"></i>
+                <?php endif; ?>
+              </div>
+              <div class="aktivitas-content">
+                <span class="aktivitas-jenis"><?= htmlspecialchars($item['jenis']) ?>:</span>
+                <span class="aktivitas-nama"><?= htmlspecialchars($item['nama']) ?></span>
+                <span class="aktivitas-mapel">— <?= htmlspecialchars($item['mapel']) ?></span>
+                <span class="aktivitas-waktu"><?= htmlspecialchars($item['waktu']) ?></span>
+              </div>
+            </div>
+          <?php endforeach; ?>
+        <?php else: ?>
+          <p>Tidak ada aktivitas terbaru.</p>
+        <?php endif; ?>
+      </div>
     </div>
 
   </section>
+
+  <!-- GRAFIK POWER BI SECTION -->
+  <section class="grafik-pbi-section">
+    <h3><i class="fas fa-chart-line"></i> Statistik Pembelajaran Saya</h3>
+    <div class="pbi-container">
+      <!-- GANTI URL INI DENGAN EMBED URL POWER BI ANDA YANG BENAR -->
+      <iframe 
+        title="Statistik Pembelajaran Saya"
+        width="100%" 
+        height="500" 
+        src="YOUR_POWER_BI_EMBED_URL_HERE" 
+        frameborder="0" 
+        allowFullScreen="true">
+      </iframe>
+    </div>
+  </section>
+
+  <!-- MODAL ABSEN -->
+  <div id="absenModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h3>Absen Sekarang</h3>
+      <form id="absenForm">
+        <label for="token">Token Absen:</label>
+        <input type="text" id="token" name="token" required>
+        <button type="submit">Kirim Absen</button>
+      </form>
+    </div>
+  </div>
 
   <!-- SCRIPT KALENDER -->
   <script>
@@ -582,69 +790,36 @@ if ($kelasSiswa) {
     renderCalendar(currentDate);
   </script>
 <script>
-// === GANTI GAMBAR PLACEHOLDER DENGAN CANVAS ===
-document.querySelector(".chart1").innerHTML += '<canvas id="barChart"></canvas>';
-document.querySelector(".chart2").innerHTML += '<canvas id="pieChart"></canvas>';
+// === HAPUS SCRIPT CHART.JS YANG LAMA KARENA DIGANTI POWER BI ===
+// Script untuk menggambar grafik dengan Chart.js dihapus.
+// Grafik sekarang akan ditampilkan melalui Power BI embed.
+</script>
 
-// === BAR CHART: NILAI PER MATA PELAJARAN ===
-const ctxBar = document.getElementById("barChart").getContext("2d");
+<!-- SCRIPT MODAL ABSEN -->
+<script>
+// Fungsi untuk membuka modal
+function openAbsenModal() {
+  document.getElementById("absenModal").style.display = "block";
+}
 
-new Chart(ctxBar, {
-  type: "bar",
-  data: {
-    labels: ["Matematika", "B. Indonesia", "B. Inggris", "IPA", "IPS", "PKN"],
-    datasets: [{
-      label: "Nilai",
-      data: [85, 90, 88, 75, 80, 92],
-      backgroundColor: "rgba(54, 162, 235, 0.7)",
-      borderColor: "rgba(54, 162, 235, 1)",
-      borderWidth: 2,
-      borderRadius: 8
-    }]
-  },
-  options: {
-    responsive: true,
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: { color: "#333" }
-      },
-      x: {
-        ticks: { color: "#333" }
-      }
-    },
-    plugins: {
-      legend: { display: false }
-    }
+// Fungsi untuk menutup modal
+document.querySelector(".close").onclick = function() {
+  document.getElementById("absenModal").style.display = "none";
+}
+
+// Tutup modal jika klik di luar modal
+window.onclick = function(event) {
+  if (event.target == document.getElementById("absenModal")) {
+    document.getElementById("absenModal").style.display = "none";
   }
-});
+}
 
-// === PIE CHART: STATUS PENGUMPULAN TUGAS ===
-const ctxPie = document.getElementById("pieChart").getContext("2d");
-
-new Chart(ctxPie, {
-  type: "pie",
-  data: {
-    labels: ["Terkumpul", "Belum", "Terlambat"],
-    datasets: [{
-      data: [12, 4, 2],
-      backgroundColor: [
-        "rgba(46, 204, 113, 0.8)",  // Hijau
-        "rgba(231, 76, 60, 0.8)",   // Merah
-        "rgba(241, 196, 15, 0.8)"   // Kuning
-      ]
-    }]
-  },
-  options: {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: "bottom",
-        labels: { color: "#333" }
-      }
-    }
-  }
-});
+// Form submission (contoh sederhana, Anda bisa tambahkan AJAX untuk mengirim ke server)
+document.getElementById("absenForm").onsubmit = function(e) {
+  e.preventDefault(); // Prevent form from submitting normally
+  alert("Absen berhasil dikirim!"); // Ganti dengan logika AJAX Anda
+  document.getElementById("absenModal").style.display = "none";
+}
 </script>
 
 </body>

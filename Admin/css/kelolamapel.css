@@ -375,11 +375,11 @@ header {
 }
 
 .modal-content button.btn {
-  background-color: #6c757d;
+  background-color: #000000;
 }
 
 .modal-content button.btn:hover {
-  background-color: #5a6268;
+  background-color: #515151;
 }
 
 /* =====================================================

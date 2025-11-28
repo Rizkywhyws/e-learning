@@ -116,41 +116,6 @@ header {
   font-size: 15px;
 }
 
-/* ==========================================================
-   SEARCH BAR
-========================================================== */
-.search-bar {
-  text-align: center;
-  margin: -40px 0 40px;
-}
-
-.search-bar input {
-  width: 50%;
-  padding: 12px 20px;
-  border-radius: 30px;
-  border: 2px solid #ccc;
-  outline: none;
-  transition: 0.3s;
-}
-
-.search-bar input:focus {
-  border-color: #2e7dff;
-}
-
-.search-bar button {
-  padding: 12px 20px;
-  border-radius: 30px;
-  border: none;
-  background: #2e7dff;
-  color: white;
-  margin-left: 5px;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.search-bar button:hover {
-  background: #1b5cff;
-}
 
 /* ==========================================================
    GRAFIK SECTION
@@ -320,18 +285,6 @@ header {
   font-weight: bold;
 }
 
-/* KANAN */
-.chart-box {
-  background: white;
-  border: 2px solid #cddfff;
-  border-radius: 12px;
-  padding: 20px;
-}
-
-.chart-box canvas {
-  width: 100%;
-  height: 320px;
-}
 
 /* ==========================================================
    JADWAL MENGAJAR (TABLE)
@@ -346,10 +299,11 @@ header {
   border: 2px solid #cddfff;
   border-radius: 12px;
   padding: 20px;
+  height: 615px;
 }
 
 .table-scroll {
-  max-height: 400px;
+  max-height: 560px;
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -530,4 +484,63 @@ header {
   .jadwal-waktu {
     min-width: 100%;
   }
+}
+/* --- STYLING UNTUK GRAFIK POWER BI --- */
+.grafik-pbi-section {
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+    max-width: 90%; 
+    margin-left: auto; 
+    margin-right: auto; 
+    height: 1000px;
+}
+
+.grafik-pbi-section h3 {
+    color: #2e7dff;
+    font-size: 1.5em;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.pbi-container {
+    position: relative;
+    width: 95%; 
+    height: 880px; 
+    margin: 0 auto; 
+    overflow: hidden;
+    border: 3px solid #76f1fd;
+    border-radius: 8px;
+    background-color: #f9f9f9; 
+    display: flex; 
+    justify-content: center;
+    align-items: center;
+}
+
+.pbi-container iframe {
+    width: 100%; 
+    height: 100%; 
+    border: none;
+    border-radius: 8px;
+    display: block;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .grafik-pbi-section {
+        padding: 15px;
+    }
+    
+    .pbi-container {
+        width: 95%; /* Lebar kotak putih jadi 95% di mobile */
+        height: 400px; 
+    }
+
+    /* Jika perlu, Anda bisa juga atur iframe di mobile */
+    .pbi-container iframe {
+        width: 100%;
+        height: 100%;
+    }
 }

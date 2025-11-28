@@ -64,6 +64,13 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
       </button>
 
       <div class="dropdown">
+        <button class="dropbtn"><i class="fa-solid fa-house"></i> Dashboard</button>
+        <div class="dropdown-content">
+          <a href="dashboard.php"><i class="fa-solid fa-gauge"></i> Dashboard Utama</a>
+        </div>
+      </div>
+
+      <div class="dropdown">
         <button class="dropbtn">
         <i class="fa-solid fa-right-from-bracket"></i>
         <a href="../Auth/logout.php" onclick="return confirm('Yakin ingin logout?')"style="text-decoration:none; color:#2e7dff;"> Logout</a>
