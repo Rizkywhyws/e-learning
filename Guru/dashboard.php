@@ -124,15 +124,7 @@ if ($nipGuru) {
   <p>Jadwal mengajar Anda: <b><?= htmlspecialchars($kelasMengajar) ?></b></p>
   </section>
 
-  <!-- SEARCH -->
-  <div class="search-bar">
-    <input type="text" placeholder="Search...">
-    <button><i class="fa-solid fa-magnifying-glass"></i></button>
-  </div>
-
-  <!-- JADWAL SECTION -->
-<!-- JADWAL SECTION -->
-<section class="grafik-section">
+  <section class="grafik-section">
     <h3>Jadwal Pelajaran</h3>
 
     <div class="grafik-container">
@@ -248,28 +240,22 @@ if ($nipGuru) {
     </div>
   </section>
 
-
-
-  <!-- TABEL -->
-  <section class="tabel-section">
-    <h3>Baru Saja Mengumpulkan</h3>
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Nama Tugas</th>
-          <th>Nama Siswa</th>
-          <th>NIS</th>
-          <th>Kelas</th>
-          <th>Keterangan Pengumpulan</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td colspan="5" class="no-data-row">Belum ada data</td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
+  <!-- GRAFIK POWER BI SECTION -->
+  <!-- Hapus tabel "Baru Saja Mengumpulkan" dan ganti dengan grafik Power BI -->
+<section class="grafik-pbi-section">
+    <h3>Statistik Pembelajaran</h3>
+    <div class="pbi-container">
+      <!-- GANTI URL INI DENGAN EMBED URL POWER BI ANDA YANG BENAR -->
+      <iframe 
+        title="Statistik Pembelajaran"
+        width="80%" 
+        height="500" 
+        src="YOUR_POWER_BI_EMBED_URL_HERE" 
+        frameborder="0" 
+        allowFullScreen="true">
+      </iframe>
+    </div>
+</section>
 
   <!-- SCRIPT DROPDOWN -->
   <script>
