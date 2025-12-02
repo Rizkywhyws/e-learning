@@ -1,0 +1,351 @@
+/* file e-learningMrt/Guru/css/detailKoreksiQuiz.css */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+/* Header Section */
+.header-section {
+    background: linear-gradient(135deg, #2e7dff 0%, #1a5acc 100%);
+    padding: 25px 30px;
+    color: white;
+    position: relative;
+}
+
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    margin-bottom: 15px;
+}
+
+.btn-back:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateX(-5px);
+}
+
+.header-section h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.header-section h2 i {
+    margin-right: 12px;
+}
+
+/* Info Grid */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    padding: 30px;
+    background: #f8f9fa;
+}
+
+.info-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #2e7dff;
+}
+
+.info-card h3 {
+    color: #2e7dff;
+    font-size: 18px;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.info-card h3 i {
+    margin-right: 10px;
+}
+
+.info-table {
+    width: 100%;
+}
+
+.info-table tr {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.info-table tr:last-child {
+    border-bottom: none;
+}
+
+.info-table td {
+    padding: 12px 8px;
+    font-size: 14px;
+    color: #555;
+}
+
+.info-table td:first-child {
+    width: 40%;
+    color: #333;
+}
+
+/* Form Koreksi */
+.form-koreksi {
+    padding: 30px;
+}
+
+.soal-container {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.soal-card {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.soal-card:hover {
+    box-shadow: 0 5px 20px rgba(46, 125, 255, 0.15);
+    border-color: #2e7dff;
+}
+
+.soal-header {
+    background: linear-gradient(135deg, #2e7dff 0%, #1a5acc 100%);
+    padding: 15px 20px;
+}
+
+.soal-number {
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.soal-content {
+    padding: 25px;
+}
+
+.pertanyaan-section,
+.jawaban-section,
+.nilai-section {
+    margin-bottom: 20px;
+}
+
+.pertanyaan-section:last-child,
+.jawaban-section:last-child,
+.nilai-section:last-child {
+    margin-bottom: 0;
+}
+
+.label-bold {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 15px;
+}
+
+.label-bold i {
+    margin-right: 8px;
+    color: #2e7dff;
+}
+
+.pertanyaan-box,
+.jawaban-box {
+    background: #f8f9fa;
+    padding: 18px;
+    border-radius: 8px;
+    border-left: 4px solid #2e7dff;
+    line-height: 1.8;
+    color: #555;
+    font-size: 14px;
+    min-height: 60px;
+}
+
+.jawaban-box {
+    border-left-color: #28a745;
+    background: #f0fff4;
+}
+
+.input-nilai {
+    width: 150px;
+    padding: 12px 18px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    transition: all 0.3s ease;
+}
+
+.input-nilai:focus {
+    outline: none;
+    border-color: #2e7dff;
+    box-shadow: 0 0 0 4px rgba(46, 125, 255, 0.1);
+}
+
+.input-nilai:hover {
+    border-color: #2e7dff;
+}
+
+/* Action Section */
+.action-section {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    padding: 25px 30px;
+    background: #f8f9fa;
+    border-top: 2px solid #e9ecef;
+}
+
+.btn-submit,
+.btn-cancel {
+    padding: 14px 35px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+}
+
+.btn-submit {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+}
+
+.btn-submit:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(40, 167, 69, 0.4);
+}
+
+.btn-cancel {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-cancel:hover {
+    background: #5a6268;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(108, 117, 125, 0.3);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.soal-card {
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+.soal-card:nth-child(1) { animation-delay: 0.1s; }
+.soal-card:nth-child(2) { animation-delay: 0.2s; }
+.soal-card:nth-child(3) { animation-delay: 0.3s; }
+.soal-card:nth-child(4) { animation-delay: 0.4s; }
+.soal-card:nth-child(5) { animation-delay: 0.5s; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+        padding: 20px;
+    }
+
+    .form-koreksi {
+        padding: 20px;
+    }
+
+    .soal-content {
+        padding: 20px;
+    }
+
+    .header-section {
+        padding: 20px;
+    }
+
+    .header-section h2 {
+        font-size: 22px;
+    }
+
+    .action-section {
+        flex-direction: column;
+    }
+
+    .btn-submit,
+    .btn-cancel {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .input-nilai {
+        width: 100%;
+    }
+
+    .info-table td:first-child {
+        width: 50%;
+    }
+}
+
+/* Print Styles */
+@media print {
+    body {
+        background: white;
+        padding: 0;
+    }
+
+    .btn-back,
+    .action-section {
+        display: none;
+    }
+
+    .container {
+        box-shadow: none;
+    }
+
+    .soal-card {
+        page-break-inside: avoid;
+    }
+}

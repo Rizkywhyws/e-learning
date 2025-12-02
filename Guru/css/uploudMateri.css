@@ -1,60 +1,43 @@
-/* === Font & Base === */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+/* Import font Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
+/* ====== BODY ====== */
 body {
   font-family: 'Poppins', sans-serif;
-  background: linear-gradient(135deg, #e9f2ff, #cfe4ff);
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 40px 0;
 }
 
-/* === Container === */
-.container {
-  width: 90%;
-  max-width: 880px;
-  background: #fff;
-  padding: 30px 35px 40px;
-  border-radius: 20px;
-  box-shadow: 0 5px 15px rgba(0, 90, 180, 0.15);
-  animation: fadeIn 0.6s ease;
+/* ====== FORM CONTAINER ====== */
+.form-container {
+  max-width: 600px;
+  background: #ffffff;
+  padding: 25px 30px 35px;
+  margin: 0 auto 60px auto;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.15);
+  animation: fadeIn 0.5s ease;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* === Title === */
-h2 {
+.form-container h2 {
   text-align: center;
-  color: #1e70c1;
-  font-weight: 600;
   margin-bottom: 25px;
-  font-size: 24px;
+  color: #004b85;
+  font-weight: 600;
 }
 
-/* === Form Groups === */
-.form-group {
-  margin-bottom: 16px;
-}
-
+/* ====== LABEL ====== */
 label {
   display: block;
+  margin-top: 15px;
   font-weight: 600;
   color: #004b85;
-  margin-bottom: 6px;
-  font-size: 14px;
 }
 
+/* ====== INPUT, SELECT, TEXTAREA ====== */
 input[type="text"],
 input[type="url"],
 input[type="file"],
@@ -62,11 +45,16 @@ select,
 textarea {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #bcd9ff;
   border-radius: 10px;
-  background-color: #f9fbff;
+  border: 1.8px solid #6fb3ff; /* biru lembut */
+  background-color: #f1f8ff; /* biru muda */
+  margin-top: 8px;
+  box-sizing: border-box;
   font-size: 14px;
-  transition: all 0.25s ease;
+  color: #004b85;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 3px rgba(0, 102, 204, 0.1);
+  font-family: 'Poppins', sans-serif;
 }
 
 input:focus,
@@ -74,39 +62,42 @@ select:focus,
 textarea:focus {
   outline: none;
   border-color: #1e70c1;
-  box-shadow: 0 0 6px rgba(30, 112, 193, 0.3);
-  background-color: #fff;
+  background-color: #ffffff;
+  box-shadow: 0 0 8px rgba(30, 112, 193, 0.3);
 }
 
 textarea {
-  height: 90px;
-  resize: none;
+  resize: vertical;
+  min-height: 90px;
 }
 
-/* === Buttons === */
+/* ====== BUTTONS ====== */
 .button-group {
   text-align: center;
   margin: 25px 0 15px;
 }
 
-button {
-  background-color: #1e70c1;
-  color: #fff;
+button,
+.save-btn {
+  background: linear-gradient(135deg, #304c89);
+  color: white;
   border: none;
-  padding: 9px 18px;
-  border-radius: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
   cursor: pointer;
-  font-size: 14px;
   font-weight: 600;
   transition: all 0.25s ease;
+  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
+  font-size: 14px;
 }
 
-button:hover {
-  background-color: #155a99;
-  transform: scale(1.03);
+button:hover,
+.save-btn:hover {
+  background: linear-gradient(135deg, #304c89);
+  transform: scale(1.05);
 }
 
-/* === Table === */
+/* ====== TABLE ====== */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -137,7 +128,7 @@ tr:hover td {
   background-color: #eef6ff;
 }
 
-/* === Action Buttons in Table === */
+/* ====== ACTION BUTTONS IN TABLE ====== */
 td button {
   border: none;
   padding: 6px 12px;
@@ -146,30 +137,33 @@ td button {
   cursor: pointer;
   font-size: 13px;
   transition: all 0.25s ease;
+  box-shadow: none;
 }
 
 .edit-btn {
-  background-color: #1e70c1;
+  background: linear-gradient(135deg, #007bff, #00bfff);
   color: white;
   margin-right: 5px;
 }
 
 .edit-btn:hover {
-  background-color: #155a99;
+  background: linear-gradient(135deg, #0056b3, #00aaff);
+  transform: scale(1.05);
 }
 
 .delete-btn {
-  background-color: #ff4d4d;
+  background: linear-gradient(135deg, #ff4d4d, #ff6b6b);
   color: white;
 }
 
 .delete-btn:hover {
-  background-color: #e60000;
+  background: linear-gradient(135deg, #e60000, #ff3333);
+  transform: scale(1.05);
 }
 
-/* === Responsive === */
+/* ====== RESPONSIVE ====== */
 @media (max-width: 768px) {
-  .container {
+  .form-container {
     width: 95%;
     padding: 20px;
   }
@@ -182,7 +176,8 @@ td button {
     padding: 8px;
   }
 
-  button {
+  button,
+  .save-btn {
     padding: 7px 14px;
     font-size: 13px;
   }
