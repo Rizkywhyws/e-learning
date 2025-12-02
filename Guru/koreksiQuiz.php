@@ -9,6 +9,15 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || $_SESSI
 
 $idAkun = $_SESSION['user_id'];
 
+// DEBUG: Cek apakah idAkun terisi
+error_log("DEBUG koreksiQuiz - idAkun: " . $idAkun);
+error_log("DEBUG koreksiQuiz - Role: " . $_SESSION['role']);
+
+// Validasi idAkun tidak boleh kosong
+if (empty($idAkun)) {
+    die("Error: Session user_id tidak ditemukan. Silakan login ulang.");
+}
+
 // Ambil parameter dari URL untuk auto-fill
 $autoMapel = isset($_GET['mapel']) ? $_GET['mapel'] : '';
 $autoKelas = isset($_GET['kelas']) ? $_GET['kelas'] : '';
@@ -128,6 +137,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const autoQuiz = '<?= $autoQuiz ?>';
     const autoLoad = '<?= $autoLoad ?>';
 
+    // DEBUG: Cek idAkun
+    console.log('DEBUG - idAkun:', idAkun);
+    console.log('DEBUG - Auto params:', {autoMapel, autoKelas, autoQuiz, autoLoad});
+
+    // Validasi idAkun
+    if (!idAkun || idAkun === '') {
+        alert('Error: Session tidak valid. Silakan login ulang.');
+        window.location.href = '../Auth/login.php';
+        return;
+    }
+
     // Load Mapel
     loadMapel();
 
@@ -173,10 +193,22 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function loadMapel() {
-        fetch('backend/koreksiQuiz_handler.php?action=getMapel&idAkun=' + idAkun)
-            .then(res => res.json())
+        console.log('DEBUG loadMapel - Fetching with idAkun:', idAkun);
+        
+        fetch(`backend/koreksiQuiz_handler.php?action=getMapel&idAkun=${idAkun}`)
+            .then(res => {
+                console.log('DEBUG loadMapel - Response status:', res.status);
+                return res.json();
+            })
             .then(data => {
+                console.log('DEBUG loadMapel - Response data:', data);
+                
                 if (data.success) {
+                    if (data.data.length === 0) {
+                        alert('Tidak ada mata pelajaran yang Anda ampu. Silakan hubungi admin.');
+                        return;
+                    }
+                    
                     data.data.forEach(item => {
                         const option = document.createElement('option');
                         option.value = item.kodeMapel;
@@ -184,20 +216,38 @@ document.addEventListener('DOMContentLoaded', function() {
                         mapelSelect.appendChild(option);
                     });
                     
+                    console.log('DEBUG loadMapel - Total mapel loaded:', data.data.length);
+                    
                     // Auto-fill jika ada parameter dari URL
                     if (autoMapel && autoLoad === '1') {
                         mapelSelect.value = autoMapel;
                         loadKelas(autoMapel, true);
                     }
+                } else {
+                    console.error('DEBUG loadMapel - Error:', data.message);
+                    alert('Gagal memuat mata pelajaran: ' + data.message);
                 }
+            })
+            .catch(error => {
+                console.error('DEBUG loadMapel - Fetch error:', error);
+                alert('Terjadi kesalahan koneksi saat memuat mata pelajaran');
             });
     }
 
     function loadKelas(kodeMapel, isAutoFill = false) {
-        fetch(backend/koreksiQuiz_handler.php?action=getKelas&idAkun=${idAkun}&kodeMapel=${kodeMapel})
+        console.log('DEBUG loadKelas - kodeMapel:', kodeMapel);
+        
+        fetch(`backend/koreksiQuiz_handler.php?action=getKelas&idAkun=${idAkun}&kodeMapel=${kodeMapel}`)
             .then(res => res.json())
             .then(data => {
+                console.log('DEBUG loadKelas - Response:', data);
+                
                 if (data.success) {
+                    if (data.data.length === 0) {
+                        alert('Tidak ada kelas untuk mata pelajaran ini.');
+                        return;
+                    }
+                    
                     data.data.forEach(item => {
                         const option = document.createElement('option');
                         option.value = item.kelas;
@@ -211,15 +261,30 @@ document.addEventListener('DOMContentLoaded', function() {
                         kelasSelect.value = autoKelas;
                         loadQuiz(kodeMapel, autoKelas, true);
                     }
+                } else {
+                    alert('Gagal memuat kelas: ' + data.message);
                 }
+            })
+            .catch(error => {
+                console.error('DEBUG loadKelas - Fetch error:', error);
+                alert('Terjadi kesalahan koneksi saat memuat kelas');
             });
     }
 
     function loadQuiz(kodeMapel, kelas, isAutoFill = false) {
-        fetch(backend/koreksiQuiz_handler.php?action=getQuiz&kodeMapel=${kodeMapel}&kelas=${kelas})
+        console.log('DEBUG loadQuiz - kodeMapel:', kodeMapel, 'kelas:', kelas);
+        
+        fetch(`backend/koreksiQuiz_handler.php?action=getQuiz&kodeMapel=${kodeMapel}&kelas=${kelas}`)
             .then(res => res.json())
             .then(data => {
+                console.log('DEBUG loadQuiz - Response:', data);
+                
                 if (data.success) {
+                    if (data.data.length === 0) {
+                        alert('Tidak ada quiz esai untuk kelas ini.');
+                        return;
+                    }
+                    
                     data.data.forEach(item => {
                         const option = document.createElement('option');
                         option.value = item.idQuiz;
@@ -238,7 +303,13 @@ document.addEventListener('DOMContentLoaded', function() {
                             loadDataSiswa();
                         }, 300);
                     }
+                } else {
+                    alert('Gagal memuat quiz: ' + data.message);
                 }
+            })
+            .catch(error => {
+                console.error('DEBUG loadQuiz - Fetch error:', error);
+                alert('Terjadi kesalahan koneksi saat memuat quiz');
             });
     }
 
@@ -246,9 +317,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const idQuiz = quizSelect.value;
         const kelas = kelasSelect.value;
 
-        fetch(backend/koreksiQuiz_handler.php?action=getDataSiswa&idQuiz=${idQuiz}&kelas=${kelas})
+        console.log('DEBUG loadDataSiswa - idQuiz:', idQuiz, 'kelas:', kelas);
+
+        fetch(`backend/koreksiQuiz_handler.php?action=getDataSiswa&idQuiz=${idQuiz}&kelas=${kelas}`)
             .then(res => res.json())
             .then(data => {
+                console.log('DEBUG loadDataSiswa - Response:', data);
+                
                 if (data.success) {
                     // Tampilkan deskripsi quiz
                     document.getElementById('deskripsiQuiz').textContent = data.quiz.deskripsi;
@@ -261,6 +336,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     alert(data.message || 'Gagal memuat data');
                 }
+            })
+            .catch(error => {
+                console.error('DEBUG loadDataSiswa - Fetch error:', error);
+                alert('Terjadi kesalahan koneksi saat memuat data siswa');
             });
     }
 
