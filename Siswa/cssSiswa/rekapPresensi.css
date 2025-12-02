@@ -6,11 +6,6 @@ body {
     padding: 20px;
 }
 
-h2 {
-    color: #2256c7;
-    margin-bottom: 20px;
-    font-size: 28px;
-}
 
 /* ====== Table Container ====== */
 .table-container {
@@ -19,6 +14,8 @@ h2 {
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    max-width: 90%;
+    margin: 0 auto;
 }
 
 /* ====== Main Table ====== */
@@ -30,13 +27,14 @@ table {
 }
 
 th, td {
-    padding: 8px 5px;
-    border: 1px solid #ccc;
+    padding: 10px 8px;
+    border: 1px solid #ddd;
 }
 
 th {
     background: #f1f1f1;
     font-weight: 600;
+    color: #333;
 }
 
 /* Hover Row */
@@ -44,12 +42,54 @@ tbody tr:hover {
     background: #f8fbff;
 }
 
-/* ====== STATUS BADGE COLORS ====== */
-.status-H { color: #2ecc71; font-weight: 600; }   /* Hadir */
-.status-A { color: #e74c3c; font-weight: 600; }   /* Alpa */
-.status-S { color: #f1c40f; font-weight: 600; }   /* Sakit */
-.status-I { color: #7f8c8d; font-weight: 600; }   /* Izin */
-.status-none { color: #b5b5b5; }
+/* ====== STATUS BADGE COLORS (Background berwarna LINGKARAN, text hitam) ====== */
+.status-H strong,
+.status-T strong,
+.status-A strong,
+.status-S strong,
+.status-I strong {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    border-radius: 50%;
+    text-align: center;
+    font-weight: 700;
+    color: #000;
+}
+
+.status-H strong { 
+    background: #2ecc71;
+}
+
+.status-T strong { 
+    background: #9a9896;
+}
+
+.status-A strong { 
+    background: #e74c3c;
+}
+
+.status-S strong { 
+    background: #f7e713;
+}
+
+.status-I strong { 
+    background: #6199ed;
+}
+
+.status-none { 
+    color: #b5b5b5 !important;
+    background: transparent !important;
+}
+
+/* ====== Persentase Column ====== */
+.persentase {
+    background: #e8f4fd !important;
+    color: #1976d2;
+    font-weight: 700;
+    font-size: 16px;
+}
 
 /* ====== Legend ====== */
 .legend {
@@ -58,27 +98,34 @@ tbody tr:hover {
     gap: 25px;
     font-size: 15px;
     align-items: center;
-    padding: 10px;
+    padding: 15px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    flex-wrap: wrap;
+    max-width: 90%;
+    margin: 0 auto;
 }
 
 .legend span {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
+    font-weight: 500;
 }
 
 /* Bulatan warna legend */
 .legend span::before {
     content: "";
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
     display: inline-block;
-    border: 1px solid #999;
 }
 
-.legend .h::before { background: #2ecc71; border-color: #2ecc71; }
-.legend .a::before { background: #e74c3c; border-color: #e74c3c; }
-.legend .s::before { background: #f1c40f; border-color: #f1c40f; }
-.legend .i::before { background: #7f8c8d; border-color: #7f8c8d; }
+.legend .h::before { background: #2ecc71; }
+.legend .t::before { background: #9a9896; }
+.legend .a::before { background: #e74c3c; }
+.legend .s::before { background: #f7e713; }
+.legend .i::before { background: #6199ed; }
 .legend .n::before { background: #e0e0e0; }

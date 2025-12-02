@@ -1,5 +1,6 @@
 <?php
 include_once("../config/db.php");
+
 // Cek apakah guru sudah login
 if (!isset($_SESSION['nip']) || $_SESSION['role'] !== 'guru') {
   echo json_encode(["status" => "error", "message" => "Anda harus login sebagai guru!"]);
@@ -122,82 +123,71 @@ $result2 = mysqli_query($conn, $queryKelas);
 while ($row = mysqli_fetch_assoc($result2)) $kelasList[] = $row;
 ?>
 
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<title>Upload Materi</title>
-<link rel="stylesheet" href="CSS/uploudMateri.css">
-</head>
-<body>
-<div class="container">
-    <h2>Upload Materi</h2>
+<link rel="stylesheet" href="CSS/uploudMateri.css?v=<?php echo time(); ?>">
 
-    <form id="materiForm">
-        <div class="form-group">
-            <label>Kelas</label>
-            <select id="kelas">
-                <option value="">-- Pilih Kelas --</option>
-                <?php foreach ($kelasList as $kelas): ?>
-                    <option value="<?= htmlspecialchars($kelas['kelas']) ?>">
-                        <?= htmlspecialchars($kelas['kelas']) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
+<div class="form-container">
+  <h2>Upload Materi</h2>
 
-        <div class="form-group">
-            <label>Mata Pelajaran</label>
-            <select id="mapel">
-                <option value="">-- Pilih Mapel --</option>
-                <?php foreach ($mapelList as $mapel): ?>
-                    <option value="<?= htmlspecialchars($mapel['kodeMapel']) ?>">
-                        <?= htmlspecialchars($mapel['namaMapel']) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
+  <form id="materiForm">
+    
+    <!-- Pilih Mapel -->
+    <label for="mapel">Mata Pelajaran</label>
+    <select id="mapel" required>
+      <option value="">-- Pilih Mata Pelajaran --</option>
+      <?php foreach ($mapelList as $mapel): ?>
+        <option value="<?= htmlspecialchars($mapel['kodeMapel']) ?>">
+          <?= htmlspecialchars($mapel['namaMapel']) ?>
+        </option>
+      <?php endforeach; ?>
+    </select>
 
-        <div class="form-group">
-            <label>Judul Materi</label>
-            <input type="text" id="judul" placeholder="Masukkan judul materi...">
-        </div>
+    <!-- Pilih Kelas -->
+    <label for="kelas">Kelas</label>
+    <select id="kelas" required>
+      <option value="">-- Pilih Kelas --</option>
+      <?php foreach ($kelasList as $kelas): ?>
+        <option value="<?= htmlspecialchars($kelas['kelas']) ?>">
+          <?= htmlspecialchars($kelas['kelas']) ?>
+        </option>
+      <?php endforeach; ?>
+    </select>
 
-        <div class="form-group">
-            <label>Deskripsi</label>
-            <textarea id="deskripsi" placeholder="Tuliskan deskripsi materi..."></textarea>
-        </div>
+    <!-- Judul Materi -->
+    <label for="judul">Judul Materi</label>
+    <input type="text" id="judul" placeholder="Masukkan judul materi..." required>
 
-        <div class="form-group">
-            <label>Link Video</label>
-            <input type="url" id="link_video" placeholder="https://contoh.com/video">
-        </div>
+    <!-- Deskripsi -->
+    <label for="deskripsi">Deskripsi</label>
+    <textarea id="deskripsi" placeholder="Tuliskan deskripsi materi..." required></textarea>
 
-        <div class="form-group">
-            <label>Upload File (PDF)</label>
-            <input type="file" id="file_pdf" accept=".pdf">
-        </div>
+    <!-- Link Video -->
+    <label for="link_video">Link Video</label>
+    <input type="url" id="link_video" placeholder="https://contoh.com/video">
 
-        <div class="button-group">
-            <button type="button" id="addRow">Tambah</button>
-        </div>
+    <!-- Upload File (PDF) -->
+    <label for="file_pdf">Upload File (PDF)</label>
+    <input type="file" id="file_pdf" accept=".pdf">
 
-        <table id="dataTable">
-            <thead>
-                <tr>
-                    <th>Kelas</th>
-                    <th>Mapel</th>
-                    <th>Judul</th>
-                    <th>Deskripsi</th>
-                    <th>Link Video</th>
-                    <th>File PDF</th>
-                    <th>Tanggal</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </form>
+    <div class="button-group">
+      <button type="button" id="addRow" class="save-btn">Tambah</button>
+    </div>
+
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th>Kelas</th>
+          <th>Mapel</th>
+          <th>Judul</th>
+          <th>Deskripsi</th>
+          <th>Link Video</th>
+          <th>File PDF</th>
+          <th>Tanggal</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </form>
 </div>
 
 <script>
@@ -278,8 +268,8 @@ function renderTable() {
             <td>${item.file_pdf}</td>
             <td>${item.created_at}</td>
             <td>
-                <button type="button" onclick="editRow(${index})">Edit</button>
-                <button type="button" onclick="deleteRow(${index})">Hapus</button>
+                <button type="button" class="edit-btn" onclick="editRow(${index})">Edit</button>
+                <button type="button" class="delete-btn" onclick="deleteRow(${index})">Hapus</button>
             </td>
         `;
         tbody.appendChild(row);
@@ -324,5 +314,3 @@ async function deleteRow(index) {
     }
 }
 </script>
-</body>
-</html>
