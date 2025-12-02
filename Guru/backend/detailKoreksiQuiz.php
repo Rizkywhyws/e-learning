@@ -1,5 +1,5 @@
 <?php
-// file e-learningMrt/Guru/detailKoreksiQuiz.php
+// file e-learningMrt/Guru/backend/detailKoreksiQuiz.php
 session_start();
 
 // Proteksi role
@@ -10,8 +10,12 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || $_SESSI
 
 include '../../config/db.php';
 
-$idQuiz = isset($_GET['idQuiz']) ? $_GET['idQuiz'] : '';
-$nis = isset($_GET['nis']) ? $_GET['nis'] : '';
+$idQuiz = isset($_GET['idQuiz']) ? mysqli_real_escape_string($conn, $_GET['idQuiz']) : '';
+$nis = isset($_GET['nis']) ? mysqli_real_escape_string($conn, $_GET['nis']) : '';
+
+// DEBUG
+error_log("=== DEBUG detailKoreksiQuiz ===");
+error_log("idQuiz: $idQuiz, NIS: $nis");
 
 if (empty($idQuiz) || empty($nis)) {
     header('Location: ../pengelolaanPembelajaran.php?page=koreksiQuiz');
@@ -20,52 +24,92 @@ if (empty($idQuiz) || empty($nis)) {
 
 // Ambil data quiz
 $queryQuiz = mysqli_query($conn, "SELECT * FROM quiz WHERE idQuiz = '$idQuiz'");
+
+if (!$queryQuiz || mysqli_num_rows($queryQuiz) == 0) {
+    die("Error: Quiz tidak ditemukan");
+}
+
 $dataQuiz = mysqli_fetch_assoc($queryQuiz);
 
 // Ambil data siswa
 $querySiswa = mysqli_query($conn, "SELECT * FROM datasiswa WHERE NIS = '$nis'");
+
+if (!$querySiswa || mysqli_num_rows($querySiswa) == 0) {
+    die("Error: Siswa tidak ditemukan");
+}
+
 $dataSiswa = mysqli_fetch_assoc($querySiswa);
 
 // Ambil semua soal quiz
 $querySoal = mysqli_query($conn, "SELECT * FROM soalquiz WHERE idQuiz = '$idQuiz' ORDER BY idSoal ASC");
 
+if (!$querySoal) {
+    die("Error: Gagal memuat soal - " . mysqli_error($conn));
+}
+
 // Proses simpan nilai
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_nilai'])) {
+    error_log("=== PROSES SIMPAN NILAI ===");
+    
     $totalNilai = 0;
     $jumlahSoal = 0;
     
     foreach ($_POST['nilai'] as $idSoal => $nilai) {
+        $idSoal = mysqli_real_escape_string($conn, $idSoal);
         $nilai = floatval($nilai);
         $totalNilai += $nilai;
         $jumlahSoal++;
         
+        error_log("Update nilai - idSoal: $idSoal, nilai: $nilai");
+        
         // Update nilai per soal di jawabanquiz
-        mysqli_query($conn, "
+        $updateQuery = "
             UPDATE jawabanquiz 
             SET nilai = '$nilai'
             WHERE idQuiz = '$idQuiz' AND NIS = '$nis' AND idSoal = '$idSoal'
-        ");
+        ";
+        
+        $result = mysqli_query($conn, $updateQuery);
+        
+        if (!$result) {
+            error_log("ERROR Update nilai: " . mysqli_error($conn));
+            die("Error: Gagal menyimpan nilai - " . mysqli_error($conn));
+        }
     }
     
     // Hitung rata-rata nilai
     $nilaiAkhir = $jumlahSoal > 0 ? round($totalNilai / $jumlahSoal, 2) : 0;
     
-    // Update nilai akhir di salah satu record (atau bisa buat tabel terpisah)
-    mysqli_query($conn, "
+    error_log("Nilai Akhir: $nilaiAkhir (Total: $totalNilai, Jumlah Soal: $jumlahSoal)");
+    
+    // Update nilai akhir di salah satu record (atau buat tabel terpisah)
+    $updateFinalQuery = "
         UPDATE jawabanquiz 
         SET nilai = '$nilaiAkhir'
         WHERE idQuiz = '$idQuiz' AND NIS = '$nis'
         LIMIT 1
-    ");
+    ";
+    
+    $resultFinal = mysqli_query($conn, $updateFinalQuery);
+    
+    if (!$resultFinal) {
+        error_log("ERROR Update nilai akhir: " . mysqli_error($conn));
+    }
     
     // Ambil kodeMapel dan kelas dari dataQuiz untuk redirect
     $kodeMapel = $dataQuiz['kodeMapel'];
     $kelas = $dataQuiz['kelas'];
     
+    error_log("Redirect ke: koreksiQuiz dengan params - mapel: $kodeMapel, kelas: $kelas, quiz: $idQuiz");
+    
     // Redirect langsung tanpa alert
-    header("Location: ../pengelolaanPembelajaran.php?page=koreksiQuiz&mapel=$kodeMapel&kelas=$kelas&quiz=$idQuiz&auto=1");
+    header("Location: ../pengelolaanPembelajaran.php?page=koreksiQuiz&mapel=" . urlencode($kodeMapel) . "&kelas=" . urlencode($kelas) . "&quiz=" . urlencode($idQuiz) . "&auto=1");
     exit;
 }
+
+// Simpan kodeMapel dan kelas untuk tombol kembali
+$kodeMapel = $dataQuiz['kodeMapel'];
+$kelas = $dataQuiz['kelas'];
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -131,7 +175,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_nilai'])) {
     </div>
 
     <!-- Form Koreksi -->
-    <form method="POST" class="form-koreksi">
+    <form method="POST" class="form-koreksi" id="formKoreksi">
         <div class="soal-container">
             <?php 
             $no = 1;
@@ -211,17 +255,52 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_nilai'])) {
 </div>
 
 <script>
-// Auto calculate average when nilai changes
 document.addEventListener('DOMContentLoaded', function() {
     const nilaiInputs = document.querySelectorAll('.input-nilai');
+    const form = document.getElementById('formKoreksi');
     
+    // Validasi input nilai
     nilaiInputs.forEach(input => {
         input.addEventListener('input', function() {
-            // Validasi input
             let value = parseFloat(this.value);
             if (value < 0) this.value = 0;
             if (value > 100) this.value = 100;
         });
+    });
+    
+    // Validasi sebelum submit
+    form.addEventListener('submit', function(e) {
+        let allFilled = true;
+        let invalidValues = [];
+        
+        nilaiInputs.forEach(input => {
+            if (input.value === '') {
+                allFilled = false;
+            }
+            
+            let value = parseFloat(input.value);
+            if (value < 0 || value > 100) {
+                invalidValues.push(input.id);
+            }
+        });
+        
+        if (!allFilled) {
+            e.preventDefault();
+            alert('Semua nilai harus diisi!');
+            return false;
+        }
+        
+        if (invalidValues.length > 0) {
+            e.preventDefault();
+            alert('Nilai harus antara 0-100!');
+            return false;
+        }
+        
+        // Konfirmasi sebelum simpan
+        if (!confirm('Apakah Anda yakin ingin menyimpan nilai ini?')) {
+            e.preventDefault();
+            return false;
+        }
     });
 });
 </script>

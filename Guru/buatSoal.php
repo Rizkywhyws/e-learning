@@ -1,6 +1,5 @@
 <?php
 include_once("../config/db.php");
-session_start();
 
 $idQuiz = isset($_GET['idQuiz']) ? $_GET['idQuiz'] : '';
 $type = isset($_GET['type']) ? $_GET['type'] : 'pilihan ganda';
