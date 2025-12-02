@@ -1,0 +1,193 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #b3e5fc, #e3f2fd);
+  margin: 0;
+  padding: 0;
+}
+
+.main-container {
+  display: flex;
+  flex-wrap: wrap;
+  height: 100vh;
+  padding: 15px;
+  box-sizing: border-box;
+}
+
+/* BAGIAN KIRI */
+.left-side {
+  flex: 1;
+  min-width: 350px;
+  background-color: #fff;
+  padding: 30px;
+  margin: 10px;
+  border-radius: 15px;
+  box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  transition: 0.3s;
+}
+
+.left-side:hover {
+  box-shadow: 0px 12px 35px rgba(0, 0, 0, 0.15);
+}
+
+h2 {
+  text-align: center;
+  color: #1a237e;
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  margin-top: 10px;
+  font-weight: 500;
+  color: #283593;
+}
+
+textarea, input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #90caf9;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  background-color: #f5f9ff;
+  font-size: 14px;
+  outline: none;
+  transition: 0.3s;
+}
+
+textarea:focus, input:focus {
+  border-color: #1e88e5;
+  background-color: #fff;
+}
+
+.jawaban-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.check-box {
+  width: 22px;
+  height: 22px;
+  border: 2px solid #f44336;
+  border-radius: 6px;
+  margin-right: 10px;
+  cursor: pointer;
+  position: relative;
+}
+
+.check-box.checked {
+  background-color: #f44336;
+}
+
+.check-box.checked::after {
+  content: "✔";
+  color: white;
+  font-size: 14px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.button-group button {
+  flex: 1;
+  margin: 0 5px;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #42a5f5, #1e88e5);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.button-group button:hover {
+  background: linear-gradient(135deg, #1e88e5, #1565c0);
+}
+
+/* BAGIAN KANAN */
+.right-side {
+  flex: 1;
+  min-width: 350px;
+  background-color: #fff;
+  padding: 30px;
+  margin: 10px;
+  border-radius: 15px;
+  box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+}
+
+.soal-item {
+  background-color: #f8faff;
+  border: 1px solid #c5cae9;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  transition: 0.3s;
+}
+
+.soal-item:hover {
+  background-color: #eef4ff;
+}
+
+.soal-item button {
+  margin-top: 10px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  background: #42a5f5;
+  color: white;
+  transition: 0.3s;
+}
+
+.soal-item button:hover {
+  background: #1e88e5;
+}
+
+.soal-item .hapus {
+  background-color: #f44336;
+  color: white;
+  margin-left: 5px;
+}
+
+.btn-simpan {
+  margin-top: 20px;
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #42a5f5, #1e88e5);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+.btn-simpan:hover {
+  background: linear-gradient(135deg, #1e88e5, #1565c0);
+  transform: translateY(-2px);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #90caf9;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #42a5f5;
+}

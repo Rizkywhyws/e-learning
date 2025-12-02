@@ -1,0 +1,425 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  background: #f4f6fb;
+}
+
+/* HEADER */
+header {
+  padding: 20px;
+  text-align: center;
+}
+.logo {
+  width: 200px;
+}
+
+/* MENU */
+.menu-row {
+  display: flex;
+  gap: 10px;
+  background: #d5ebff;
+  border: 2px solid #2e7dff;
+  padding: 10px 25px;
+  border-radius: 40px;
+  width: fit-content;
+  margin: -20px auto 20px;
+}
+
+.dropdown {
+  position: relative;
+}
+.dropbtn {
+  background: transparent;
+  border: none;
+  color: #2e7dff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.dropbtn:hover {
+  background: rgba(46, 125, 255, 0.15);
+}
+.dropdown-arrow {
+  font-size: 12px;
+}
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background: white;
+  border-radius: 10px;
+  min-width: 160px;
+  margin-top: 8px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+  z-index: 999;
+}
+.dropdown-content a {
+  padding: 12px;
+  display: block;
+  text-decoration: none;
+  color: #333;
+}
+.dropdown-content a:hover {
+  background: #e7f0ff;
+}
+
+/* WELCOME BOX */
+.welcome-box {
+  background: #bcd4ff;
+  padding: 20px 20px 40px 20px;
+  border-radius: 12px;
+  text-align: center;
+  width: 90%;
+  margin: auto;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.welcome-box h2 {
+  font-weight: 700;
+}
+
+/* SEARCH BAR */
+.search-bar {
+  text-align: center;
+  margin: -20px 0;
+}
+.search-bar input {
+  width: 50%;
+  padding: 12px 20px;
+  border-radius: 30px;
+  border: 2px solid #ccc;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.search-bar button {
+  padding: 12px 20px;
+  border-radius: 30px;
+  border: none;
+  background: #2e7dff;
+  color: white;
+  margin-left: 5px;
+}
+
+/* BUAT PRESENSI */
+.presensi-header {
+  font-size: 25px;
+  color: #333;
+  margin-left: 85px;
+  margin-top: 30px;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+.attendance-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  width: 90%;
+  margin: 0 auto 30px;
+}
+.card {
+  flex: 1 1 250px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 30px 20px;
+  text-align: center;
+  border: 3px solid;
+  transition: transform 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+.card:hover { transform: translateY(-3px); }
+.card-x { border-color: #ff998c; }
+.card-xi { border-color: #ffee00; }
+.card-xii { border-color: #44aa44; }
+.card h3 {
+  font-size: 30px;
+  color: #1f3f66;
+  margin-bottom: 25px;
+  font-weight: 700;
+}
+.card button {
+  background: #fff;
+  color: #555;
+  border: 1px solid #ccc;
+  padding: 8px 30px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+.card button:hover {
+  background: #f0f0f0;
+}
+
+/* MODAL */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.4);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modal.show { display: flex; }
+.modal-content {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+  width: 400px;
+  padding: 20px 30px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.modal-header {
+  background: #2e7dff;
+  color: white;
+  padding: 15px;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  text-align: center;
+  margin: -20px -30px 10px;
+}
+.modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+.modal-content label {
+  font-weight: 500;
+  color: #333;
+}
+.modal-content input,
+.modal-content select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+.modal-content input:focus,
+.modal-content select:focus {
+  border-color: #3b4cca;
+}
+.button-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+}
+.btn-primary {
+  background: #3b4cca;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.btn-primary:hover {
+  background: #2d3ba4;
+}
+.btn-secondary {
+  background: #eee;
+  color: #333;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.btn-secondary:hover {
+  background: #ddd;
+}
+
+/* ===== STYLE UNTUK INPUT TOKEN ===== */
+.token-presensi-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.token-presensi-input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid #d4d4d4;
+    border-radius: 8px;
+    font-size: 16px;
+    background: #fff;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+/* ===== BUTTON GENERATE TOKEN ===== */
+.btn-generate-token {
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: #1a75ff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.btn-generate-token:hover {
+    background: #005ce6;
+}
+
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .attendance-cards {
+    flex-direction: column;
+    align-items: center;
+  }
+  .card { width: 80%; }
+}
+
+/* ========== REKAP PRESENSI ========== */
+.rekap-presensi {
+  background: #f4f6fb;
+  width: 90%;
+  margin: 30px auto;
+  padding-bottom: 30px;
+}
+
+/* PERUBAHAN: Hilangkan space-between karena tombol "Terapkan" dihapus */
+.rekap-header {
+  display: flex;
+  justify-content: flex-start; /* Ubah dari space-between */
+  align-items: center;
+  margin-bottom: 15px;
+  gap: 20px; /* Tambahkan jarak antara H3 dan date-picker */
+}
+
+.rekap-header h3 {
+  font-size: 25px;
+  font-weight: 600;
+  color: #333;
+}
+
+.date-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.date-picker label {
+  font-weight: 500;
+  color: #555;
+}
+
+.date-picker input[type="date"] {
+  padding: 8px 12px;
+  border: 2px solid #d0d7ff;
+  border-radius: 8px;
+  background: #fff;
+  color: #333;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.date-picker input[type="date"]:hover {
+  border-color: #2e7dff;
+}
+
+/* Hapus .btn-filter karena sudah tidak digunakan */
+
+/* SECTION PER KELAS */
+.kelas-section {
+  margin-bottom: 30px;
+}
+
+/* PERUBAHAN: Mengatur agar judul kelas dan filter golongan berdampingan */
+.kelas-header {
+  display: flex;
+  justify-content: space-between; /* Kembali ke space-between untuk judul dan filter golongan */
+  align-items: center;
+  background: #dbe7ff;
+  padding: 12px 15px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.kelas-header h3 {
+  margin: 0;
+  font-weight: 600;
+  color: #333;
+  font-size: 18px;
+}
+
+/* FILTER GOLONGAN */
+.golongan-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.golongan-filter label {
+  font-weight: 500;
+  color: #555;
+  font-size: 14px;
+}
+
+.golongan-filter select {
+  padding: 8px 12px;
+  border: 2px solid #d0d7ff;
+  border-radius: 8px;
+  background: #fff;
+  color: #333;
+  font-weight: 500;
+  cursor: pointer;
+  min-width: 180px;
+}
+
+.golongan-filter select:hover {
+  border-color: #2e7dff;
+}
+
+.golongan-filter select:focus {
+  outline: none;
+  border-color: #2e7dff;
+  box-shadow: 0 0 0 3px rgba(46, 125, 255, 0.1);
+}
+
+/* TABEL REKAP */
+.rekap-tabel table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.rekap-tabel th {
+  background: #dbe7ff;
+  color: #333;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #c5d7ff;
+}
+
+.rekap-tabel td {
+  text-align: center;
+  padding: 8px;
+  border: 1px solid #e0e6f8;
+  font-size: 14px;
+}
+
+.rekap-tabel tr:nth-child(even) {
+  background: #f9fbff;
+}
+
+html {
+  scroll-behavior: smooth;
+}

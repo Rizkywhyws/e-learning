@@ -1,0 +1,556 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+body, * {
+    font-family: "Poppins", sans-serif;
+}
+
+/* ===== FORM CONTAINER ===== */
+.form-container {
+    width: 80%;
+    max-width: 700px;
+    margin: 10px auto 40px;
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 30px 40px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    font-family: "Poppins", sans-serif;
+    text-align: left;
+    transition: 0.3s ease;
+}
+
+.form-container:hover {
+    transform: translateY(-3px);
+}
+
+/* ===== LABEL ===== */
+label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #3a3a3a;
+}
+
+/* ===== INPUT & SELECT ===== */
+select,
+input[type="text"],
+input[type="date"],
+textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: 10px;
+    border: 1.5px solid #cfd8e3;
+    font-size: 15px;
+    color: #333;
+    background-color: #f9fbff;
+    transition: all 0.3s ease;
+    margin-bottom: 18px;
+}
+
+select:hover,
+input:hover,
+textarea:hover {
+    border-color: #7a9dfb;
+}
+
+select:focus,
+input:focus,
+textarea:focus {
+    border-color: #4c6ef5;
+    background-color: #fff;
+    box-shadow: 0 0 5px rgba(76, 110, 245, 0.2);
+    outline: none;
+}
+
+/* ===== TEXTAREA ===== */
+textarea {
+    resize: none;
+    height: 120px;
+}
+
+/* ===== UPLOAD BOX ===== */
+.upload-box {
+    background: #f3f6ff;
+    border: 2px dashed #a3baff;
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    transition: 0.3s ease;
+}
+
+.upload-box:hover {
+    background-color: #eaf0ff;
+}
+
+.upload-box input[type="file"] {
+    display: none;
+}
+
+.upload-box label {
+    font-weight: 500;
+    color: #304c89;
+    cursor: pointer;
+    font-size: 15px;
+    transition: color 0.3s;
+}
+
+.upload-box label:hover {
+    color: #1c3478;
+}
+
+.upload-box::before {
+    content: "📁";
+    display: block;
+    font-size: 35px;
+    margin-bottom: 10px;
+}
+
+/* ===== BUTTON ===== */
+.save-btn {
+    width: 100%;
+    background-color: #4c6ef5;
+    color: #fff;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+}
+
+.save-btn:hover {
+    background-color: #3b5bdb;
+    box-shadow: 0 4px 10px rgba(60, 90, 255, 0.3);
+}
+
+/* ===== CUSTOM DROPDOWN (SELECT) ===== */
+select {
+    font-family: "Poppins", sans-serif;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background: #f9fbff url("data:image/svg+xml;utf8,<svg fill='%234c6ef5' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>") no-repeat right 12px center;
+    background-size: 18px;
+    padding-right: 40px;
+    cursor: pointer;
+}
+
+/* Saat fokus */
+select:focus {
+    background-color: #fff;
+    border-color: #4c6ef5;
+    box-shadow: 0 0 5px rgba(76, 110, 245, 0.25);
+}
+
+/* Saat hover */
+select:hover {
+    background-color: #f1f4ff;
+}
+
+/* ===== Gaya untuk opsi di dalam dropdown ===== */
+select option {
+    background-color: #fff;
+    color: #333;
+    padding: 10px;
+}
+
+/* Styling khusus untuk opsi "Jadikan Tugas Sebagai Materi Baru" */
+select#materi option[value="new"] {
+    background: linear-gradient(135deg, #e7f0ff 0%, #dbe4ff 100%);
+    color: #4c6ef5;
+    font-weight: 600;
+    border-top: 2px solid #a3baff;
+    border-bottom: 2px solid #a3baff;
+    padding: 12px 10px;
+}
+
+/* Untuk browser yang mendukung styling <option> */
+select option:hover {
+    background-color: #e9efff;
+}
+
+/* ===== Tampilan disabled option (placeholder) ===== */
+select option[value=""] {
+    color: #9ca3af;
+}
+
+/* ===== Tampilan dropdown jika disabled ===== */
+select:disabled {
+    background-color: #f1f1f1;
+    color: #999;
+    cursor: not-allowed;
+}
+
+/* ===== Styling khusus dropdown materi ===== */
+#materi {
+    background: linear-gradient(135deg, #f9fbff 0%, #f0f4ff 100%);
+    border: 2px solid #b8c9fb;
+    font-weight: 500;
+}
+
+#materi:focus {
+    background: linear-gradient(135deg, #ffffff 0%, #f5f8ff 100%);
+    border-color: #6b8aff;
+    box-shadow: 0 0 8px rgba(76, 110, 245, 0.3);
+}
+
+#materi:hover {
+    background: linear-gradient(135deg, #f5f8ff 0%, #eaf0ff 100%);
+    border-color: #7a9dfb;
+}
+
+/* ===== DAFTAR TUGAS TABLE STYLING ===== */
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.koreksi-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 12px;
+    overflow: hidden;
+    background-color: #ffffff;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    font-family: "Poppins", sans-serif;
+}
+
+.koreksi-table thead {
+    background-color: #4c6ef5;
+    color: #fff;
+}
+
+.koreksi-table th, 
+.koreksi-table td {
+    padding: 14px 18px;
+    text-align: left;
+    border-bottom: 1px solid #e5e9f2;
+    font-size: 15px;
+}
+
+.koreksi-table th {
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+.koreksi-table tbody tr:nth-child(even) {
+    background-color: #f8faff;
+}
+
+.koreksi-table tbody tr:hover {
+    background-color: #edf2ff;
+    transition: 0.2s ease;
+    cursor: pointer;
+}
+
+/* ===== ACTION BUTTONS ===== */
+.edit-btn,
+.delete-btn {
+    padding: 10px 18px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 0.4px;
+    margin-right: 10px;
+}
+
+/* tombol edit */
+.edit-btn {
+    background-color: #4c6ef5;
+    color: #fff;
+}
+.edit-btn:hover {
+    background-color: #3b5bdb;
+    box-shadow: 0 4px 10px rgba(60, 90, 255, 0.25);
+}
+
+/* tombol hapus */
+.delete-btn {
+    background-color: #f05a5a;
+    color: #fff;
+}
+.delete-btn:hover {
+    background-color: #f04747;
+    box-shadow: 0 4px 10px rgba(255, 100, 100, 0.25);
+}
+
+/* ===== SECTION WRAPPER ===== */
+.wide-section {
+    width: 90%;
+    max-width: 1200px;
+    margin: 60px auto;
+    background-color: #ffffff;
+    border-radius: 20px;
+    padding: 30px 40px 50px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
+    font-family: "Poppins", sans-serif;
+}
+
+.wide-section h3 {
+    color: #304c89;
+    font-weight: 600;
+    border-left: 5px solid #4c6ef5;
+    padding-left: 10px;
+    margin-bottom: 25px;
+}
+
+.selected-row {
+    background-color: #dbe4ff !important;
+    box-shadow: inset 0 0 0 2px #4c6ef5;
+    transition: 0.2s;
+}
+
+/* ===== MODAL STYLING ===== */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+    }
+    to { 
+        opacity: 1; 
+    }
+}
+
+.modal-content {
+    background-color: #ffffff;
+    margin: 3% auto;
+    padding: 35px 45px;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 650px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+    animation: slideDown 0.4s ease;
+    position: relative;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-content h2 {
+    color: #304c89;
+    margin-bottom: 25px;
+    margin-top: 0;
+    font-size: 24px;
+    border-bottom: 3px solid #4c6ef5;
+    padding-bottom: 12px;
+    font-weight: 600;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 32px;
+    font-weight: bold;
+    line-height: 20px;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-top: -10px;
+    margin-right: -10px;
+}
+
+.close:hover,
+.close:focus {
+    color: #f05a5a;
+    transform: rotate(90deg);
+}
+
+/* Modal form styling sama seperti form utama */
+#editForm label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #3a3a3a;
+}
+
+#editForm select,
+#editForm input[type="text"],
+#editForm input[type="date"],
+#editForm textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: 10px;
+    border: 1.5px solid #cfd8e3;
+    font-size: 15px;
+    color: #333;
+    background-color: #f9fbff;
+    transition: all 0.3s ease;
+    margin-bottom: 18px;
+    box-sizing: border-box;
+}
+
+#editForm select:hover,
+#editForm input:hover,
+#editForm textarea:hover {
+    border-color: #7a9dfb;
+}
+
+#editForm select:focus,
+#editForm input:focus,
+#editForm textarea:focus {
+    border-color: #4c6ef5;
+    background-color: #fff;
+    box-shadow: 0 0 5px rgba(76, 110, 245, 0.2);
+    outline: none;
+}
+
+#editForm textarea {
+    resize: none;
+    height: 120px;
+}
+
+#editForm input[readonly] {
+    background-color: #f0f0f0;
+    cursor: not-allowed;
+    color: #666;
+}
+
+/* ===== DATETIME-LOCAL INPUT STYLING ===== */
+input[type="datetime-local"] {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: 10px;
+    border: 1.5px solid #cfd8e3;
+    font-size: 15px;
+    color: #333;
+    background-color: #f9fbff;
+    transition: all 0.3s ease;
+    margin-bottom: 18px;
+    font-family: "Poppins", sans-serif;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+/* Saat hover */
+input[type="datetime-local"]:hover {
+    border-color: #7a9dfb;
+    background-color: #f1f4ff;
+}
+
+/* Saat fokus */
+input[type="datetime-local"]:focus {
+    border-color: #4c6ef5;
+    background-color: #fff;
+    box-shadow: 0 0 5px rgba(76, 110, 245, 0.25);
+    outline: none;
+}
+
+/* ===== Styling untuk calendar picker icon ===== */
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    background: url("data:image/svg+xml;utf8,<svg fill='%234c6ef5' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z'/><path d='M12 11c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z'/></svg>") no-repeat center;
+    background-size: 20px;
+    width: 28px;
+    height: 28px;
+    opacity: 0.8;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    padding: 4px;
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+    background-color: #e7f0ff;
+}
+
+/* Styling untuk input di dalam modal */
+#editForm input[type="datetime-local"] {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: 10px;
+    border: 1.5px solid #cfd8e3;
+    font-size: 15px;
+    color: #333;
+    background-color: #f9fbff;
+    transition: all 0.3s ease;
+    margin-bottom: 18px;
+    font-family: "Poppins", sans-serif;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .form-container {
+        width: 95%;
+        padding: 25px;
+    }
+
+    select,
+    input,
+    textarea {
+        font-size: 14px;
+    }
+    
+    .modal-content {
+        width: 95%;
+        padding: 25px 30px;
+        margin: 10% auto;
+    }
+
+    .modal-content h2 {
+        font-size: 20px;
+    }
+
+    .wide-section {
+        width: 95%;
+        padding: 20px 25px 35px;
+    }
+
+    .koreksi-table th, 
+    .koreksi-table td {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+
+    .edit-btn,
+    .delete-btn {
+        padding: 8px 14px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-content {
+        width: 98%;
+        padding: 20px 25px;
+        margin: 5% auto;
+    }
+
+    .close {
+        font-size: 28px;
+    }
+
+    #editForm select,
+    #editForm input,
+    #editForm textarea {
+        font-size: 14px;
+        padding: 10px 12px;
+    }
+}

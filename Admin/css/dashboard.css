@@ -1,0 +1,298 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  background-color: #f1f5fc;
+  color: #333;
+}
+
+/* ===================================
+   ✅ STICKY HEADER
+====================================*/
+.sticky-header {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  background-color: #f1f5fc !important;
+  z-index: 9999 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ===================================
+   HEADER
+====================================*/
+header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 15px 40px;
+  background-color: #f1f5fc;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo img {
+  width: 185px;
+  height: 80px;
+}
+
+/* ===================================
+   MENU ROW
+====================================*/
+.menu-row {
+  display: flex;
+  gap: 10px;
+  padding: 10px 20px;
+  background: #d5ebff;
+  border: 2px solid #2e7dff;
+  border-radius: 40px;
+  margin: 0 auto 10px;
+  justify-content: center;
+  align-items: center;
+  width: fit-content;
+}
+
+/* ===================================
+   DROPDOWN
+====================================*/
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropbtn {
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2e7dff;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dropbtn:hover {
+  background: rgba(46, 125, 255, 0.1);
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #ffffff;
+  min-width: 180px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  margin-top: 8px;
+  overflow: hidden;
+  z-index: 10000;
+}
+
+.dropdown-content a {
+  padding: 12px 14px;
+  text-decoration: none;
+  color: #333;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.dropdown-content a:hover {
+  background-color: #e8f0ff;
+}
+
+/* ===================================
+   MAIN
+====================================*/
+main {
+  padding-top: 180px !important;
+}
+
+/* ===================================
+   WELCOME BOX
+====================================*/
+.welcome-box {
+  background-color: #b5ccff;
+  text-align: center;
+  padding: 40px 20px;      /* FIXED */
+  border-radius: 20px;     /* FIXED */
+  margin: 20px auto 10px;
+  width: 90%;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.299);
+}
+
+.welcome-box h2 {
+  color: #000000;
+  font-size: 30px;
+  font-weight: 700;
+  margin-top: -9px;
+}
+
+.welcome-box p {
+  color: #000000;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* ===================================
+   SEARCH BAR
+====================================*/
+.search-bar {
+  text-align: center;
+  margin-bottom: 20px;
+  margin-top: -28px;
+}
+
+.search-bar input {
+  width: 60%;
+  padding: 14px 20px;
+  border-radius: 25px;
+  border: 2px solid #000000;
+  outline: none;
+  transition: 0.3s;
+}
+
+.search-bar input:focus {
+  border-color: #2e7dff;
+}
+
+.search-bar button {
+  background: #2e7dff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 25px;
+  cursor: pointer;
+  color: white;
+  margin-left: 5px;
+}
+
+/* ===================================
+   DASHBOARD
+====================================*/
+.dashboard {
+  width: 80%;
+  margin: auto;
+}
+
+.dashboard h3 {
+  font-size: 40px;
+  font-weight: 700;
+  margin-top: 50px;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+/* ===================================
+   CARD
+====================================*/
+.card-container {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.card {
+  width: 340px;
+  background: #fff;
+  border-radius: 12px;
+  text-align: center;
+  padding: 60px 90px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+  transition: 0.2s;
+  margin-bottom: 90px;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.card h4 {
+  font-size: 26px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.card p {
+  font-size: 25px;
+  font-weight: 700;
+}
+
+/* ===================================
+   CARD COLORS
+====================================*/
+.card.guru { border: 6px solid #ff7b7b; }
+.card.siswa { border: 6px solid #ffd84c; }
+.card.mapel { border: 6px solid #66d977; }
+.card.jadwal { border: 6px solid #4db6ff; }
+
+/* ===================================
+   DATA SECTION
+====================================*/
+.data-section {
+  padding-top: 20px;
+  padding-bottom: 50px;
+}
+
+/* ===================================
+   TABLES
+====================================*/
+.table-container {
+  width: 90%;
+  margin: 15px auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #f5f9ff;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 3px solid #2e7dff;
+}
+
+.data-table thead {
+  background: #bcd4ff;
+}
+
+.data-table th,
+.data-table td {
+  padding: 14px;
+  text-align: center;
+  border-right: 2px solid #c4d6f6;
+  border-bottom: 2px solid #c4d6f6;
+}
+
+/* Hide last border */
+.data-table th:last-child,
+.data-table td:last-child {
+  border-right: none;
+}
+
+/* ===================================
+   UTILITY
+====================================*/
+.hidden {
+  display: none !important;
+}
