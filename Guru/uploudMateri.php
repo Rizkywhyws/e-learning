@@ -1,10 +1,15 @@
 <?php
+// Periksa status session sebelum memulainya
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
 include_once("../config/db.php");
 
 // Cek apakah guru sudah login
 if (!isset($_SESSION['nip']) || $_SESSION['role'] !== 'guru') {
-  echo json_encode(["status" => "error", "message" => "Anda harus login sebagai guru!"]);
-  exit;
+    echo json_encode(["status" => "error", "message" => "Anda harus login sebagai guru!"]);
+    exit;
 }
 
 $nipGuru = $_SESSION['nip']; // Ambil NIP dari session
@@ -18,27 +23,88 @@ function generateIdMateri($conn) {
     return $id;
 }
 
+// === PROSES UPLOAD FILE ===
+function uploadFile($file) {
+    // Folder tujuan upload (sejajar dengan folder Guru/)
+    $targetDir = "../uploads/";
+    
+    // Buat folder jika belum ada
+    if (!is_dir($targetDir)) {
+        mkdir($targetDir, 0755, true);
+    }
+    
+    // Cek apakah ada file yang diupload
+    if (!isset($file) || $file['error'] == UPLOAD_ERR_NO_FILE) {
+        return null; // Tidak ada file
+    }
+    
+    // Validasi error upload
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        return ["status" => "error", "message" => "Error saat upload file"];
+    }
+    
+    // Validasi tipe file (hanya PDF)
+    $fileType = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    if ($fileType != "pdf") {
+        return ["status" => "error", "message" => "Hanya file PDF yang diperbolehkan"];
+    }
+    
+    // Validasi ukuran file (max 10MB)
+    if ($file['size'] > 10 * 1024 * 1024) {
+        return ["status" => "error", "message" => "Ukuran file maksimal 10MB"];
+    }
+    
+    // Generate nama file unik
+    $fileName = uniqid() . '_' . basename($file['name']);
+    $targetFile = $targetDir . $fileName;
+    
+    // Pindahkan file ke folder tujuan
+    if (move_uploaded_file($file['tmp_name'], $targetFile)) {
+        // Return path relatif untuk database (dari folder e-learning)
+        return "uploads/" . $fileName;
+    } else {
+        return ["status" => "error", "message" => "Gagal memindahkan file"];
+    }
+}
+
 // === PROSES REQUEST ===
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
-    $data = json_decode($_POST['data_json'] ?? '[]', true);
 
     // --- TAMBAH DATA ---
     if ($action === 'add') {
         $idmateri = generateIdMateri($conn);
-        $kodeMapel = mysqli_real_escape_string($conn, $data['kodeMapel']);
-        $judul = mysqli_real_escape_string($conn, $data['judul']);
-        $deskripsi = mysqli_real_escape_string($conn, $data['deskripsi']);
-        $filePath = mysqli_real_escape_string($conn, $data['file_pdf']);
-        $linkVideo = mysqli_real_escape_string($conn, $data['link_video']);
+        $kodeMapel = mysqli_real_escape_string($conn, $_POST['kodeMapel']);
+        $judul = mysqli_real_escape_string($conn, $_POST['judul']);
+        $deskripsi = mysqli_real_escape_string($conn, $_POST['deskripsi']);
+        $linkVideo = mysqli_real_escape_string($conn, $_POST['link_video']);
         $createdAt = date('Y-m-d H:i:s');
+        
+        // Upload file PDF
+        $filePath = null;
+        if (isset($_FILES['file_pdf'])) {
+            $uploadResult = uploadFile($_FILES['file_pdf']);
+            
+            if (is_array($uploadResult) && isset($uploadResult['status']) && $uploadResult['status'] == 'error') {
+                echo json_encode($uploadResult);
+                exit;
+            }
+            $filePath = $uploadResult;
+        }
 
-        // Gunakan NIP dari session, bukan dari form
+        // Insert ke database
         $sql = "INSERT INTO materi (idmateri, kodeMapel, NIP, judul, deskripsi, filePath, linkVideo, createdAt)
-                VALUES ('$idmateri', '$kodeMapel', '$nipGuru', '$judul', '$deskripsi', '$filePath', '$linkVideo', '$createdAt')";
+                VALUES ('$idmateri', '$kodeMapel', '$nipGuru', '$judul', '$deskripsi', " . 
+                ($filePath ? "'$filePath'" : "NULL") . ", " . 
+                ($linkVideo ? "'$linkVideo'" : "NULL") . ", '$createdAt')";
 
         if (mysqli_query($conn, $sql)) {
-            echo json_encode(["status" => "success", "idmateri" => $idmateri]);
+            echo json_encode([
+                "status" => "success", 
+                "idmateri" => $idmateri,
+                "filePath" => $filePath,
+                "createdAt" => $createdAt
+            ]);
         } else {
             echo json_encode(["status" => "error", "message" => mysqli_error($conn)]);
         }
@@ -47,21 +113,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // --- UPDATE DATA ---
     if ($action === 'update') {
-        $idmateri = mysqli_real_escape_string($conn, $data['idmateri']);
-        $kodeMapel = mysqli_real_escape_string($conn, $data['kodeMapel']);
-        $judul = mysqli_real_escape_string($conn, $data['judul']);
-        $deskripsi = mysqli_real_escape_string($conn, $data['deskripsi']);
-        $filePath = mysqli_real_escape_string($conn, $data['file_pdf']);
-        $linkVideo = mysqli_real_escape_string($conn, $data['link_video']);
+        $idmateri = mysqli_real_escape_string($conn, $_POST['idmateri']);
+        $kodeMapel = mysqli_real_escape_string($conn, $_POST['kodeMapel']);
+        $judul = mysqli_real_escape_string($conn, $_POST['judul']);
+        $deskripsi = mysqli_real_escape_string($conn, $_POST['deskripsi']);
+        $linkVideo = mysqli_real_escape_string($conn, $_POST['link_video']);
+        
+        // Ambil data lama untuk cek file lama
+        $oldData = mysqli_query($conn, "SELECT filePath FROM materi WHERE idmateri='$idmateri' AND NIP='$nipGuru'");
+        $oldRow = mysqli_fetch_assoc($oldData);
+        $filePath = $oldRow['filePath'];
+        
+        // Upload file baru jika ada
+        if (isset($_FILES['file_pdf']) && $_FILES['file_pdf']['error'] != UPLOAD_ERR_NO_FILE) {
+            $uploadResult = uploadFile($_FILES['file_pdf']);
+            
+            if (is_array($uploadResult) && isset($uploadResult['status']) && $uploadResult['status'] == 'error') {
+                echo json_encode($uploadResult);
+                exit;
+            }
+            
+            // Hapus file lama jika ada
+            if ($filePath && file_exists("../" . $filePath)) {
+                unlink("../" . $filePath);
+            }
+            
+            $filePath = $uploadResult;
+        }
 
-        // Gunakan NIP dari session
+        // Update database
         $sql = "UPDATE materi 
                 SET kodeMapel='$kodeMapel', NIP='$nipGuru', judul='$judul', deskripsi='$deskripsi',
-                    filePath='$filePath', linkVideo='$linkVideo'
+                    filePath=" . ($filePath ? "'$filePath'" : "NULL") . ",
+                    linkVideo=" . ($linkVideo ? "'$linkVideo'" : "NULL") . "
                 WHERE idmateri='$idmateri' AND NIP='$nipGuru'";
 
         if (mysqli_query($conn, $sql)) {
-            echo json_encode(["status" => "success"]);
+            echo json_encode(["status" => "success", "filePath" => $filePath]);
         } else {
             echo json_encode(["status" => "error", "message" => mysqli_error($conn)]);
         }
@@ -72,15 +160,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'delete') {
         $idmateri = mysqli_real_escape_string($conn, $_POST['idmateri']);
 
-        // cek apakah materi digunakan di tabel tugas
+        // Ambil data file
+        $getData = mysqli_query($conn, "SELECT filePath FROM materi WHERE idmateri='$idmateri' AND NIP='$nipGuru'");
+        $dataRow = mysqli_fetch_assoc($getData);
+        
+        // Cek apakah materi digunakan di tabel tugas
         $cek = mysqli_query($conn, "SELECT idTugas FROM tugas WHERE idMateri = '$idmateri'");
 
         if (mysqli_num_rows($cek) > 0) {
-            // kalau dipakai → TIDAK BOLEH HAPUS ROW
-            // hanya hapus filePath dan linkVideo
+            // Hapus file fisik
+            if ($dataRow['filePath'] && file_exists("../" . $dataRow['filePath'])) {
+                unlink("../" . $dataRow['filePath']);
+            }
+            
+            // Update: set NULL untuk filePath dan linkVideo
             $sql = "UPDATE materi
                     SET filePath = NULL, linkVideo = NULL
-                    WHERE idMateri = '$idmateri' AND NIP='$nipGuru'";
+                    WHERE idmateri = '$idmateri' AND NIP='$nipGuru'";
 
             if (mysqli_query($conn, $sql)) {
                 echo json_encode([
@@ -91,8 +187,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 echo json_encode(["status" => "error", "message" => mysqli_error($conn)]);
             }
         } else {
-            // tidak dipakai tugas → boleh delete row
-            $sql = "DELETE FROM materi WHERE idMateri='$idmateri' AND NIP='$nipGuru'";
+            // Hapus file fisik
+            if ($dataRow['filePath'] && file_exists("../" . $dataRow['filePath'])) {
+                unlink("../" . $dataRow['filePath']);
+            }
+            
+            // Delete row
+            $sql = "DELETE FROM materi WHERE idmateri='$idmateri' AND NIP='$nipGuru'";
             if (mysqli_query($conn, $sql)) {
                 echo json_encode(["status" => "success"]);
             } else {
@@ -101,6 +202,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         exit;
     }
+}
+
+// === LOAD DATA EXISTING ===
+if (isset($_GET['load_data'])) {
+    $query = "SELECT m.idmateri, m.kodeMapel, m.judul, m.deskripsi, m.filePath, m.linkVideo, m.createdAt,
+                     mp.namaMapel, jm.kelas
+              FROM materi m
+              JOIN mapel mp ON m.kodeMapel = mp.kodeMapel
+              JOIN jadwalmapel jm ON m.kodeMapel = jm.kodeMapel AND m.NIP = jm.nipGuru
+              WHERE m.NIP = '$nipGuru'
+              GROUP BY m.idmateri
+              ORDER BY m.createdAt DESC";
+    
+    $result = mysqli_query($conn, $query);
+    $data = [];
+    while ($row = mysqli_fetch_assoc($result)) {
+        $data[] = $row;
+    }
+    echo json_encode($data);
+    exit;
 }
 
 // Ambil mapel dan kelas yang diampu guru ini dari jadwalmapel
@@ -170,29 +291,62 @@ while ($row = mysqli_fetch_assoc($result2)) $kelasList[] = $row;
 
     <div class="button-group">
       <button type="button" id="addRow" class="save-btn">Tambah</button>
+      <button type="button" id="cancelEdit" class="cancel-btn" style="display:none;">Batal</button>
     </div>
-
-    <table id="dataTable">
-      <thead>
-        <tr>
-          <th>Kelas</th>
-          <th>Mapel</th>
-          <th>Judul</th>
-          <th>Deskripsi</th>
-          <th>Link Video</th>
-          <th>File PDF</th>
-          <th>Tanggal</th>
-          <th>Aksi</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
   </form>
+
+  <!-- Tabel ditampilkan hanya jika ada data -->
+  <table id="dataTable" style="display: none;">
+    <thead>
+      <tr>
+        <th>Kelas</th>
+        <th>Mapel</th>
+        <th>Judul</th>
+        <th>Deskripsi</th>
+        <th>Link Video</th>
+        <th>File PDF</th>
+        <th>Tanggal</th>
+        <th>Aksi</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 </div>
 
 <script>
-let dataList = [];
+let dataList = []; // Hanya untuk data yang baru ditambah di session ini
 let editIndex = -1;
+
+// JANGAN load data saat halaman pertama kali dibuka
+// Tabel hanya muncul setelah guru menambah materi baru
+window.addEventListener('DOMContentLoaded', () => {
+    // Kosongkan - tidak perlu load data existing
+});
+
+// Fungsi untuk load data yang sudah ada
+async function loadExistingData() {
+    try {
+        let res = await fetch("uploudMateri.php?load_data=1&t=" + Date.now());
+        let data = await res.json();
+        
+        dataList = data.map(item => ({
+            idmateri: item.idmateri,
+            kelas: item.kelas,
+            kodeMapel: item.kodeMapel,
+            namaMapel: item.namaMapel,
+            judul: item.judul,
+            deskripsi: item.deskripsi,
+            link_video: item.linkVideo || '',
+            file_pdf: item.filePath || '',
+            created_at: item.createdAt
+        }));
+        
+        renderTable();
+    } catch (error) {
+        console.error("Error loading data:", error);
+        // Jangan tampilkan tabel jika belum ada data
+    }
+}
 
 document.getElementById("addRow").addEventListener("click", async function() {
     let kelas = document.getElementById("kelas").value;
@@ -202,71 +356,146 @@ document.getElementById("addRow").addEventListener("click", async function() {
     let judul = document.getElementById("judul").value;
     let deskripsi = document.getElementById("deskripsi").value;
     let link = document.getElementById("link_video").value;
-    let file = document.getElementById("file_pdf").files[0]?.name || "";
-    let tanggal = new Date().toLocaleString();
+    let fileInput = document.getElementById("file_pdf");
+    let file = fileInput.files[0];
 
     if (!kelas || !kodeMapel || !judul || !deskripsi) {
-        alert("Lengkapi semua field terlebih dahulu!");
+        alert("Lengkapi field Kelas, Mapel, Judul, dan Deskripsi terlebih dahulu!");
         return;
     }
 
-    let newData = { kelas, kodeMapel, namaMapel, judul, deskripsi, link_video: link, file_pdf: file, created_at: tanggal };
-
+    // Buat FormData untuk kirim file
+    let formData = new FormData();
+    
     // === TAMBAH ===
     if (editIndex === -1) {
-        let formData = new FormData();
         formData.append("action", "add");
-        formData.append("data_json", JSON.stringify(newData));
-        let res = await fetch("uploudMateri.php?t=" + Date.now(), { method: "POST", body: formData });
+        formData.append("kodeMapel", kodeMapel);
+        formData.append("judul", judul);
+        formData.append("deskripsi", deskripsi);
+        formData.append("link_video", link);
+        
+        if (file) {
+            formData.append("file_pdf", file);
+        }
+        
+        let res = await fetch("uploudMateri.php?t=" + Date.now(), { 
+            method: "POST", 
+            body: formData 
+        });
         let result = await res.json();
 
         if (result.status === "success") {
-            newData.idmateri = result.idmateri;
-            dataList.push(newData);
+            let newData = {
+                idmateri: result.idmateri,
+                kelas: kelas,
+                kodeMapel: kodeMapel,
+                namaMapel: namaMapel,
+                judul: judul,
+                deskripsi: deskripsi,
+                link_video: link,
+                file_pdf: result.filePath || '',
+                created_at: result.createdAt
+            };
+            
+            dataList.unshift(newData); // Tambahkan di awal array
             renderTable();
             document.getElementById("materiForm").reset();
-            alert("Data berhasil disimpan (ID: " + result.idmateri + ")");
+            alert("Data berhasil disimpan!");
         } else {
             alert("Gagal menambah data: " + result.message);
         }
     } else {
         // === UPDATE ===
         let item = dataList[editIndex];
-        newData.idmateri = item.idmateri;
-
-        let formData = new FormData();
+        
         formData.append("action", "update");
-        formData.append("data_json", JSON.stringify(newData));
+        formData.append("idmateri", item.idmateri);
+        formData.append("kodeMapel", kodeMapel);
+        formData.append("judul", judul);
+        formData.append("deskripsi", deskripsi);
+        formData.append("link_video", link);
+        
+        if (file) {
+            formData.append("file_pdf", file);
+        }
 
-        let res = await fetch("uploudMateri.php?t=" + Date.now(), { method: "POST", body: formData });
+        let res = await fetch("uploudMateri.php?t=" + Date.now(), { 
+            method: "POST", 
+            body: formData 
+        });
         let result = await res.json();
 
         if (result.status === "success") {
-            dataList[editIndex] = newData;
+            dataList[editIndex].kelas = kelas;
+            dataList[editIndex].kodeMapel = kodeMapel;
+            dataList[editIndex].namaMapel = namaMapel;
+            dataList[editIndex].judul = judul;
+            dataList[editIndex].deskripsi = deskripsi;
+            dataList[editIndex].link_video = link;
+            
+            if (result.filePath) {
+                dataList[editIndex].file_pdf = result.filePath;
+            }
+            
             editIndex = -1;
             renderTable();
             document.getElementById("materiForm").reset();
             document.getElementById("addRow").textContent = "Tambah";
-            alert("Data berhasil diupdate");
+            document.getElementById("cancelEdit").style.display = "none";
+            alert("Data berhasil diupdate!");
         } else {
-            alert("Gagal update!");
+            alert("Gagal update: " + result.message);
         }
     }
 });
 
+// Tombol Batal Edit
+document.getElementById("cancelEdit").addEventListener("click", function() {
+    editIndex = -1;
+    document.getElementById("materiForm").reset();
+    document.getElementById("addRow").textContent = "Tambah";
+    document.getElementById("cancelEdit").style.display = "none";
+});
+
 function renderTable() {
-    const tbody = document.querySelector("#dataTable tbody");
+    const table = document.getElementById("dataTable");
+    const tbody = table.querySelector("tbody");
     tbody.innerHTML = "";
+    
+    if (dataList.length === 0) {
+        // Sembunyikan tabel jika tidak ada data
+        table.style.display = "none";
+        return;
+    }
+    
+    // Tampilkan tabel jika ada data
+    table.style.display = "table";
+    
     dataList.forEach((item, index) => {
         const row = document.createElement("tr");
+        
+        // Format nama file untuk tampilan
+        let fileName = item.file_pdf ? item.file_pdf.split('/').pop() : '-';
+        
+        // Buat link untuk buka file (path dari root e-learning)
+        let fileLink = item.file_pdf 
+            ? `<a href="../${item.file_pdf}" target="_blank" style="color: #007bff; text-decoration: underline;">${fileName}</a>`
+            : '-';
+        
+        // Format link video
+        let videoLink = item.link_video 
+            ? `<a href="${item.link_video}" target="_blank" style="color: #007bff; text-decoration: underline;">Lihat Video</a>`
+            : '-';
+        
         row.innerHTML = `
-            <td>${item.kelas}</td>
+            <td>${item.kelas || '-'}</td>
             <td>${item.namaMapel}</td>
             <td>${item.judul}</td>
             <td>${item.deskripsi}</td>
-            <td>${item.link_video}</td>
-            <td>${item.file_pdf}</td>
-            <td>${item.created_at}</td>
+            <td>${videoLink}</td>
+            <td>${fileLink}</td>
+            <td>${new Date(item.created_at).toLocaleString('id-ID')}</td>
             <td>
                 <button type="button" class="edit-btn" onclick="editRow(${index})">Edit</button>
                 <button type="button" class="delete-btn" onclick="deleteRow(${index})">Hapus</button>
@@ -286,23 +515,30 @@ function editRow(index) {
 
     editIndex = index;
     document.getElementById("addRow").textContent = "Update";
+    document.getElementById("cancelEdit").style.display = "inline-block";
+    
+    // Scroll ke form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 async function deleteRow(index) {
-    if (!confirm("Yakin ingin menghapus?")) return;
+    if (!confirm("Yakin ingin menghapus materi ini?")) return;
 
     const item = dataList[index];
     let formData = new FormData();
     formData.append("action", "delete");
     formData.append("idmateri", item.idmateri);
 
-    let res = await fetch("uploudMateri.php?t=" + Date.now(), { method: "POST", body: formData });
+    let res = await fetch("uploudMateri.php?t=" + Date.now(), { 
+        method: "POST", 
+        body: formData 
+    });
     let result = await res.json();
 
     if (result.status === "success") {
         dataList.splice(index, 1);
         renderTable();
-        alert("Berhasil hapus");
+        alert("Berhasil hapus materi");
     } else if (result.status === "warning") {
         // filePath + linkVideo jadi NULL
         dataList[index].file_pdf = "";
