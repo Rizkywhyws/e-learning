@@ -284,7 +284,8 @@ function loadMateri(idMateri) {
                 if(data.linkVideo) {
                     materiBox.innerHTML = `<a href="${data.linkVideo}" target="_blank">🔗 ${data.linkVideo}</a>`;
                 } else if(data.filePath) {
-                    materiBox.innerHTML = `<a href="${data.filePath}" target="_blank">📄 Lihat File Materi</a>`;
+                    // Path langsung ke uploads tanpa folder Siswa
+                    materiBox.innerHTML = `<a href="../${data.filePath}" target="_blank">📄 Lihat File Materi</a>`;
                 } else {
                     materiBox.innerHTML = '<span style="color: #999;">Tidak ada file/link</span>';
                 }
