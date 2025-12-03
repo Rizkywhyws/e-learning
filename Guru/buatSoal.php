@@ -98,40 +98,6 @@ $daftarSoal = getSoal($conn, $idQuiz);
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Buat Soal - <?= $typeDisplay[$type] ?? ucfirst($type) ?></title>
 <link rel="stylesheet" href="css/buatSoal.css">
-<style>
-.soal-item {background:#f8f8f8; padding:10px; margin-bottom:10px; border-radius:10px;}
-.soal-item ul {margin-left:20px;}
-button.hapus {background:red; color:white; border:none; padding:4px 10px; border-radius:5px; cursor:pointer;}
-button.edit {background:orange; color:white; border:none; padding:4px 10px; border-radius:5px; cursor:pointer; margin-right:5px;}
-button:hover {opacity:0.85;}
-
-.right-side { position: relative; }
-
-.btn-selesai-container {
-  text-align: center;
-  margin-top: 30px;
-  padding: 20px 0;
-}
-
-.btn-selesai {
-  padding: 14px 40px;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  transition: all 0.3s;
-  background: linear-gradient(135deg, #4CAF50, #45a049);
-  color: white;
-}
-
-.btn-selesai:hover {
-  background: linear-gradient(135deg, #45a049, #3d8b40);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(76, 175, 80, 0.4);
-}
-</style>
 </head>
 <body>
 <div class="main-container">

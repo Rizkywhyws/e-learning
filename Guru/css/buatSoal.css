@@ -162,22 +162,34 @@ textarea:focus, input:focus {
   margin-left: 5px;
 }
 
-.btn-simpan {
-  margin-top: 20px;
-  width: 100%;
-  padding: 12px;
-  background: linear-gradient(135deg, #42a5f5, #1e88e5);
+.soal-item .edit {
+  background-color: #ff9800;
   color: white;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: 0.3s;
 }
 
-.btn-simpan:hover {
-  background: linear-gradient(135deg, #1e88e5, #1565c0);
+.btn-selesai-container {
+  text-align: center;
+  margin-top: 30px;
+  padding: 20px 0;
+}
+
+.btn-selesai {
+  padding: 14px 40px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  transition: all 0.3s;
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+}
+
+.btn-selesai:hover {
+  background: linear-gradient(135deg, #45a049, #3d8b40);
   transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(76, 175, 80, 0.4);
 }
 
 /* Scrollbar */
