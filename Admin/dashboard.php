@@ -98,12 +98,24 @@ $countJadwal = $conn->query("SELECT COUNT(*) AS total FROM jadwalmapel")->fetch_
   <!-- SECTION TABEL -->
 <section class="data-section">
 
-  <!-- Tombol Pilihan -->
-  <div class="data-tabs">
-    <button class="tab-btn active" data-target="table-guru">Guru</button>
-    <button class="tab-btn" data-target="table-siswa">Siswa</button>
-    <button class="tab-btn" data-target="table-mapel">Mapel</button>
-    <button class="tab-btn" data-target="table-jadwal">Jadwal</button>
+  <!-- Tombol Pilihan & Filter Kelas -->
+  <div class="filter-container">
+    <button class="category-btn active" data-target="table-guru">Guru</button>
+    <button class="category-btn" data-target="table-siswa">Siswa</button>
+    <button class="category-btn" data-target="table-mapel">Mapel</button>
+    <button class="category-btn" data-target="table-jadwal">Jadwal</button>
+
+    <div class="class-filter">
+      <select id="filterKelas">
+        <option value="">Semua Kelas</option>
+        <?php
+        $kelasOptions = $conn->query("SELECT DISTINCT kelas FROM dataSiswa ORDER BY kelas ASC");
+        while($kelas = $kelasOptions->fetch_assoc()) {
+            echo "<option value='".$kelas['kelas']."'>".$kelas['kelas']."</option>";
+        }
+        ?>
+      </select>
+    </div>
   </div>
 
   <!-- TABEL GURU -->
@@ -136,17 +148,6 @@ $countJadwal = $conn->query("SELECT COUNT(*) AS total FROM jadwalmapel")->fetch_
 
   <!-- TABEL SISWA -->
   <div class="table-container hidden" id="table-siswa">
-    <div class="filter-container">
-      <select id="filterKelas" class="filter-select">
-        <option value="">Semua Kelas</option>
-        <?php
-        $kelasOptions = $conn->query("SELECT DISTINCT kelas FROM dataSiswa ORDER BY kelas ASC");
-        while($kelas = $kelasOptions->fetch_assoc()) {
-            echo "<option value='".$kelas['kelas']."'>".$kelas['kelas']."</option>";
-        }
-        ?>
-      </select>
-    </div>
     <table class="data-table">
       <thead>
         <tr>
@@ -247,70 +248,70 @@ if ($resultJadwal->num_rows > 0) {
 
 </section>
 
-
-</body>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  const dropdownButtons = document.querySelectorAll(".dropbtn");
+    // --- Dropdown Menu ---
+    const dropdownButtons = document.querySelectorAll(".dropbtn");
 
-  dropdownButtons.forEach(btn => {
-    btn.addEventListener("click", function (e) {
-      e.stopPropagation(); // cegah menutup langsung
-      const menu = this.nextElementSibling;
+    dropdownButtons.forEach(btn => {
+        btn.addEventListener("click", function (e) {
+            e.stopPropagation(); // cegah menutup langsung
+            const menu = this.nextElementSibling;
 
-      // tutup semua dropdown lain
-      document.querySelectorAll(".dropdown-content").forEach(dc => {
-        if (dc !== menu) dc.style.display = "none";
-      });
+            // tutup semua dropdown lain
+            document.querySelectorAll(".dropdown-content").forEach(dc => {
+                if (dc !== menu) dc.style.display = "none";
+            });
 
-      // toggle dropdown ini
-      menu.style.display = menu.style.display === "block" ? "none" : "block";
+            // toggle dropdown ini
+            menu.style.display = menu.style.display === "block" ? "none" : "block";
+        });
     });
-  });
 
-  // klik di luar dropdown → tutup semua
-  document.addEventListener("click", function () {
-    document.querySelectorAll(".dropdown-content").forEach(dc => {
-      dc.style.display = "none";
+    // klik di luar dropdown → tutup semua
+    document.addEventListener("click", function () {
+        document.querySelectorAll(".dropdown-content").forEach(dc => {
+            dc.style.display = "none";
+        });
     });
-  });
+
+    // --- Tabs untuk Tabel ---
+    document.querySelectorAll(".category-btn").forEach(btn => {
+        btn.addEventListener("click", function () {
+            // aktifkan tombol
+            document.querySelectorAll(".category-btn").forEach(b => b.classList.remove("active"));
+            this.classList.add("active");
+
+            // tampilkan tabel sesuai target
+            let target = this.getAttribute("data-target");
+            
+            // sembunyikan semua tabel dan container
+            document.querySelectorAll("#table-guru, #table-siswa, #table-mapel, #table-jadwal")
+            .forEach(el => el.classList.add("hidden"));
+            
+            // tampilkan target yang dipilih
+            let targetElement = document.getElementById(target);
+            if (targetElement) {
+                targetElement.classList.remove("hidden");
+            }
+        });
+    });
+
+    // --- Filter Kelas untuk Tabel Siswa ---
+    document.getElementById("filterKelas").addEventListener("change", function() {
+        let selectedKelas = this.value;
+        let rows = document.querySelectorAll("#siswaTableBody tr");
+        
+        rows.forEach(row => {
+            if (selectedKelas === "" || row.getAttribute("data-kelas") === selectedKelas) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    });
 });
 </script>
-<script>
-document.querySelectorAll(".tab-btn").forEach(btn => {
-  btn.addEventListener("click", function () {
-    // aktifkan tombol
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-    this.classList.add("active");
 
-    // tampilkan tabel sesuai target
-    let target = this.getAttribute("data-target");
-    
-    // sembunyikan semua tabel dan container
-    document.querySelectorAll("#table-guru, #table-siswa, #table-mapel, #table-jadwal")
-    .forEach(el => el.classList.add("hidden"));
-    
-    // tampilkan target yang dipilih
-    let targetElement = document.getElementById(target);
-    if (targetElement) {
-      targetElement.classList.remove("hidden");
-    }
-  });
-});
-
-// Filter Kelas untuk Tabel Siswa
-document.getElementById("filterKelas").addEventListener("change", function() {
-  let selectedKelas = this.value;
-  let rows = document.querySelectorAll("#siswaTableBody tr");
-  
-  rows.forEach(row => {
-    if (selectedKelas === "" || row.getAttribute("data-kelas") === selectedKelas) {
-      row.style.display = "";
-    } else {
-      row.style.display = "none";
-    }
-  });
-});
-</script>
-
+</body>
 </html>
