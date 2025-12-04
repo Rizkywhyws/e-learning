@@ -1,0 +1,55 @@
+
+
+/* Responsif */
+@media (max-width: 768px) {
+    .dropbtn {
+        padding: 10px 14px;
+        font-size: 14px;
+    }
+    .welcome-box h2 {
+        font-size: 22px;
+    }
+    .search-box input[type="text"] {
+        width: 80%;
+    }
+}
+
+/* Tombol menu vertikal */
+.btn-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin: 0 auto;
+    gap: 14px;
+}
+
+.btn {
+    width: 1550px;
+    background-color: #304c89;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 0;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    background-color: #22396e;
+}
+
+.content {
+    width: 100%;
+    max-width: 8500px; /* biar tabel bisa lebih lebar */
+    margin: 20px auto;
+    background: #f5f8ff;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.05);
+}
+
+
+

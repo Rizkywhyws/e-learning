@@ -1,0 +1,546 @@
+/* ==========================================================
+   E-SCHOOL DASHBOARD GURU (FIXED)
+   Author: Rizky Wahyu Wangsa Syaelendra
+   ========================================================== */
+
+/* RESET DASAR */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  background: #f4f6fb;
+  color: #333;
+  overflow-x: hidden;
+}
+
+/* ==========================================================
+   HEADER
+========================================================== */
+header {
+  text-align: center;
+  padding: 20px 0;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.logo {
+  width: 200px;
+}
+
+/* ==========================================================
+   MENU DROPDOWN
+========================================================== */
+.menu-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: #d5ebff;
+  border: 2px solid #2e7dff;
+  padding: 10px 25px;
+  border-radius: 40px;
+  width: fit-content;
+  margin: -10px auto;
+}
+
+.dropdown {
+  position: relative;
+}
+
+.dropbtn {
+  background: transparent;
+  border: none;
+  color: #2e7dff;
+  padding: 10px 18px;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: 0.2s;
+}
+
+.dropbtn:hover {
+  background: rgba(46, 125, 255, 0.15);
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #fff;
+  border-radius: 10px;
+  min-width: 180px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+  z-index: 999;
+}
+
+.dropdown-content a {
+  display: block;
+  padding: 12px 16px;
+  text-decoration: none;
+  color: #333;
+  transition: 0.2s;
+}
+
+.dropdown-content a:hover {
+  background: #e7f0ff;
+  color: #2e7dff;
+}
+
+/* ==========================================================
+   WELCOME BOX
+========================================================== */
+.welcome-box {
+  background: #bcd4ff;
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  width: 90%;
+  margin: 30px auto 20px;
+  color: #1f2d3d;
+}
+
+.welcome-box h2 {
+  font-weight: 700;
+  font-size: 22px;
+}
+
+.welcome-box p {
+  margin-top: 6px;
+  font-size: 15px;
+}
+
+
+/* ==========================================================
+   GRAFIK SECTION
+========================================================== */
+.grafik-section {
+  width: 90%;
+  margin: 40px auto;
+}
+
+.grafik-section h3 {
+  margin-bottom: 12px;
+  font-size: 18px;
+  color: #1f2d3d;
+}
+
+/* Layout: kiri (card+kalender) dan kanan (chart/jadwal) */
+.grafik-container {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px;
+  align-items: start;
+}
+
+/* KIRI */
+.left-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Dua card sejajar */
+.card-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.card-box {
+  flex: 1;
+  background: #dde7f7;
+  border: 2px solid #cddfff;
+  border-radius: 12px;
+  height: 180px;
+  position: relative;
+  display: flex; /* Aktifkan Flexbox */
+  flex-direction: column; /* Susun item secara vertikal */
+  justify-content: center; /* Pusatkan konten secara vertikal */
+  align-items: center; /* Pusatkan konten secara horizontal */
+  text-align: center; /* Jaga teks tetap di tengah */
+}
+
+.card-label {
+  position: absolute;
+  top: -12px;
+  left: 38px;
+  background: white;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #1f2d3d;
+  border: 2px solid #cddfff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  /* Hapus margin atau padding yang bisa mengganggu posisi */
+  margin: 0;
+}
+.card-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #2e7dff;
+    align-self: center; /* Opsional: Pastikan elemen ini juga sejajar ke tengah */
+}
+/* KALENDER */
+.calendar-box {
+  background: #ffffff;
+  border: 2px solid #cddfff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 20px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.calendar-header h4 {
+  color: #2e7dff;
+  font-weight: 700;
+  margin: 0;
+}
+
+.calendar-header button {
+  background: #2e7dff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.calendar-header button:hover {
+  background: #1a5edc;
+}
+
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-weight: 600;
+  color: #2e7dff;
+  margin-bottom: 10px;
+}
+
+.calendar-dates {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.calendar-dates .date,
+.calendar-dates .empty {
+  text-align: center;
+  padding: 10px 0;
+  border-radius: 8px;
+  background: #f4f6fb;
+  color: #333;
+  font-size: 14px;
+}
+
+.calendar-dates .date.today {
+  background: #2e7dff;
+  color: white;
+  font-weight: 700;
+}
+
+.day-name {
+  font-weight: 600;
+  color: #2e7dff;
+}
+
+.date,
+.empty {
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.date {
+  background: #f1f5ff;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.date:hover {
+  background: #d9e5ff;
+}
+
+.today {
+  background: #2e7dff;
+  color: white;
+  font-weight: bold;
+}
+
+
+/* ==========================================================
+   JADWAL MENGAJAR (TABLE)
+========================================================== */
+.right-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.jadwal-table-box {
+  background: white;
+  border: 2px solid #cddfff;
+  border-radius: 12px;
+  padding: 20px;
+  height: 615px;
+}
+
+.table-scroll {
+  max-height: 560px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.table-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.table-scroll::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.table-scroll::-webkit-scrollbar-thumb {
+  background: #2e7dff;
+  border-radius: 10px;
+}
+
+.table-scroll::-webkit-scrollbar-thumb:hover {
+  background: #1d5fcf;
+}
+
+.jadwal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.jadwal-table thead {
+  position: sticky;
+  top: 0;
+  background: #bcd4ff;
+  z-index: 1;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.jadwal-table th {
+  padding: 14px;
+  text-align: center;
+  font-weight: 700;
+  color: #1f2d3d;
+  border-right: 2px solid #9bbdf0;
+}
+
+.jadwal-table th:last-child {
+  border-right: none;
+}
+
+.jadwal-table tbody tr {
+  border-bottom: 2px solid #c6dafe;
+}
+
+.jadwal-table tbody tr:hover {
+  background: #f0f7ff;
+}
+
+.jadwal-table tbody tr.current-schedule {
+  background: #d4edda !important;
+  border-left: 4px solid #28a745;
+}
+
+.jadwal-table tbody tr.current-schedule:hover {
+  background: #c3e6cb !important;
+}
+
+.jadwal-table td {
+  padding: 12px;
+  text-align: center;
+  background: #eef4ff;
+  border-right: 2px solid #c6dafe;
+}
+
+.jadwal-table td:last-child {
+  border-right: none;
+}
+
+.jadwal-table .no-data-row {
+  background: #f8fbff;
+  padding: 20px !important;
+  font-style: italic;
+  color: #6c7a91;
+  text-align: center;
+}
+
+/* ==========================================================
+   TABEL DATA
+========================================================== */
+.tabel-section {
+  width: 90%;
+  margin: 40px auto;
+}
+
+.tabel-section h3 {
+  margin-bottom: 12px;
+  font-size: 18px;
+}
+
+.data-table {
+  width: 100%;
+  background: #f5f9ff;
+  border-radius: 10px;
+  border-collapse: collapse;
+  border: 3px solid #bdd4ff;
+  overflow: hidden;
+  font-size: 14px;
+}
+
+.data-table thead {
+  background: #bcd4ff;
+}
+
+.data-table th {
+  padding: 14px;
+  text-align: center;
+  font-weight: 700;
+  border-right: 2px solid #9bbdf0;
+}
+
+.data-table td {
+  padding: 15px;
+  text-align: center;
+  background: #eef4ff;
+  border-right: 2px solid #c6dafe;
+  border-bottom: 2px solid #c6dafe;
+}
+
+.no-data-row {
+  background: #f8fbff;
+  padding: 20px !important;
+  font-style: italic;
+  color: #6c7a91;
+  border-right: none !important;
+  border-bottom: none !important;
+}
+
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: #f4f6fb;
+}
+
+/* ==========================================================
+   RESPONSIVE
+========================================================== */
+@media (max-width: 1024px) {
+  .grafik-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .jadwal-box {
+    order: -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .menu-row {
+    flex-direction: column;
+    border-radius: 20px;
+  }
+  
+  .search-bar input {
+    width: 80%;
+  }
+  
+  .card-row {
+    flex-direction: column;
+  }
+  
+  .card-box {
+    height: 160px;
+  }
+  
+  .jadwal-item {
+    flex-direction: column;
+  }
+  
+  .jadwal-waktu {
+    min-width: 100%;
+  }
+}
+/* --- STYLING UNTUK GRAFIK POWER BI --- */
+.grafik-pbi-section {
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+    max-width: 90%; 
+    margin-left: auto; 
+    margin-right: auto; 
+    height: 1000px;
+}
+
+.grafik-pbi-section h3 {
+    color: #2e7dff;
+    font-size: 1.5em;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.pbi-container {
+    position: relative;
+    width: 95%; 
+    height: 880px; 
+    margin: 0 auto; 
+    overflow: hidden;
+    border: 3px solid #76f1fd;
+    border-radius: 8px;
+    background-color: #f9f9f9; 
+    display: flex; 
+    justify-content: center;
+    align-items: center;
+}
+
+.pbi-container iframe {
+    width: 100%; 
+    height: 100%; 
+    border: none;
+    border-radius: 8px;
+    display: block;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .grafik-pbi-section {
+        padding: 15px;
+    }
+    
+    .pbi-container {
+        width: 95%; /* Lebar kotak putih jadi 95% di mobile */
+        height: 400px; 
+    }
+
+    /* Jika perlu, Anda bisa juga atur iframe di mobile */
+    .pbi-container iframe {
+        width: 100%;
+        height: 100%;
+    }
+}

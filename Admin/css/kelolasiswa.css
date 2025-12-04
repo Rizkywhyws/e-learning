@@ -1,0 +1,748 @@
+/* =====================================================
+    GLOBAL RESET
+  =====================================================*/
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+  }
+
+  body {
+    background-color: #F1F5FC;
+    color: #333;
+  }
+
+  /* =====================================================
+    HEADER
+  =====================================================*/
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px 40px;
+    background-color: #F1F5FC;
+  }
+
+  .logo img {
+    width: 185px;
+    height: 80px;
+  }
+
+  /* =====================================================
+    DROPDOWN BAR
+  =====================================================*/
+  .menu-row {
+    display: flex;
+    gap: 10px;
+    padding: 10px 20px;
+    background: #D5EBFF;
+    border: 2px solid #2e7dff;
+    border-radius: 40px;
+    margin: 10px auto 20px;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .dropbtn {
+    background: transparent;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    color: #2e7dff;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .dropbtn i {
+    color: #2e7dff;
+  }
+
+  .dropbtn:hover {
+    background: rgba(46, 125, 255, 0.1);
+  }
+
+  .dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #ffffff;
+    min-width: 180px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+    border-radius: 10px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+
+  .dropdown-content a {
+    padding: 12px 14px;
+    text-decoration: none;
+    color: #333;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .dropdown-content a i {
+    color: #2e7dff;
+  }
+
+  .dropdown-content a:hover {
+    background-color: #e8f0ff;
+  }
+
+  /* =====================================================
+    WELCOME BOX
+  =====================================================*/
+  .welcome-box {
+    background-color: #b5ccff;
+    text-align: center;
+    padding: 40px 20px;
+    border-radius: 20px;
+    margin: 20px auto;
+    margin-bottom: 10px;
+    width: 90%;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .welcome-box h2 {
+    color: #000;
+    font-size: 30px;
+    font-weight: 700;
+  }
+
+  .welcome-box p {
+    color: #000;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  /* =====================================================
+    SEARCH BAR
+  =====================================================*/
+  .search-bar {
+    text-align: center;
+    margin-bottom: 20px;
+    margin-top: -28px;
+  }
+
+  .search-bar input {
+    width: 60%;
+    padding: 14px 20px;
+    border-radius: 25px;
+    border: 2px solid #000;
+    outline: none;
+    transition: 0.3s;
+  }
+
+  .search-bar input:focus {
+    border-color: #2e7dff;
+  }
+
+  .search-bar button {
+    background: #2e7dff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 25px;
+    cursor: pointer;
+    color: white;
+    margin-left: 5px;
+  }
+
+  /* =====================================================
+    TABLE
+  =====================================================*/
+  .data-table {
+    width: 100%;
+    margin: 0 auto;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .data-table thead {
+    background-color: #2e7dff;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #ddd;
+    text-align: center;
+  }
+
+  .data-table tbody tr:hover {
+    background-color: #e8f0ff;
+    cursor: pointer;
+  }
+
+  .data-table tbody tr.selected {
+    background-color: #c8ddff !important;
+  }
+
+  .data-table td input[type="checkbox"],
+  .data-table th input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+  }
+
+  /* =====================================================
+     SCROLLABLE TABLE WRAPPER
+  =====================================================*/
+  .table-wrapper {
+    max-height: 400px;
+    overflow-y: auto;
+    margin: 0 auto 30px;
+    border-radius: 14px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    width: 95%;
+  }
+
+  .table-wrapper::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .table-wrapper::-webkit-scrollbar-thumb {
+    background: #2e7dff;
+    border-radius: 4px;
+  }
+
+  .table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #1e5fcf;
+  }
+
+  /* =====================================================
+    BUTTONS
+  =====================================================*/
+  .action-buttons {
+    width: 95%;
+    margin: 15px auto;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .btn {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn.green { 
+    background-color: #28a745; 
+  }
+  
+  .btn.green:hover:not(:disabled) { 
+    background-color: #218838; 
+  }
+
+  .btn.purple { 
+    background-color: #6f42c1; 
+  }
+  
+  .btn.purple:hover:not(:disabled) { 
+    background-color: #5a32a3; 
+  }
+
+  .btn.yellow { 
+    background-color: #ffc107; 
+    color: #222; 
+  }
+  
+  .btn.yellow:hover:not(:disabled) { 
+    background-color: #e0a800; 
+  }
+
+  .btn.red { 
+    background-color: #dc3545; 
+  }
+  
+  .btn.red:hover:not(:disabled) { 
+    background-color: #c82333; 
+  }
+
+  .btn.blue { 
+    background-color: #007bff; 
+  }
+  
+  .btn.blue:hover:not(:disabled) { 
+    background-color: #0056b3; 
+  }
+
+  /* =====================================================
+     FILTER BOX
+  =====================================================*/
+  .filter-box {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding-right: 30px;
+    margin: 15px 20px;
+    gap: 10px;
+  }
+
+  .filter-box label {
+    font-weight: 600;
+  }
+
+  .filter-box select {
+    padding: 8px 12px;
+    font-size: 14px;
+    border-radius: 8px;
+    border: 2px solid #aaa;
+    outline: none;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  .filter-box select:focus {
+    border-color: #2e7dff;
+  }
+
+  /* =====================================================
+     MODAL STYLES
+  =====================================================*/
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.3s;
+  }
+
+  .modal.hidden { 
+    display: none; 
+  }
+
+  .modal-content {
+    background-color: #fff;
+    margin: 3% auto;
+    padding: 0;
+    border-radius: 14px;
+    width: 90%;
+    max-width: 1000px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    animation: slideDown 0.3s;
+    position: relative;
+  }
+
+  /* Header untuk modal Add/Edit Student dan Import */
+  .modal-content h3#formTitle,
+  .modal-content h3 {
+    color: #2e7dff;
+    text-align: center;
+    font-weight: 700;
+    font-size: 22px;
+    padding: 20px 25px;
+    margin: 0;
+    border-bottom: 2px solid #e0e0e0;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    background-color: #2e7dff;
+    border-radius: 14px 14px 0 0;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .modal-header h3 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 20px;
+  }
+
+  .close,
+  .close-import,
+  .close-naik {
+    color: #999;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+    line-height: 1;
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    z-index: 100;
+  }
+
+  .close:hover,
+  .close:focus,
+  .close-import:hover,
+  .close-import:focus,
+  .close-naik:hover,
+  .close-naik:focus {
+    color: #2e7dff;
+  }
+
+  .modal-content form {
+    padding: 25px;
+  }
+
+  .modal-content .row {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .modal-content label {
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+
+  .modal-content input,
+  .modal-content select {
+    padding: 12px;
+    border-radius: 10px;
+    border: 2px solid #aaa;
+    outline: none;
+    font-size: 15px;
+    transition: 0.3s;
+    background-color: white;
+  }
+
+  .modal-content input:focus,
+  .modal-content select:focus {
+    border-color: #2e7dff;
+  }
+
+  .modal-content select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D'10'%20height%3D'10'%20viewBox%3D'0%200%2010%2010'%20xmlns%3D'http%3A//www.w3.org/2000/svg'%3E%3Cpolygon%20points%3D'0,0%2010,0%205,5'%20fill%3D'%232e7dff'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px;
+  }
+
+  .form-actions {
+    margin-top: 18px;
+    display: flex;
+    justify-content: end;
+    gap: 12px;
+  }
+
+  /* =====================================================
+     IMPORT MODAL SPECIFIC
+  =====================================================*/
+  .import-info {
+    padding: 20px 25px;
+    background-color: #e8f4f8;
+    border-left: 4px solid #2e7dff;
+    margin-bottom: 20px;
+  }
+
+  .import-info p {
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+
+  .import-info ul {
+    margin-left: 20px;
+    margin-bottom: 15px;
+  }
+
+  .import-info li {
+    margin-bottom: 5px;
+    font-size: 13px;
+  }
+
+  .btn-download {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: #28a745;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: 0.3s;
+  }
+
+  .btn-download:hover {
+    background-color: #218838;
+  }
+
+  .file-info {
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #666;
+    font-style: italic;
+  }
+
+  #previewSection {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 10px;
+  }
+
+  #previewSection h4 {
+    margin-bottom: 10px;
+    color: #2e7dff;
+  }
+
+  .preview-wrapper {
+    max-height: 250px;
+    overflow-y: auto;
+    border-radius: 8px;
+    margin-bottom: 10px;
+  }
+
+  .preview-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .preview-table th,
+  .preview-table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+  }
+
+  .preview-table th {
+    background-color: #2e7dff;
+    color: white;
+    position: sticky;
+    top: 0;
+  }
+
+  .preview-count {
+    font-weight: 600;
+    color: #333;
+  }
+
+  /* =====================================================
+     MODAL NAIK KELAS
+  =====================================================*/
+  .modal-naik-kelas {
+    width: 95%;
+    max-width: 1200px;
+  }
+
+  .modal-naik-kelas h3 {
+    color: #2e7dff;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 0;
+    text-align: center;
+    padding: 20px 25px;
+    border-bottom: 2px solid #e0e0e0;
+  }
+
+  .kelas-tujuan-wrapper {
+    margin-bottom: 15px;
+    padding: 0 25px;
+    margin-top: 20px;
+  }
+
+  .kelas-tujuan-wrapper label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+    font-size: 15px;
+  }
+
+  .kelas-select,
+  #kelasTujuan {
+    width: 100%;
+    padding: 12px 40px 12px 15px;
+    font-size: 15px;
+    border: 2px solid #aaa;
+    border-radius: 10px;
+    outline: none;
+    transition: all 0.3s ease;
+    background-color: white;
+    cursor: pointer;
+    font-family: "Poppins", sans-serif;
+    color: #333;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D'10'%20height%3D'10'%20viewBox%3D'0%200%2010%2010'%20xmlns%3D'http%3A//www.w3.org/2000/svg'%3E%3Cpolygon%20points%3D'0,0%2010,0%205,5'%20fill%3D'%232e7dff'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 12px;
+  }
+
+  .kelas-select:hover,
+  #kelasTujuan:hover {
+    border-color: #2e7dff;
+  }
+
+  .kelas-select:focus,
+  #kelasTujuan:focus {
+    border-color: #2e7dff;
+    box-shadow: 0 0 0 3px rgba(46, 125, 255, 0.1);
+  }
+
+  .select-all-wrapper {
+    margin: 15px 25px;
+    padding: 12px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+  }
+
+  .select-all-wrapper label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .select-all-wrapper input[type="checkbox"],
+  #selectAll {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    margin: 0;
+  }
+
+  .modal-table-wrapper {
+    max-height: 350px;
+    overflow-y: auto;
+    overflow-x: auto;
+    margin: 15px 25px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    width: calc(100% - 50px);
+  }
+
+  .modal-table-wrapper .data-table {
+    box-shadow: none;
+    margin: 0;
+    min-width: 700px;
+  }
+
+  .modal-table-wrapper::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .modal-table-wrapper::-webkit-scrollbar-thumb {
+    background: #2e7dff;
+    border-radius: 4px;
+  }
+
+  .modal-table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #1e5fcf;
+  }
+
+  .modal-table-wrapper::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+
+  .modal-actions {
+    margin-top: 20px;
+    padding: 20px 25px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    border-top: 1px solid #e0e0e0;
+  }
+
+  /* =====================================================
+     ANIMATION
+  =====================================================*/
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideDown {
+    from {
+      transform: translateY(-50px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  /* =====================================================
+     RESPONSIVE
+  =====================================================*/
+  @media (max-width: 1024px) {
+    .modal-naik-kelas {
+      width: 95%;
+      max-width: 95%;
+    }
+
+    .modal-table-wrapper {
+      width: calc(100% - 20px);
+      margin: 15px 10px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .modal-content {
+      width: 95%;
+    }
+
+    .modal-naik-kelas {
+      width: 95%;
+      max-width: 95%;
+      padding: 15px;
+    }
+
+    .action-buttons {
+      flex-wrap: wrap;
+    }
+
+    .search-bar input {
+      width: 80%;
+    }
+
+    .table-wrapper {
+      width: 100%;
+    }
+
+    .modal-table-wrapper {
+      width: calc(100% - 10px);
+      margin: 15px 5px;
+    }
+  }

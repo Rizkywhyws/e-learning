@@ -1,0 +1,199 @@
+/* Atur ulang dasar */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+    background-color: #f4f7fa; 
+    padding: 40px 22px;
+}
+
+.container {
+    max-width: 1480px;
+    margin: 0 auto;
+}
+
+h3 {
+    color: #333;
+    margin-bottom: 25px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* --- BAGIAN PROFIL & PASSWORD --- */
+.profile-layout {
+    display: grid;
+    grid-template-columns: 2fr 3fr;
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+/* Kartu Umum */
+.profile-info-card, .change-password-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Kolom Kiri - Informasi Profil */
+.profile-info-card {
+    background-color: #cfe0ff; 
+    border: 1px solid #c9d5e3;
+    padding: 35px 40px;
+    display: flex;
+    flex-direction: column;
+    max-height: max-content;
+    justify-content: space-between;
+}
+
+.info-group {
+    display: flex;
+    margin-bottom: 22px;
+    font-size: 17px;
+    align-items: baseline;
+}
+
+.info-group label {
+    flex-basis: 140px; 
+    color: #000000;
+    font-weight: 500;
+}
+
+.info-group span {
+    margin-right: 20px;
+    color: #333;
+}
+
+.info-group p {
+    flex-grow: 1; 
+    color: #555;
+    word-break: break-all;
+    font-size: 17px;
+}
+
+/* Kolom Kanan - Ganti Password */
+.change-password-card {
+    border: 1px solid #dcdcdc;
+    display: flex;
+    flex-direction: column;
+}
+
+.change-password-card .card-title {
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+    background-color: #cfe0ff; 
+    margin: 0; 
+    padding: 18px 20px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    color: #333;
+}
+
+.change-password-card form {
+    padding: 30px 35px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group {
+    margin-bottom: 22px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 15px;
+    color: #555;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.form-group input[type="text"],
+.form-group input[type="password"] {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 15px;
+}
+
+.btn-primary {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background-color: #cfe0ff; 
+    color: #333;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 15px;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: #c9d0df;
+}
+
+/* Responsif Dasar */
+@media (max-width: 992px) {
+    .profile-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .info-group {
+        font-size: 15px;
+    }
+    
+    .info-group label {
+        flex-basis: 120px;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 20px 15px;
+    }
+    
+    h3 {
+        font-size: 16px;
+        margin-bottom: 20px;
+    }
+    
+    .profile-info-card {
+        padding: 25px 20px;
+    }
+    
+    .info-group {
+        font-size: 14px;
+        margin-bottom: 18px;
+    }
+    
+    .info-group label {
+        flex-basis: 100px;
+    }
+    
+    .change-password-card form {
+        padding: 20px 25px;
+    }
+    
+    .form-group label {
+        font-size: 14px;
+    }
+    
+    .form-group input[type="text"],
+    .form-group input[type="password"] {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+    
+    .btn-primary {
+        padding: 10px;
+        font-size: 15px;
+    }
+}

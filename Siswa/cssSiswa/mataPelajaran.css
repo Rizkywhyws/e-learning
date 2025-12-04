@@ -1,0 +1,714 @@
+
+/* === mataPelajaran.css === */
+/* === MATA PELAJARAN BARU (INTERAKTIF) === 
+* {
+  box-sizing: border-box;
+}
+*/
+
+/* === CONTAINER UNTUK BAGIAN MATA PELAJARAN === */
+.mapel-container {
+    width: 90%; /* samakan dengan welcome box */
+    margin: 60px auto 60px; /* tengah dan beri jarak bawah */
+    background-color: #ffffff;
+    border: 2px solid #d6e1ff; /* garis tepi lembut */
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    overflow: hidden; /* biar h3-nya nyatu */
+}
+
+/* Header bagian Mata Pelajaran (menyatu dengan box) */
+.mapel-container h3 {
+    color: #1a3e8e;
+    font-weight: 700;
+    font-size: 22px;
+    text-align: center;
+    margin: 0;
+    padding: 18px 25px 5px; /* kiri-kanan sama dengan grid isi mapel */
+    background: #eef4ff; /* pastikan tidak ada background */
+    border: none; /* hilangkan garis bawah kalau ada */
+    box-shadow: none; /* pastikan gak ada efek box */
+}
+
+
+
+/* Grid isi mapel */
+.mapel-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* maksimal 3 kolom */
+    gap: 15px;
+    padding: 20px 25px 30px; /* beri padding dalam box */
+    background-color: #eef4ff; /* sedikit beda agar lembut */
+}
+
+
+
+.mapel-card {
+    background-color: #ffffff;
+    border-radius: 15px;
+    padding: 15px 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    text-align: center;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    cursor: pointer;
+    height: 80px; /* kecil dulu */
+}
+
+.mapel-card.active {
+    height: auto; /* melebar otomatis */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    transform: translateY(-3px);
+}
+
+.mapel-card h4 {
+    color: #1a3e8e;
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+
+/* --- Kode Mapel --- */
+.kode-mapel {
+    font-size: 13px;
+    color: #6b7aa0;
+    font-weight: 500;
+    margin-bottom: 3px;
+}
+
+/* --- Materi List baru dengan tanggal di kanan --- */
+.materi {
+    background: #f4f7ff;
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin: 6px 0;
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: 0.2s;
+}
+
+.materi .judul {
+    flex: 1;
+    color: #1a2d60;
+}
+
+.tgl-materi {
+    font-size: 12px;
+    color: #7689b2;
+    margin-left: 10px;
+}
+
+/* Warna status materi */
+.materi.merah {
+    border-left: 5px solid #ff7b7b;
+    background-color: #fff2f2;
+}
+.materi.biru {
+    border-left: 5px solid #6ea8ff;
+    background-color: #f2f6ff;
+}
+
+.materi:hover {
+    background: #e9f0ff;
+}
+
+
+
+.mapel-card .tanggal {
+    color: #666;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+/* Materi List */
+.materi-list {
+    display: none;
+    margin-top: 10px;
+}
+
+.mapel-card.active .materi-list {
+    display: block;
+}
+
+.materi {
+    background: #f4f7ff;
+    border-radius: 8px;
+    padding: 8px;
+    margin: 6px 0;
+    font-size: 13px;
+    text-align: left;
+    transition: 0.2s;
+}
+
+.materi:hover {
+    background: #e9f0ff;
+}
+
+.materi.merah { border-left: 5px solid #ff7b7b; }
+.materi.hijau { border-left: 5px solid #7bff7f; }
+.materi.biru { border-left: 5px solid #6ea8ff; }
+.materi.ungu { border-left: 5px solid #c17bff; }
+
+/* Tombol muncul di bawah materi */
+.button-group {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin: 5px 0 17px;
+    animation: fadeIn 0.2s ease;
+}
+
+.btn-materi, .btn-tugas {
+    border: none;
+    padding: 9px 85px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.btn-materi {
+    background-color: #c5e1ff;
+    color: #1d3f8e;
+    border-radius: 20px 0 0 20px;
+}
+
+.btn-tugas {
+    background-color: #c5e1ff;
+    color: #1d3f8e;
+    border-radius: 0 20px 20px 0;
+}
+
+.btn-materi:hover { background-color: #a9d0ff; }
+.btn-tugas:hover { background-color: #a9d0ff; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
+/* === REKAP NILAI TABLE === */
+.rekap-nilai {
+    width: 90%;
+    margin: 0 auto 80px;
+}
+
+.rekap-nilai h3 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a3e8e;
+    text-align: left;
+    margin: 0 0 15px 0; /* 👈 ini bikin jarak bawah 15px */
+    /*padding-left: 10px;  opsional biar sejajar dengan tabel */
+}
+
+
+.table-wrapper {
+    overflow-x: auto;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+    font-size: 14px;
+}
+
+thead {
+    background-color: #bcd3ff;
+    color: #111;
+}
+
+th, td {
+    padding: 10px 6px;
+    border-bottom: 1px solid #eaeaea;
+}
+
+.sub-header th {
+    background-color: #d9e6ff;
+    font-weight: 500;
+}
+
+tbody tr:hover {
+    background-color: #f8faff;
+}
+
+
+/* ============================
+   POPUP NILAI (HOVER / CLICK)
+   ============================ */
+#popupNilai {
+    position: absolute;
+    display: none;                 /* default: tidak muncul */
+    background: #ffffff;           /* putih bersih */
+    padding: 15px 18px;
+    min-width: 210px;
+    border-radius: 10px;           /* sudut membulat */
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e6e6e6;
+    z-index: 9999;
+    transform: translateY(8px);    /* posisi awal untuk animasi */
+    opacity: 0;
+    transition: 
+        opacity 0.18s ease-out,
+        transform 0.18s ease-out;
+}
+
+/* Saat popup aktif ditampilkan */
+#popupNilai.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Judul */
+#popupNilai .judul-tugas {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2d2d2d;
+    margin-bottom: 6px;
+}
+
+/* Baris informasi */
+#popupNilai .popup-row {
+    font-size: 12px;
+    margin-bottom: 4px;
+    color: #333;
+}
+
+/* Label */
+#popupNilai .popup-label {
+    font-weight: 600;
+    color: #666;
+}
+
+/* ============================
+   BADGE STATUS
+   ============================ */
+.status-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 6px;
+}
+
+/* Status: tepat waktu / selesai */
+.status-selesai {
+    background-color: #d4ffe1;
+    color: #0f8a40;
+    border: 1px solid #8ff5b5;
+}
+
+/* Status: terlambat */
+.status-terlambat {
+    background-color: #ffe2e2;
+    color: #cc1e1e;
+    border: 1px solid #ffb3b3;
+}
+
+.status-belum {
+    background: #b0b0b0;
+    color: white;
+}
+
+
+
+/* ====================================== POPUP TUGAS ============================ */
+.popup-overlay {
+  display: none;
+  position: fixed;
+  z-index: 999;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.4);
+  justify-content: center;
+  align-items: center;
+  font-family: 'Poppins', sans-serif;
+}
+
+.popup-content {
+  background: #fff;
+  border-radius: 12px;
+  width: 480px;
+  max-width: 95%;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+  overflow: hidden;
+  animation: fadeIn 0.3s ease;
+}
+
+.popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #e8f0ff;
+  padding: 10px 16px;
+  border-radius: 10px 10px 0 0;
+  position: relative;
+}
+
+.popup-header h2 {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  color: #1a3e8e;
+}
+
+.status-label {
+  position: absolute;
+  right: 50px; /* Geser ke kiri dari tombol close */
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: #fda4af;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.status-label.belum {
+  background: #ff9ea9;
+}
+
+/* Lampiran Box - mirip dengan materi-box */
+.lampiran-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  height: 40px;
+  margin-bottom: 10px;
+  padding: 0 12px;
+}
+
+.lampiran-box a {
+  text-decoration: none;
+  color: #1e3a8a;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lampiran-box a:hover {
+  color: #1a56db;
+}
+
+.lampiran-box span {
+  color: #999;
+  font-size: 13px;
+}
+
+.close-btn {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  color: #444;
+  cursor: pointer;
+}
+
+.popup-body {
+  padding: 20px;
+}
+
+.popup-body h3 {
+  font-size: 15px;
+  color: #1a3e8e;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.popup-body label {
+  font-size: 13px;
+  color: #1a2d60;
+  font-weight: 500;
+  display: block;
+  margin-top: 10px;
+}
+
+.popup-body textarea,
+.popup-body input[type="text"] {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #d0d8f2;
+  background: #f9faff;
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+.popup-body textarea[readonly],
+.popup-body input[readonly] {
+  background: #f0f2f8;
+  color: #333;
+}
+
+.upload-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #f5f7fa;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 7px 12px;
+  margin-bottom: 15px;
+  height: 40px;
+  position: relative;
+}
+
+.upload-box input[type="file"] {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.upload-box span {
+  flex: 2;
+  font-size: 0.9rem;
+  color: #666;
+  margin-left: 8px;
+}
+
+.upload-icon {
+  background: none;
+  border: none;
+  color: #1e3a8a;
+  font-size: 1.2rem;
+  pointer-events: none;
+}
+
+#fileName {
+  flex: 1;
+  font-size: 13px;
+  color: #666;
+  padding-left: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.info-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.info-row div {
+  flex: 1;
+}
+
+.btn-kumpul {
+  width: 100%;
+  margin-top: 15px;
+  background: #c5d7ff;
+  border: none;
+  padding: 10px 0;
+  border-radius: 10px;
+  color: #1a3e8e;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-kumpul:hover {
+  background: #a9c4ff;
+}
+
+
+/*?////////*/
+/* ===== Style untuk box file yang sudah diupload ===== */
+#uploadedFileBox {
+    margin-top: 15px;
+    margin-bottom: 10px;
+    animation: fadeIn 0.3s ease;
+}
+
+#uploadedFileBox > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: #e8f5e9;
+    border-radius: 8px;
+    border: 1px solid #81c784;
+}
+
+#uploadedFileBox span {
+    color: #2e7d32;
+    font-weight: 500;
+    font-size: 13px;
+    flex: 1;
+}
+
+#uploadedFileBox a {
+    color: #1976d2;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 5px;
+    transition: background 0.2s;
+}
+
+#uploadedFileBox a:hover {
+    background: #bbdefb;
+}
+
+/* ===== Style untuk tombol PERBARUI TUGAS ===== */
+.btn-kumpul.update-mode {
+    background: #fff3cd !important;
+    color: #856404 !important;
+    border: 1px solid #ffc107;
+}
+
+.btn-kumpul.update-mode:hover {
+    background: #ffe69c !important;
+}
+
+/* ===== Label untuk upload file baru ===== */
+.upload-section-label {
+    display: block;
+    font-size: 13px;
+    color: #1a2d60;
+    font-weight: 500;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+.upload-note {
+    font-size: 11px;
+    color: #666;
+    font-style: italic;
+    margin-top: 3px;
+    margin-bottom: 8px;
+}
+
+/* ===== Animation ===== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* ===== FIX Z-INDEX POPUP ===== */
+.sticky-header {
+  position: relative;
+  z-index: 10; /* header tetap di atas elemen biasa */
+}
+
+.popup-overlay {
+  z-index: 99999 !important; /* pastikan popup selalu paling depan */
+}
+
+
+/* === Atur posisi mapel dan tanggal biar sejajar === */
+.mapel-row {
+  display: flex;
+  justify-content: space-between; /* mapel di kiri, tanggal di kanan */
+  align-items: center;            /* biar sejajar vertikal */
+  margin-bottom: 15px;
+}
+
+.mapel-row .mapel {
+  font-weight: 600;
+  color: #1e3a8a; /* biru elegan (opsional) */
+}
+
+.mapel-row .tanggal {
+  color: #666;
+  font-size: 0.75rem;
+}
+
+
+
+/* ===== POPUP MATERI PEMBELAJARAN ===== */
+#popupMateri .popup-content {
+  width: 480px;
+}
+
+#popupMateri .popup-header {
+  background-color: #dbeafe;
+  position: relative;
+  padding: 10px 16px;
+  border-radius: 10px 10px 0 0;
+}
+
+
+#popupMateri .popup-body {
+  padding: 20px;
+}
+
+#popupMateri .mapel-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+#popupMateri h3 {
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 10px;
+}
+
+#popupMateri .deskripsi {
+  font-size: 0.9rem;
+  color: #444;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+#popupMateri .materi-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  height: 45px;
+  margin-bottom: 20px;
+}
+
+#popupMateri .materi-box a {
+  text-decoration: none;
+  color: #1e3a8a;
+  font-weight: 500;
+}
+
+#popupMateri .btn-kumpul {
+  width: 100%;
+  background-color: #dbeafe;
+  color: #1e3a8a;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 0;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+#popupMateri .btn-kumpul:hover {
+  background-color: #bfdbfe;
+}
+

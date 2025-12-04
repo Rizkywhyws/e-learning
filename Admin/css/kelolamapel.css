@@ -1,0 +1,395 @@
+/* =====================================================
+   STYLE KELOLA MAPEL (SAMA FORMAT DENGAN KELOLA GURU)
+=====================================================*/
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  background-color: #F1F5FC;
+  color: #333;
+}
+
+/* =====================================================
+   HEADER
+=====================================================*/
+header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #F1F5FC;
+  padding: 15px 40px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo img {
+  width: 185px;
+  height: 80px;
+}
+
+/* =====================================================
+   NAVBAR MENU (DROPDOWN)
+=====================================================*/
+.menu-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  background: #D5EBFF;
+  border: 2px solid #2E7DFF;
+  border-radius: 40px;
+  padding: 10px 20px;
+  width: fit-content;
+  margin: -10px auto 10px;
+}
+
+.dropbtn {
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2E7DFF;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dropbtn:hover {
+  background: rgba(46, 125, 255, 0.1);
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #fff;
+  min-width: 180px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+  border-radius: 10px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+.dropdown-content a {
+  padding: 12px 14px;
+  text-decoration: none;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dropdown-content a i {
+  color: #2E7DFF;
+}
+
+.dropdown-content a:hover {
+  background-color: #E8F0FF;
+}
+
+/* =====================================================
+   WELCOME BOX
+=====================================================*/
+.welcome-box {
+  background-color: #B5CCFF;
+  border-radius: 20px;
+  padding: 40px 20px;
+  margin: 20px auto 10px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+}
+
+.welcome-box h2 {
+  color: #000;
+  font-size: 30px;
+  font-weight: 700;
+  margin-top: -8px;
+}
+
+.welcome-box p {
+  color: #000;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* =====================================================
+   SEARCH BAR
+=====================================================*/
+.search-bar {
+  text-align: center;
+  margin-top: -25px;
+  margin-bottom: 20px;
+}
+
+.search-bar input {
+  width: 60%;
+  padding: 14px 20px;
+  border-radius: 25px;
+  border: 2px solid #000;
+  outline: none;
+  transition: 0.3s;
+}
+
+.search-bar input:focus {
+  border-color: #2E7DFF;
+}
+
+.search-bar button {
+  background: #2E7DFF;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 25px;
+  cursor: pointer;
+  margin-left: 5px;
+}
+
+/* =====================================================
+   TOMBOL AKSI
+=====================================================*/
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 20px auto;
+}
+
+.btn {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: 0.25s;
+}
+
+.btn.green { background-color: #28a745; }
+.btn.green:hover { background-color: #218838; }
+
+.btn.yellow { background-color: #f0ad4e; }
+.btn.yellow:hover { background-color: #ec971f; }
+
+.btn.red { background-color: #d9534f; }
+.btn.red:hover { background-color: #c9302c; }
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* =====================================================
+   TABLE
+=====================================================*/
+.data-table {
+  width: 95%;
+  margin: 0 auto 30px;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+}
+
+.data-table thead {
+  background-color: #2E7DFF;
+  color: white;
+}
+
+.data-table th,
+.data-table td {
+  padding: 14px 16px;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+}
+
+.data-table tbody tr:hover {
+  background-color: #E8F0FF;
+}
+
+.data-table tbody tr.selected {
+  background-color: #C8DDFF !important;
+}
+
+/* =====================================================
+   MODAL
+=====================================================*/
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+  animation: fadeIn 0.3s;
+}
+
+.modal-content {
+  background-color: #fff;
+  margin: 5% auto;
+  padding: 30px;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 550px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+  position: relative;
+  animation: slideDown 0.3s;
+}
+
+/* Modal lebih besar untuk form yang panjang (jadwal) */
+.modal-content.modal-large {
+  max-width: 650px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  line-height: 20px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.close:hover,
+.close:focus {
+  color: #000;
+}
+
+.modal-content h3 {
+  text-align: center;
+  color: #2E7DFF;
+  font-weight: 700;
+  margin-bottom: 25px;
+  margin-top: 10px;
+}
+
+.modal-content form {
+  width: 100%;
+  display: block;
+}
+
+.modal-content .row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 18px;
+}
+
+.modal-content label {
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #333;
+}
+
+.modal-content input,
+.modal-content select {
+  padding: 12px 15px;
+  border-radius: 10px;
+  border: 2px solid #aaa;
+  outline: none;
+  font-size: 15px;
+  transition: 0.3s;
+  background-color: #fff;
+}
+
+.modal-content input:focus,
+.modal-content select:focus {
+  border-color: #2E7DFF;
+  box-shadow: 0 0 6px rgba(46,125,255,0.3);
+}
+
+/* Dropdown khusus guru pengampu */
+.modal-content select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='14' height='10' viewBox='0 0 14 10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%232e7dff' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 14px;
+  cursor: pointer;
+}
+
+.modal-content select:hover {
+  background-color: #f8fbff;
+}
+
+/* Tombol submit & cancel */
+.modal-content .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 25px;
+  width: 100%;
+}
+
+.modal-content button {
+  padding: 11px 22px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.modal-content button.btn.green {
+  background-color: #28a745;
+}
+
+.modal-content button.btn.green:hover {
+  background-color: #218838;
+}
+
+.modal-content button.btn {
+  background-color: #000000;
+}
+
+.modal-content button.btn:hover {
+  background-color: #515151;
+}
+
+/* =====================================================
+   ANIMATION
+=====================================================*/
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+  }
+  to { 
+    opacity: 1; 
+  }
+}
