@@ -1,5 +1,5 @@
 <?php
-//session_start();
+//file koreksiTugas.php
 
 // ========== PROTEKSI LOGIN & ROLE ==========
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || $_SESSION['role'] !== 'guru') {
@@ -88,20 +88,35 @@ $('#mapel').on('change', function() {
     }
 
     $.get('backend/getKelas.php', { kodeMapel: kodeMapel }, function(res){
-        let data = JSON.parse(res);
-        let html = '<option value="">-- Pilih Kelas --</option>';
-        data.forEach(d => {
-            html += `<option value="${d.kelas}">${d.kelas}</option>`;
-        });
-        $('#kelas').html(html);
-        $('#kelasContainer').show();
-        $('#tugasContainer').hide();
-        $('#inputLain').hide();
+        try {
+            let data = typeof res === 'string' ? JSON.parse(res) : res;
+            
+            if (data.error) {
+                alert('Error: ' + data.error);
+                return;
+            }
+            
+            let html = '<option value="">-- Pilih Kelas --</option>';
+            data.forEach(d => {
+                html += `<option value="${d.kelas}">${d.kelas}</option>`;
+            });
+            $('#kelas').html(html);
+            $('#kelasContainer').show();
+            $('#tugasContainer').hide();
+            $('#inputLain').hide();
+        } catch (e) {
+            console.error('Parse error:', e);
+            console.error('Response:', res);
+            alert('Terjadi kesalahan. Cek console untuk detail.');
+        }
+    }).fail(function(xhr, status, error) {
+        console.error('AJAX Error:', error);
+        console.error('Response:', xhr.responseText);
+        alert('Request gagal: ' + error);
     });
 });
 
-// ========== Ambil daftar tugas ==========
-$('#kelas').on('change', function(){
+$('#kelas').on('change', function(){ 
     let kodeMapel = $('#mapel').val();
     let kelas = $(this).val();
 
@@ -112,26 +127,71 @@ $('#kelas').on('change', function(){
     }
 
     $.get('backend/getTugas.php', { kodeMapel: kodeMapel, kelas: kelas }, function(res){
-        let data = JSON.parse(res);
-        let html = '<option value="">-- Pilih Tugas --</option>';
-        data.forEach(d => {
-            html += `<option value="${d.idTugas}">${d.judul}</option>`;
-        });
-        $('#tugas').html(html);
-        $('#tugasContainer').show();
-        $('#inputLain').hide();
+        try {
+            let data = typeof res === 'string' ? JSON.parse(res) : res;
+            
+            if (data.error) {
+                alert('Error: ' + data.error);
+                return;
+            }
+            
+            let html = '<option value="">-- Pilih Tugas --</option>';
+            data.forEach(d => {
+                html += `<option value="${d.idTugas}">${d.judul}</option>`;
+            });
+            $('#tugas').html(html);
+            $('#tugasContainer').show();
+            $('#inputLain').hide();
+        } catch (e) {
+            console.error('Parse error:', e);
+            console.error('Response:', res);
+            alert('Terjadi kesalahan. Cek console untuk detail.');
+        }
+    }).fail(function(xhr, status, error) {
+        console.error('AJAX Error:', error);
+        console.error('Response:', xhr.responseText);
+        alert('Request gagal: ' + error);
     });
 });
+
+// ========== Ambil daftar tugas ==========
+// $('#kelas').on('change', function(){
+//     let kodeMapel = $('#mapel').val();
+//     let kelas = $(this).val();
+
+//     if (kelas === "") {
+//         $('#tugasContainer').hide();
+//         $('#inputLain').hide();
+//         return;
+//     }
+
+//     $.get('backend/getTugas.php', { kodeMapel: kodeMapel, kelas: kelas }, function(res){
+//         let data = JSON.parse(res);
+//         let html = '<option value="">-- Pilih Tugas --</option>';
+//         data.forEach(d => {
+//             html += `<option value="${d.idTugas}">${d.judul}</option>`;
+//         });
+//         $('#tugas').html(html);
+//         $('#tugasContainer').show();
+//         $('#inputLain').hide();
+//     });
+// });
 
 // ========== Ambil detail & tabel tugas ==========
 $('#tugas').on('change', function(){
     let idTugas = $(this).val();
+    let kelas = $('#kelas').val(); // 👈 AMBIL NILAI KELAS
+    
     if (idTugas === "") {
         $('#inputLain').hide();
         return;
     }
 
-    $.get('backend/getTabelKoreksi.php', { idTugas: idTugas }, function(html){
+    // 👇 KIRIM PARAMETER KELAS JUGA
+    $.get('backend/getTabelKoreksi.php', { 
+        idTugas: idTugas,
+        kelas: kelas 
+    }, function(html){
         $('#inputLain').html(html).show();
     });
 });
