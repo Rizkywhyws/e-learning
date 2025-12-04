@@ -166,7 +166,7 @@ header {
     padding: 20px;
 }
 
-/* PRESENSI CARD */
+/* PRESENSI CARD (KIRI) */
 .now-presensi-card {
     flex: 2;
 }
@@ -335,7 +335,7 @@ header {
     box-shadow: none;
 }
 
-/* DATA KEHADIRAN CARD */
+/* DATA KEHADIRAN CARD (KANAN) */
 .data-kehadiran-card {
     flex: 1;
     max-width: 420px;
@@ -350,48 +350,10 @@ header {
     padding: 20px;
 }
 
-/* LEGEND */
-.rekap-presensi-section + .legend-row {
-    margin-top: 20px; /* Menyesuaikan margin karena adanya REKAP PRESENSI */
-}
+/* ===================================== */
+/* MODAL STYLES (DIPINDAH DARI INLINE) */
+/* ===================================== */
 
-.legend-row {
-    background: white;
-    border-radius: 12px;
-    padding: 15px 30px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    display: flex;
-    justify-content: space-around;
-    gap: 20px;
-    flex-wrap: wrap;
-    width: 90%;
-    max-width: 1200px;
-    margin: 20px auto 40px;
-    border: 1px solid #eee;
-}
-.legend-item {
-    display: flex;
-    align-items: center;
-    font-size: 0.9em;
-    color: #333;
-    font-weight: 500;
-}
-.legend-color {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    margin-right: 8px;
-    border: 1px solid rgba(0,0,0,0.1);
-}
-
-/* Warna Status */
-.hadir { background-color: #4CAF50; }
-.alpa { background-color: #F44336; }
-.sakit { background-color: #FFEB3B; }
-.izin { background-color: #2196F3; }
-.tidak-ada { background-color: #CCCCCC; }
-
-/* MODAL PRESENSI  MAUPUN IZIN */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -550,6 +512,9 @@ header {
           color: #856404;
           border: 1px solid #ffeeba;
 }
+/* ========================================
+   CSS TAMBAHAN UNTUK MODAL TOKEN PRESENSI
+   ======================================== */
 
 .token-input {
     width: 100%;

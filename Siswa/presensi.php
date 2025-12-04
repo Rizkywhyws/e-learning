@@ -11,20 +11,20 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'siswa') {
     exit;
 }
 
-// AMBIL DATA DARI SESSION
+// NGAMBIL DATA DARI SESSION
 $idAkun     = $_SESSION['user_id'];
 $namaSiswa  = $_SESSION['nama'];
 $email      = $_SESSION['email'];
 $namaMapel  = "(Tidak ada jadwal)";
 
-// Inisialisasi variabel siswa dan pesan status
+// INISIALISASI VARIABEL SISWA DAN PESAN STATUS
 $nisSiswa = null;
 $kelasSiswa = null;
 $jurusanSiswa = null;
 $statusMsg = null;
 $statusType = null;
 
-// Ambil pesan dari session (dari prosesPresensi.php)
+// NGAMBIL PESAN DARI SESSION (DARI PROSESPRESENSI.PHP)
 if (isset($_SESSION['statusMsg'])) {
     $statusMsg = $_SESSION['statusMsg'];
     $statusType = $_SESSION['statusType'];
@@ -32,7 +32,7 @@ if (isset($_SESSION['statusMsg'])) {
     unset($_SESSION['statusType']);
 }
 
-// AMBIL DATA LENGKAP SISWA (NIS, KELAS, JURUSAN)
+// NGAMBIL DATA LENGKAP SISWA (NIS, KELAS, JURUSAN)
 $querySiswa = $conn->prepare("
     SELECT NIS, kelas, jurusan 
     FROM datasiswa 
@@ -49,14 +49,13 @@ if ($dataSiswa) {
     $jurusanSiswa = $dataSiswa['jurusan']; 
 }
 
-// Ambil presensi terdekat (baik aktif maupun belum aktif)
+// NGAMBIL PRESENSI TERDEKAT (BAIK AKTIF MAUPUN BELUM AKTIF)
 $presensi = null;
 $presensiAktif = false;
 $statusPresensiSiswa = '-';
 $bisakahPresensi = false;
 
 if ($kelasSiswa) {
-    // Query untuk mencari sesi presensi terdekat (aktif atau akan datang)
     $queryPresensi = $conn->prepare("
         SELECT 
             bp.*, 
@@ -74,26 +73,29 @@ if ($kelasSiswa) {
             mapel m ON jm.kodeMapel = m.kodeMapel
         JOIN
             dataguru dg ON bp.NIP = dg.NIP
+        LEFT JOIN
+            presensisiswa ps ON bp.idBuatPresensi = ps.idBuatPresensi AND ps.NIS = ?
         WHERE 
             jm.kelas = ? 
             AND UNIX_TIMESTAMP(bp.waktuDitutup) >= UNIX_TIMESTAMP(NOW())
+            AND ps.idPresensi IS NULL
         ORDER BY 
             bp.waktuDimulai ASC
         LIMIT 1
     ");
 
-    $queryPresensi->bind_param('s', $kelasSiswa);
+    $queryPresensi->bind_param('ss', $nisSiswa, $kelasSiswa);
     $queryPresensi->execute();
     $presensi = $queryPresensi->get_result()->fetch_assoc();
     $queryPresensi->close();
     
     if ($presensi) {
-        // Ambil timestamp dari database (lebih akurat)
+        // Ngambil timestamp dari database (lebih akurat)
         $now_unix = $presensi['now_unix'];
         $mulai_unix = $presensi['mulai_unix'];
         $tutup_unix = $presensi['tutup_unix'];
         
-        // Cek apakah presensi sudah aktif (dimulai)
+        // Cek apakah presensi sudah aktif
         if ($now_unix >= $mulai_unix && $now_unix <= $tutup_unix) {
             $presensiAktif = true;
             $bisakahPresensi = true;
@@ -103,7 +105,7 @@ if ($kelasSiswa) {
             $bisakahPresensi = false;
         }
 
-        // Ambil status presensi siswa
+        // Ngambil status presensi siswa
         $queryStatus = $conn->prepare("
             SELECT status FROM presensisiswa 
             WHERE idBuatPresensi = ? AND NIS = ? 
@@ -123,29 +125,33 @@ if ($kelasSiswa) {
     }
 }
 
-// Ambil jadwal selanjutnya untuk welcome box
-if ($kelasSiswa) {
-    $qNext = $conn->prepare("
-        SELECT bp.*, m.namaMapel
-        FROM buatpresensi bp
-        JOIN jadwalmapel jm ON bp.idJadwalMapel = jm.idJadwalMapel
-        JOIN mapel m ON jm.kodeMapel = m.kodeMapel
-        WHERE jm.kelas = ? 
-          AND bp.waktuDimulai >= NOW()
-        ORDER BY bp.waktuDibuat ASC
-        LIMIT 1
-    ");
-    $qNext->bind_param('s', $kelasSiswa);
-    $qNext->execute();
-    $next = $qNext->get_result()->fetch_assoc();
-    $qNext->close();
+// NGAMBIL JADWAL UNTUK WELCOME BOX
+if ($presensi) {
+    $namaMapel = $presensi['namaMapel'];
+} else {
+    if ($kelasSiswa) {
+        $qNext = $conn->prepare("
+            SELECT bp.*, m.namaMapel
+            FROM buatpresensi bp
+            JOIN jadwalmapel jm ON bp.idJadwalMapel = jm.idJadwalMapel
+            JOIN mapel m ON jm.kodeMapel = m.kodeMapel
+            WHERE jm.kelas = ? 
+              AND bp.waktuDimulai >= NOW()
+            ORDER BY bp.waktuDibuat ASC
+            LIMIT 1
+        ");
+        $qNext->bind_param('s', $kelasSiswa);
+        $qNext->execute();
+        $next = $qNext->get_result()->fetch_assoc();
+        $qNext->close();
 
-    if ($next) {
-        $namaMapel = $next['namaMapel'];
+        if ($next) {
+            $namaMapel = $next['namaMapel'];
+        }
     }
 }
 
-// AMBIL DATA KEHADIRAN SISWA UNTUK CHART
+// NGAMBIL DATA KEHADIRAN SISWA UNTUK CHART
 $dataKehadiran = [
     'hadir' => 0,
     'terlambat' => 0,
@@ -202,14 +208,14 @@ if ($nisSiswa) {
     <div class="dropdown">
         <button class="dropbtn"><i class="fa-solid fa-user"></i> Profil <i class="fa-solid fa-chevron-down dropdown-arrow"></i></button>
         <div class="dropdown-content">
-            <a href="#"><i class="fa-solid fa-users"></i> Profil Saya</a>
+            <a href="dashboard.php"><i class="fa-solid fa-users"></i> Profil Saya</a>
         </div>
     </div>
 
     <div class="dropdown">
         <button class="dropbtn"><i class="fa-solid fa-clipboard-check"></i> Presensi Siswa <i class="fa-solid fa-chevron-down dropdown-arrow"></i></button>
         <div class="dropdown-content">
-            <a href="rekapPresensi.php"><i class="fa-solid fa-check"></i> Lihat Presensi</a>
+            <a href="presensi.php"><i class="fa-solid fa-check"></i> Lihat Presensi</a>
 
         </div>
     </div>
@@ -218,7 +224,7 @@ if ($nisSiswa) {
         <button class="dropbtn"><i class="fa-solid fa-school"></i> Pengelolaan Pembelajaran <i class="fa-solid fa-chevron-down dropdown-arrow"></i></button>
         <div class="dropdown-content">
             <a href="mataPelajaran.php"><i class="fa-solid fa-book-open"></i> Mapel</a>
-            <a href="#"><i class="fa-solid fa-pen-to-square"></i> Quiz</a>
+            <a href="ngerjakanQuiz.php"><i class="fa-solid fa-pen-to-square"></i> Quiz</a>
         </div>
     </div>
     <div class="dropdown">
@@ -341,14 +347,6 @@ if ($nisSiswa) {
         <h1>Rekap Presensi</h1>
         <?php include "../Siswa/rekapPresensi.php"; ?>
     </section>
-
-    <div class="legend-row">
-        <span class="legend-item"><span class="legend-color hadir"></span> Hadir</span>
-        <span class="legend-item"><span class="legend-color alpa"></span> Alpa</span>
-        <span class="legend-item"><span class="legend-color sakit"></span> Sakit</span>
-        <span class="legend-item"><span class="legend-color izin"></span> Izin</span>
-        <span class="legend-item"><span class="legend-color tidak-ada"></span> Tidak Ada Presensi</span>
-    </div>
 </main>
 
 <!-- Modal Token Presensi -->
@@ -442,9 +440,8 @@ if ($nisSiswa) {
 </div>
 
 <script>
-// ========================================
+
 // CHART.JS - DATA KEHADIRAN
-// ========================================
 const dataKehadiran = {
     hadir: <?= $dataKehadiran['hadir'] ?>,
     terlambat: <?= $dataKehadiran['terlambat'] ?>,
@@ -468,11 +465,11 @@ const kehadiranChart = new Chart(ctx, {
                 dataKehadiran.alpa
             ],
             backgroundColor: [
-                '#4CAF50',  // Hadir - Hijau
-                '#FF9800',  // Terlambat - Orange
-                '#2196F3',  // Sakit - Biru
-                '#9C27B0',  // Izin - Ungu
-                '#F44336'   // Alpa - Merah
+                '#2ecc71',  // Hadir - Hijau
+                '#9a9896',  // Terlambat - Orange
+                '#f7e713',  // Sakit - Biru
+                '#6199ed',  // Izin - Ungu
+                '#e74c3c'   // Alpa - Merah
             ],
             borderColor: '#fff',
             borderWidth: 2
@@ -508,9 +505,8 @@ const kehadiranChart = new Chart(ctx, {
     }
 });
 
-// ========================================
+
 // FUNGSI MODAL
-// ========================================
 function openModalToken() {
     document.getElementById('tokenModal').style.display = 'flex';
     document.getElementById('tokenInput').focus();
@@ -524,9 +520,7 @@ function closeModalUpload() {
     document.getElementById('uploadModal').style.display = 'none';
 }
 
-// ========================================
-// FUNGSI JAVASCRIPT UNTUK MODAL dan Dropdown
-// ========================================
+// FUNGSI JS UNTUK MODAL DAN DROPDOWN
 document.addEventListener('DOMContentLoaded', function() {
     const uploadModal = document.getElementById('uploadModal');
     const tokenModal = document.getElementById('tokenModal');
@@ -542,7 +536,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Close modal when clicking outside
+    // TUTUP MODAL KALAU KLIK LUAR
     uploadModal.addEventListener('click', function(e) {
         if (e.target === uploadModal) {
             closeModalUpload();
@@ -555,7 +549,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // File input change handler
+    // FILE INPUT SURAT
     fileInput.addEventListener('change', function() {
         if (this.files && this.files.length > 0) {
             fileLabel.textContent = this.files[0].name;
@@ -564,7 +558,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Dropdown functionality
+    // FUNGSI DROPDOWN
     const dropdowns = document.querySelectorAll('.dropdown');
     dropdowns.forEach(dropdown => {
         const dropbtn = dropdown.querySelector('.dropbtn');
