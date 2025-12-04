@@ -29,7 +29,6 @@ header {
   width: fit-content;
   margin: -20px auto 20px;
 }
-
 .dropdown {
   position: relative;
 }
@@ -132,11 +131,26 @@ header {
   border: 3px solid;
   transition: transform 0.3s ease;
   box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  position: relative;
 }
 .card:hover { transform: translateY(-3px); }
 .card-x { border-color: #ff998c; }
 .card-xi { border-color: #ffee00; }
 .card-xii { border-color: #44aa44; }
+
+/* CARD DISABLED */
+.card.disabled {
+  background: #f5f5f5;
+  border-color: #d4d4d4;
+  opacity: 0.7;
+}
+.card.disabled:hover {
+  transform: none;
+}
+.card.disabled h3 {
+  color: #999;
+}
+
 .card h3 {
   font-size: 30px;
   color: #1f3f66;
@@ -157,7 +171,205 @@ header {
   background: #f0f0f0;
 }
 
-/* MODAL */
+.card button:disabled {
+  background: #e0e0e0;
+  color: #999;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* INFO DISABLED */
+.info-disabled {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 15px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  border-radius: 8px;
+  color: #666;
+  font-size: 13px;
+  font-weight: 500;
+  border: 2px dashed #d4d4d4;
+}
+
+.info-disabled::before {
+  content: "🔒";
+  font-size: 16px;
+}
+
+/* MODAL DAFTAR PRESENSI AKTIF */
+.modal-list-presensi {
+  display: none;
+  position: fixed;
+  top: 0; 
+  left: 0;
+  width: 100%; 
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-list-presensi.show { 
+  display: flex; 
+}
+
+.modal-list-content {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+  width: 90%;
+  max-width: 900px;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.modal-list-header {
+  background: #2e7dff;
+  color: white;
+  padding: 20px;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.modal-list-header h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.btn-close-modal {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  font-size: 24px;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s;
+}
+
+.btn-close-modal:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+.modal-list-body {
+  padding: 20px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+}
+
+.empty-state i {
+  font-size: 48px;
+  color: #ddd;
+  margin-bottom: 15px;
+}
+
+.empty-state p {
+  font-size: 16px;
+  margin: 0;
+}
+
+/* TABEL PRESENSI AKTIF */
+.table-presensi-aktif {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table-presensi-aktif thead {
+  background: #f0f4ff;
+}
+
+.table-presensi-aktif th {
+  padding: 12px;
+  text-align: center;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 2px solid #d0d7ff;
+  font-size: 14px;
+}
+
+.table-presensi-aktif td {
+  padding: 12px;
+  text-align: center;
+  border-bottom: 1px solid #e8ecf5;
+  font-size: 14px;
+}
+
+.table-presensi-aktif tr:hover {
+  background: #f9fbff;
+}
+
+/* STATUS BADGE */
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-aktif {
+  background: #d4f4dd;
+  color: #2d7a3e;
+}
+
+.status-akan-datang {
+  background: #fff3cd;
+  color: #856404;
+}
+
+/* TOKEN DISPLAY */
+.token-display {
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #2e7dff;
+  background: #f0f4ff;
+  padding: 4px 10px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .modal-list-content {
+    width: 95%;
+    max-height: 90vh;
+  }
+  
+  .table-presensi-aktif {
+    font-size: 12px;
+  }
+  
+  .table-presensi-aktif th,
+  .table-presensi-aktif td {
+    padding: 8px 4px;
+  }
+}
+
+/* MODAL TAMBAH PRESENSI */
 .modal {
   display: none;
   position: fixed;
@@ -240,7 +452,7 @@ header {
   background: #ddd;
 }
 
-/* ===== STYLE UNTUK INPUT TOKEN ===== */
+/* STYLE UNTUK TOKEN */
 .token-presensi-wrapper {
     display: flex;
     align-items: center;
@@ -259,7 +471,7 @@ header {
     text-transform: uppercase;
 }
 
-/* ===== BUTTON GENERATE TOKEN ===== */
+/* BUTTON GENERATE TOKEN */
 .btn-generate-token {
     padding: 10px 14px;
     border-radius: 8px;
@@ -285,7 +497,7 @@ header {
   .card { width: 80%; }
 }
 
-/* ========== REKAP PRESENSI ========== */
+/* REKAP PRESENSI */
 .rekap-presensi {
   background: #f4f6fb;
   width: 90%;
@@ -293,13 +505,12 @@ header {
   padding-bottom: 30px;
 }
 
-/* PERUBAHAN: Hilangkan space-between karena tombol "Terapkan" dihapus */
 .rekap-header {
   display: flex;
-  justify-content: flex-start; /* Ubah dari space-between */
+  justify-content: flex-start; 
   align-items: center;
   margin-bottom: 15px;
-  gap: 20px; /* Tambahkan jarak antara H3 dan date-picker */
+  gap: 20px; 
 }
 
 .rekap-header h3 {
@@ -333,17 +544,15 @@ header {
   border-color: #2e7dff;
 }
 
-/* Hapus .btn-filter karena sudah tidak digunakan */
-
-/* SECTION PER KELAS */
+/* SECTION PER KELAS REKAP PRESENSI */
 .kelas-section {
   margin-bottom: 30px;
 }
 
-/* PERUBAHAN: Mengatur agar judul kelas dan filter golongan berdampingan */
+/* Mengatur agar judul kelas dan filter golongan berdampingan */
 .kelas-header {
   display: flex;
-  justify-content: space-between; /* Kembali ke space-between untuk judul dan filter golongan */
+  justify-content: space-between; 
   align-items: center;
   background: #dbe7ff;
   padding: 12px 15px;
