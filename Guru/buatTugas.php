@@ -8,20 +8,17 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || $_SESSI
     exit;
 }
 require_once "../config/db.php";
-//include "../config/db.php";
 
 // ==================== AMBIL DATA DARI SESSION LOGIN ====================
-$idAkun = $_SESSION['user_id']; // Gunakan user_id dari login
+$idAkun = $_SESSION['user_id'];
 $nipGuru = isset($_SESSION['nip']) ? $_SESSION['nip'] : '';
 
-// Jika NIP tidak ada di session, ambil dari database
 if (empty($nipGuru)) {
     $queryGuru = mysqli_query($conn, "SELECT NIP FROM dataguru WHERE idAkun = '$idAkun'");
     $dataGuru = mysqli_fetch_assoc($queryGuru);
     $nipGuru = isset($dataGuru['NIP']) ? $dataGuru['NIP'] : '';
-    $_SESSION['nip'] = $nipGuru; // Simpan ke session untuk request berikutnya
+    $_SESSION['nip'] = $nipGuru;
 }
-
 
 // ==================== FUNGSI BUAT ID OTOMATIS ====================
 function generateIdTugas($conn) {
@@ -35,7 +32,6 @@ function generateIdTugas($conn) {
     }
 }
 
-// Fungsi generate random ID untuk materi
 function generateRandomIdMateri($conn) {
     do {
         $id = "MT" . rand(10000, 99999);
@@ -47,11 +43,15 @@ function generateRandomIdMateri($conn) {
 // ==================== HANDLE AJAX GET MATERI ====================
 if (isset($_GET['action']) && $_GET['action'] === 'getMateri' && isset($_GET['kodeMapel'])) {
     $kodeMapel = mysqli_real_escape_string($conn, $_GET['kodeMapel']);
+    $kelas = isset($_GET['kelas']) ? mysqli_real_escape_string($conn, $_GET['kelas']) : '';
+    
+    // ✅ Filter materi berdasarkan kelas juga
+    $whereKelas = !empty($kelas) ? "AND kelas = '$kelas'" : "";
     
     $qMateri = mysqli_query($conn, "
         SELECT idMateri, judul 
         FROM materi 
-        WHERE kodeMapel = '$kodeMapel' AND NIP = '$nipGuru'
+        WHERE kodeMapel = '$kodeMapel' AND NIP = '$nipGuru' $whereKelas
         ORDER BY createdAt DESC
     ");
     
@@ -69,11 +69,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'getMateri' && isset($_GET['ko
 if (isset($_POST['action']) && $_POST['action'] === 'update' && isset($_POST['idTugas'])) {
     $id = mysqli_real_escape_string($conn, $_POST['idTugas']);
     $kodeMapel = mysqli_real_escape_string($conn, $_POST['mapel']);
+    $kelas = mysqli_real_escape_string($conn, $_POST['kelas']); // ✅ TAMBAHAN KELAS
     $judul = mysqli_real_escape_string($conn, $_POST['judul']);
     $deskripsi = mysqli_real_escape_string($conn, $_POST['deskripsi']);
     $deadline = mysqli_real_escape_string($conn, $_POST['deadline']);
 
-    // Handle file upload untuk edit
     $filePath = "";
     if (!empty($_FILES['file']['name'])) {
         $uploadDir = "../../uploads/tugas/";
@@ -82,19 +82,17 @@ if (isset($_POST['action']) && $_POST['action'] === 'update' && isset($_POST['id
         $targetFile = $uploadDir . time() . "_" . $fileName;
         if (move_uploaded_file($_FILES['file']['tmp_name'], $targetFile)) {
             $filePath = $targetFile;
-            // Update dengan file baru
             $update = mysqli_query($conn, "
                 UPDATE tugas 
-                SET kodeMapel='$kodeMapel', judul='$judul', deskripsi='$deskripsi', 
+                SET kodeMapel='$kodeMapel', kelas='$kelas', judul='$judul', deskripsi='$deskripsi', 
                     deadline='$deadline', filePath='$filePath' 
                 WHERE idTugas='$id'
             ");
         }
     } else {
-        // Update tanpa ubah file
         $update = mysqli_query($conn, "
             UPDATE tugas 
-            SET kodeMapel='$kodeMapel', judul='$judul', deskripsi='$deskripsi', deadline='$deadline' 
+            SET kodeMapel='$kodeMapel', kelas='$kelas', judul='$judul', deskripsi='$deskripsi', deadline='$deadline' 
             WHERE idTugas='$id'
         ");
     }
@@ -111,7 +109,6 @@ if (isset($_POST['action']) && $_POST['action'] === 'update' && isset($_POST['id
 if (isset($_POST['action']) && $_POST['action'] === 'hapus' && isset($_POST['idTugas'])) {
     $id = mysqli_real_escape_string($conn, $_POST['idTugas']);
     
-    // Ambil data tugas termasuk idMateri
     $qTugas = mysqli_query($conn, "SELECT filePath, idMateri FROM tugas WHERE idTugas='$id'");
     if (!$qTugas || mysqli_num_rows($qTugas) == 0) {
         echo "❌ Tugas tidak ditemukan!";
@@ -121,20 +118,16 @@ if (isset($_POST['action']) && $_POST['action'] === 'hapus' && isset($_POST['idT
     $tugasData = mysqli_fetch_assoc($qTugas);
     $idMateri = $tugasData['idMateri'];
     
-    // Hapus file tugas jika ada
     if (!empty($tugasData['filePath']) && file_exists($tugasData['filePath'])) {
         unlink($tugasData['filePath']);
     }
     
-    // Hapus tugas dari database
     $delete = mysqli_query($conn, "DELETE FROM tugas WHERE idTugas='$id'");
 
     if ($delete) {
         $message = "✅ Tugas berhasil dihapus!";
         
-        // Cek apakah perlu hapus materi juga
         if (!empty($idMateri)) {
-            // Cek kolom filePath dan linkVideo di tabel materi
             $qMateri = mysqli_query($conn, "SELECT filePath, linkVideo FROM materi WHERE idMateri='$idMateri'");
             
             if ($qMateri && mysqli_num_rows($qMateri) > 0) {
@@ -142,7 +135,6 @@ if (isset($_POST['action']) && $_POST['action'] === 'hapus' && isset($_POST['idT
                 $materiFilePath = $materiData['filePath'];
                 $materiLinkVideo = $materiData['linkVideo'];
                 
-                // Jika kedua kolom kosong/null, hapus materi
                 if ((empty($materiFilePath) || is_null($materiFilePath)) && 
                     (empty($materiLinkVideo) || is_null($materiLinkVideo))) {
                     
@@ -169,13 +161,13 @@ if (isset($_POST['action']) && $_POST['action'] === 'hapus' && isset($_POST['idT
 // ==================== JIKA FORM DISUBMIT ====================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['action'])) {
     $kodeMapel = mysqli_real_escape_string($conn, $_POST['mapel']);
+    $kelas = mysqli_real_escape_string($conn, $_POST['kelas']); // ✅ TAMBAHAN KELAS
     $judul = mysqli_real_escape_string($conn, $_POST['judul']);
     $deskripsi = mysqli_real_escape_string($conn, $_POST['deskripsi']);
     $deadline = mysqli_real_escape_string($conn, $_POST['deadline']);
     $createdAt = date("Y-m-d H:i:s");
     $materiOption = mysqli_real_escape_string($conn, $_POST['materi']);
 
-    // Upload file (optional)
     $filePath = "";
     if (!empty($_FILES['file']['name'])) {
         $uploadDir = "../../uploads/tugas/";
@@ -187,15 +179,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['action'])) {
         }
     }
 
-    // Cek apakah user memilih "buat materi baru"
     $idMateri = "";
     if ($materiOption === "new") {
-        // Buat materi baru
         $idMateri = generateRandomIdMateri($conn);
         
-        // Insert ke tabel materi
-        $sqlMateri = "INSERT INTO materi (idMateri, kodeMapel, NIP, judul, createdAt)
-                      VALUES ('$idMateri', '$kodeMapel', '$nipGuru', '$judul', '$createdAt')";
+        // ✅ INSERT materi dengan kolom kelas
+        $sqlMateri = "INSERT INTO materi (idMateri, kodeMapel, kelas, NIP, judul, createdAt)
+                      VALUES ('$idMateri', '$kodeMapel', '$kelas', '$nipGuru', '$judul', '$createdAt')";
         
         $resultMateri = mysqli_query($conn, $sqlMateri);
         
@@ -204,16 +194,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['action'])) {
             exit;
         }
     } else {
-        // Gunakan materi yang sudah ada
         $idMateri = $materiOption;
     }
 
-    // Generate ID Tugas
     $idTugas = generateIdTugas($conn);
 
-    // Insert data ke tabel tugas dengan idMateri
-    $sql = "INSERT INTO tugas (idTugas, kodeMapel, NIP, judul, deskripsi, deadline, filePath, createdAt, idMateri)
-            VALUES ('$idTugas', '$kodeMapel', '$nipGuru', '$judul', '$deskripsi', '$deadline', '$filePath', '$createdAt', '$idMateri')";
+    // ✅ QUERY INSERT DENGAN KOLOM KELAS
+    $sql = "INSERT INTO tugas (idTugas, kodeMapel, kelas, NIP, judul, deskripsi, deadline, filePath, createdAt, idMateri)
+            VALUES ('$idTugas', '$kodeMapel', '$kelas', '$nipGuru', '$judul', '$deskripsi', '$deadline', '$filePath', '$createdAt', '$idMateri')";
     $result = mysqli_query($conn, $sql);
 
     if ($result) {
@@ -243,7 +231,6 @@ $mapelQuery = mysqli_query($conn, "
 
     <form action="" method="POST" enctype="multipart/form-data">
 
-        <!-- Dropdown Mata Pelajaran -->
         <label for="mapel">Mata Pelajaran</label>
         <select name="mapel" id="mapel" required>
             <option value="">-- Pilih Mata Pelajaran --</option>
@@ -252,17 +239,14 @@ $mapelQuery = mysqli_query($conn, "
             <?php } ?>
         </select>
 
-        <!-- Dropdown Kelas -->
         <div id="kelasContainer" style="display:none;">
             <label for="kelas">Kelas</label>
-            <select name="kelas" id="kelas">
+            <select name="kelas" id="kelas" required>
                 <option value="">-- Pilih Kelas --</option>
             </select>
         </div>
 
-        <!-- Input tambahan -->
         <div id="inputLain" style="display:none;">
-            <!-- Dropdown Materi -->
             <label for="materi">Materi Terkait</label>
             <select name="materi" id="materi" required>
                 <option value="">-- Pilih Materi --</option>
@@ -302,14 +286,17 @@ $mapelQuery = mysqli_query($conn, "
             <select id="edit_mapel" name="mapel" required>
                 <option value="">-- Pilih Mata Pelajaran --</option>
                 <?php 
-                mysqli_data_seek($mapelQuery, 0); // reset pointer
+                mysqli_data_seek($mapelQuery, 0);
                 while ($m = mysqli_fetch_assoc($mapelQuery)) { ?>
                     <option value="<?= $m['kodeMapel']; ?>"><?= $m['namaMapel']; ?></option>
                 <?php } ?>
             </select>
 
+            <!-- ✅ UBAH INPUT KELAS MENJADI EDITABLE -->
             <label for="edit_kelas">Kelas</label>
-            <input type="text" id="edit_kelas" readonly style="background-color: #f0f0f0;">
+            <select id="edit_kelas" name="kelas" required>
+                <option value="">-- Pilih Kelas --</option>
+            </select>
 
             <label for="edit_judul">Judul Tugas</label>
             <input type="text" id="edit_judul" name="judul" required>
@@ -320,10 +307,8 @@ $mapelQuery = mysqli_query($conn, "
             <label for="edit_deadline">Deadline Tugas</label>
             <input type="datetime-local" id="edit_deadline" name="deadline" required>
 
-            <!-- File saat ini -->
             <div id="currentFileInfo" style="margin-bottom: 10px;"></div>
 
-            <!-- Upload file baru -->
             <div class="upload-box">
                 <label for="edit_file">Upload File Baru (opsional)</label><br>
                 <input type="file" id="edit_file" name="file">
@@ -335,17 +320,15 @@ $mapelQuery = mysqli_query($conn, "
     </div>
 </div>
 
-<!-- === Tabel Daftar seluruh tugas di mata pelajaran itu === -->
+<!-- === Tabel Daftar seluruh tugas === -->
 <div class="wide-section">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
         <h3 style="margin:0;">Daftar Tugas yang Telah Dibuat</h3>
         
-        <!-- Dropdown Filter -->
         <div style="display:flex; gap:10px; align-items:center;">
             <select id="filterMapel" style="padding:8px 12px; border-radius:8px; border:1px solid #ccc;">
                 <option value="">-- Pilih Mapel --</option>
                 <?php
-                // Ambil daftar mapel yang diampu guru
                 mysqli_data_seek($mapelQuery, 0);
                 while ($m = mysqli_fetch_assoc($mapelQuery)) {
                     echo "<option value='{$m['kodeMapel']}'>{$m['namaMapel']}</option>";
@@ -371,13 +354,10 @@ $mapelQuery = mysqli_query($conn, "
                     <th>Dibuat Pada</th>
                 </tr>
             </thead>
-            <tbody>
-                <!-- Akan diisi lewat JavaScript -->
-            </tbody>
+            <tbody></tbody>
         </table>
     </div>
 
-    <!-- tombol aksi untuk update/delete tugas yang sudah dibuat -->
     <div style="margin-top: 20px;">
         <button type="button" class="edit-btn">✏️ Edit Tugas</button>
         <button type="button" class="delete-btn">🗑️ Hapus Tugas</button>
@@ -385,12 +365,10 @@ $mapelQuery = mysqli_query($conn, "
 </div>
 
 <script>
-// === FILTER MAPEL DAN KELAS ===
 const filterMapel = document.getElementById("filterMapel");
 const filterKelas = document.getElementById("filterKelas");
 const tugasTableBody = document.querySelector("#tugasTable tbody");
 
-// Saat mapel dipilih → ambil kelas
 filterMapel.addEventListener("change", () => {
     const kodeMapel = filterMapel.value;
     tugasTableBody.innerHTML = "";
@@ -414,7 +392,6 @@ filterMapel.addEventListener("change", () => {
     }
 });
 
-// Saat kelas dipilih → tampilkan tabel tugas
 filterKelas.addEventListener("change", () => {
     const kodeMapel = filterMapel.value;
     const kelas = filterKelas.value;
@@ -431,17 +408,14 @@ filterKelas.addEventListener("change", () => {
     }
 });
 
-// === PILIH TUGAS & AKSI TOMBOL ===
 let selectedRow = null;
 let selectedTugas = null;
 let isLoading = false;
 
-// Delegasi klik pada TABEL
 document.getElementById("tugasTable").addEventListener("click", (e) => {
     const row = e.target.closest("tbody tr");
     if (!row) return;
 
-    // Reset selection
     document.querySelectorAll(".koreksi-table tbody tr").forEach(r => {
         r.classList.remove("selected-row");
         r.classList.remove("loading-row");
@@ -455,11 +429,9 @@ document.getElementById("tugasTable").addEventListener("click", (e) => {
     selectedTugas = null;
     isLoading = true;
 
-    // Disable tombol sementara
     document.querySelector(".edit-btn").disabled = true;
     document.querySelector(".delete-btn").disabled = true;
 
-    // Ambil detail tugas dari database
     fetch(`backend/getDetailTugas.php?idTugas=${idTugas}`)
         .then(res => res.text())
         .then(text => {
@@ -504,11 +476,10 @@ document.getElementById("tugasTable").addEventListener("click", (e) => {
         });
 });
 
-// === MODAL EDIT ===
 const modal = document.getElementById("editModal");
 const closeModal = document.querySelector(".close");
 
-// TOMBOL EDIT - Buka Modal
+// ✅ TOMBOL EDIT - Load Kelas saat Modal Dibuka
 document.querySelector(".edit-btn").addEventListener("click", () => {
     if (isLoading) {
         alert("⏳ Sedang memuat data, tunggu sebentar...");
@@ -520,15 +491,33 @@ document.querySelector(".edit-btn").addEventListener("click", () => {
         return;
     }
 
-    // Isi data ke modal
     document.getElementById("edit_idTugas").value = selectedTugas.idTugas;
     document.getElementById("edit_mapel").value = selectedTugas.kodeMapel;
-    document.getElementById("edit_kelas").value = selectedTugas.kelas;
     document.getElementById("edit_judul").value = selectedTugas.judul;
     document.getElementById("edit_deskripsi").value = selectedTugas.deskripsi;
     document.getElementById("edit_deadline").value = selectedTugas.deadline;
 
-    // Tampilkan file yang ada
+    // ✅ Load daftar kelas untuk mapel yang dipilih
+    fetch(`backend/getKelas.php?kodeMapel=${selectedTugas.kodeMapel}`)
+        .then(res => res.json())
+        .then(data => {
+            const editKelas = document.getElementById("edit_kelas");
+            editKelas.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+            
+            data.forEach(k => {
+                const opt = document.createElement("option");
+                opt.value = k.kelas;
+                opt.textContent = k.kelas;
+                
+                // ✅ Set selected kelas dari data tugas
+                if (k.kelas === selectedTugas.kelas) {
+                    opt.selected = true;
+                }
+                
+                editKelas.appendChild(opt);
+            });
+        });
+
     const fileInfo = document.getElementById("currentFileInfo");
     if (selectedTugas.filePath && selectedTugas.filePath !== '') {
         const fileName = selectedTugas.filePath.split('/').pop();
@@ -542,17 +531,33 @@ document.querySelector(".edit-btn").addEventListener("click", () => {
         fileInfo.innerHTML = '<p style="color: #999; font-size: 14px;">📌 Belum ada file yang diupload</p>';
     }
 
-    // Tampilkan modal
     modal.style.display = "block";
 });
 
-// Close modal
+// ✅ Saat mapel diubah di modal edit, reload kelas
+document.getElementById("edit_mapel").addEventListener("change", () => {
+    const kodeMapel = document.getElementById("edit_mapel").value;
+    if (kodeMapel) {
+        fetch(`backend/getKelas.php?kodeMapel=${kodeMapel}`)
+            .then(res => res.json())
+            .then(data => {
+                const editKelas = document.getElementById("edit_kelas");
+                editKelas.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+                data.forEach(k => {
+                    const opt = document.createElement("option");
+                    opt.value = k.kelas;
+                    opt.textContent = k.kelas;
+                    editKelas.appendChild(opt);
+                });
+            });
+    }
+});
+
 closeModal.onclick = () => modal.style.display = "none";
 window.onclick = (e) => {
     if (e.target == modal) modal.style.display = "none";
 }
 
-// SUBMIT EDIT FORM
 document.getElementById("editForm").addEventListener("submit", (e) => {
     e.preventDefault();
 
@@ -560,11 +565,11 @@ document.getElementById("editForm").addEventListener("submit", (e) => {
     formData.append("action", "update");
     formData.append("idTugas", document.getElementById("edit_idTugas").value);
     formData.append("mapel", document.getElementById("edit_mapel").value);
+    formData.append("kelas", document.getElementById("edit_kelas").value); // ✅ Kirim kelas
     formData.append("judul", document.getElementById("edit_judul").value);
     formData.append("deskripsi", document.getElementById("edit_deskripsi").value);
     formData.append("deadline", document.getElementById("edit_deadline").value);
     
-    // Tambahkan file jika ada
     const fileInput = document.getElementById("edit_file");
     if (fileInput.files.length > 0) {
         formData.append("file", fileInput.files[0]);
@@ -579,7 +584,6 @@ document.getElementById("editForm").addEventListener("submit", (e) => {
         alert(msg);
         modal.style.display = "none";
         
-        // Refresh tabel
         const kodeMapel = filterMapel.value;
         const kelas = filterKelas.value;
         if (kodeMapel && kelas) {
@@ -595,7 +599,6 @@ document.getElementById("editForm").addEventListener("submit", (e) => {
     .catch(err => alert("❌ Gagal: " + err));
 });
 
-// === TOMBOL DELETE ===
 document.querySelector(".delete-btn").addEventListener("click", () => {
     if (isLoading) {
         alert("⏳ Sedang memuat data, tunggu sebentar...");
@@ -625,7 +628,6 @@ document.querySelector(".delete-btn").addEventListener("click", () => {
     .catch(err => alert("❌ Gagal: " + err));
 });
 
-// === Dropdown Dinamis untuk Form Tambah ===
 const mapel = document.getElementById("mapel");
 const kelasContainer = document.getElementById("kelasContainer");
 const kelas = document.getElementById("kelas");
@@ -635,7 +637,6 @@ const materiSelect = document.getElementById("materi");
 mapel.addEventListener("change", () => {
     const kodeMapel = mapel.value;
     if (kodeMapel) {
-        // Ambil daftar kelas
         fetch(`backend/getKelas.php?kodeMapel=${kodeMapel}`)
             .then(res => res.json())
             .then(data => {
@@ -648,8 +649,23 @@ mapel.addEventListener("change", () => {
                 });
             });
         
-        // Ambil daftar materi untuk mapel ini
-        fetch(`buatTugas.php?action=getMateri&kodeMapel=${kodeMapel}`)
+        // ✅ HAPUS: Jangan load materi di sini, tunggu sampai kelas dipilih
+        kelasContainer.style.display = "block";
+    } else {
+        kelasContainer.style.display = "none";
+        inputLain.style.display = "none";
+    }
+});
+
+kelas.addEventListener("change", () => {
+    if (kelas.value !== "") {
+        inputLain.style.display = "block";
+        
+        // ✅ Reload materi berdasarkan kelas yang dipilih
+        const kodeMapel = mapel.value;
+        const kelasValue = kelas.value;
+        
+        fetch(`buatTugas.php?action=getMateri&kodeMapel=${kodeMapel}&kelas=${kelasValue}`)
             .then(res => res.json())
             .then(data => {
                 materiSelect.innerHTML = '<option value="">-- Pilih Materi --</option>';
@@ -662,20 +678,11 @@ mapel.addEventListener("change", () => {
                     materiSelect.appendChild(opt);
                 });
             });
-            
-        kelasContainer.style.display = "block";
     } else {
-        kelasContainer.style.display = "none";
         inputLain.style.display = "none";
     }
 });
 
-kelas.addEventListener("change", () => {
-    if (kelas.value !== "") inputLain.style.display = "block";
-    else inputLain.style.display = "none";
-});
-
-// === BATASI DEADLINE HANYA BISA PILIH WAKTU SETELAH SEKARANG ===
 const deadlineInput = document.getElementById("deadline");
 if (deadlineInput) {
     const now = new Date();
@@ -685,7 +692,6 @@ if (deadlineInput) {
     deadlineInput.value = localISOTime;
 }
 
-// === Untuk input edit deadline juga (modal edit) ===
 const editDeadlineInput = document.getElementById("edit_deadline");
 if (editDeadlineInput) {
     const now = new Date();
@@ -694,7 +700,6 @@ if (editDeadlineInput) {
     editDeadlineInput.min = localISOTime;
 }
 
-// === Gaya highlight baris ===
 const style = document.createElement("style");
 style.textContent = `
 .selected-row {

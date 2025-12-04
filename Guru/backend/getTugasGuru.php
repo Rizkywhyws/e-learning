@@ -11,14 +11,13 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'guru') {
 }
 
 // ========== AMBIL NIP GURU ==========
-$nipGuru = $_SESSION['nip'] ?? null;
+$nipGuru = isset($_SESSION['nip']) ? $_SESSION['nip'] : null;
 
 if (!$nipGuru) {
-    // fallback ambil dari DB
     $idAkun = $_SESSION['user_id'];
     $qGuru = mysqli_query($conn, "SELECT NIP FROM dataguru WHERE idAkun='$idAkun'");
     $guru = mysqli_fetch_assoc($qGuru);
-    $nipGuru = $guru['NIP'] ?? null;
+    $nipGuru = isset($guru['NIP']) ? $guru['NIP'] : null;
 }
 
 if (!$nipGuru) {
@@ -27,24 +26,21 @@ if (!$nipGuru) {
 }
 
 // ========== AMBIL PARAMETER GET ==========
-$kodeMapel = mysqli_real_escape_string($conn, $_GET['mapel'] ?? '');
-$kelas      = mysqli_real_escape_string($conn, $_GET['kelas'] ?? '');
+$kodeMapel = isset($_GET['mapel']) ? mysqli_real_escape_string($conn, $_GET['mapel']) : '';
+$kelas     = isset($_GET['kelas']) ? mysqli_real_escape_string($conn, $_GET['kelas']) : '';
 
 if (!$kodeMapel || !$kelas) {
     echo '<tr><td colspan="6" style="text-align:center; color:red;">Mapel atau kelas tidak valid!</td></tr>';
     exit;
 }
 
-// ========== QUERY AMBIL TUGAS ==========
+// ✅ UPDATE QUERY: Filter langsung dari kolom kelas di tabel tugas
 $tugasRes = mysqli_query($conn, "
     SELECT t.*
     FROM tugas t
-    JOIN jadwalmapel jm 
-        ON jm.kodeMapel = t.kodeMapel 
-       AND jm.nipGuru = t.NIP
     WHERE t.NIP = '$nipGuru'
       AND t.kodeMapel = '$kodeMapel'
-      AND jm.kelas = '$kelas'
+      AND t.kelas = '$kelas'
     ORDER BY t.createdAt DESC
 ");
 

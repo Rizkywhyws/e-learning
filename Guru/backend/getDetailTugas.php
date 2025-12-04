@@ -15,31 +15,27 @@ header('Content-Type: application/json');
 require_once "../../config/db.php";
 
 // Validasi idTugas
-$idTugas = $_GET['idTugas'] ?? '';
+$idTugas = isset($_GET['idTugas']) ? $_GET['idTugas'] : '';
 
 if (empty($idTugas)) {
     echo json_encode(['error' => 'idTugas kosong']);
     exit;
 }
 
-// Gunakan prepared statement untuk keamanan
+// ✅ UPDATE QUERY: Ambil kelas langsung dari tabel tugas
 $sql = "
     SELECT 
         t.idTugas, 
         t.kodeMapel, 
+        t.kelas,
         m.namaMapel, 
         t.judul, 
         t.deskripsi, 
         t.deadline, 
-        t.filePath,
-        GROUP_CONCAT(DISTINCT jm.kelas ORDER BY jm.kelas SEPARATOR ', ') AS kelas
+        t.filePath
     FROM tugas t
     JOIN mapel m ON t.kodeMapel = m.kodeMapel
-    LEFT JOIN jadwalmapel jm 
-        ON jm.kodeMapel = t.kodeMapel 
-        AND jm.nipGuru = t.NIP
     WHERE t.idTugas = ?
-    GROUP BY t.idTugas
     LIMIT 1
 ";
 
