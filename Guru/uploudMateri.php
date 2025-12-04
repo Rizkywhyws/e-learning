@@ -75,6 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'add') {
         $idmateri = generateIdMateri($conn);
         $kodeMapel = mysqli_real_escape_string($conn, $_POST['kodeMapel']);
+        $kelas = mysqli_real_escape_string($conn, $_POST['kelas']); // 👈 TAMBAHAN
         $judul = mysqli_real_escape_string($conn, $_POST['judul']);
         $deskripsi = mysqli_real_escape_string($conn, $_POST['deskripsi']);
         $linkVideo = mysqli_real_escape_string($conn, $_POST['link_video']);
@@ -92,9 +93,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $filePath = $uploadResult;
         }
 
-        // Insert ke database
-        $sql = "INSERT INTO materi (idmateri, kodeMapel, NIP, judul, deskripsi, filePath, linkVideo, createdAt)
-                VALUES ('$idmateri', '$kodeMapel', '$nipGuru', '$judul', '$deskripsi', " . 
+        // Insert ke database (TAMBAHKAN KELAS)
+        $sql = "INSERT INTO materi (idmateri, kodeMapel, kelas, NIP, judul, deskripsi, filePath, linkVideo, createdAt)
+                VALUES ('$idmateri', '$kodeMapel', '$kelas', '$nipGuru', '$judul', '$deskripsi', " . 
                 ($filePath ? "'$filePath'" : "NULL") . ", " . 
                 ($linkVideo ? "'$linkVideo'" : "NULL") . ", '$createdAt')";
 
@@ -102,6 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode([
                 "status" => "success", 
                 "idmateri" => $idmateri,
+                "kelas" => $kelas, // 👈 TAMBAHAN
                 "filePath" => $filePath,
                 "createdAt" => $createdAt
             ]);
@@ -115,6 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'update') {
         $idmateri = mysqli_real_escape_string($conn, $_POST['idmateri']);
         $kodeMapel = mysqli_real_escape_string($conn, $_POST['kodeMapel']);
+        $kelas = mysqli_real_escape_string($conn, $_POST['kelas']); // 👈 TAMBAHAN
         $judul = mysqli_real_escape_string($conn, $_POST['judul']);
         $deskripsi = mysqli_real_escape_string($conn, $_POST['deskripsi']);
         $linkVideo = mysqli_real_escape_string($conn, $_POST['link_video']);
@@ -141,9 +144,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $filePath = $uploadResult;
         }
 
-        // Update database
+        // Update database (TAMBAHKAN KELAS)
         $sql = "UPDATE materi 
-                SET kodeMapel='$kodeMapel', NIP='$nipGuru', judul='$judul', deskripsi='$deskripsi',
+                SET kodeMapel='$kodeMapel', kelas='$kelas', NIP='$nipGuru', judul='$judul', deskripsi='$deskripsi',
                     filePath=" . ($filePath ? "'$filePath'" : "NULL") . ",
                     linkVideo=" . ($linkVideo ? "'$linkVideo'" : "NULL") . "
                 WHERE idmateri='$idmateri' AND NIP='$nipGuru'";
@@ -204,15 +207,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// === LOAD DATA EXISTING ===
+// === LOAD DATA EXISTING (QUERY DIUBAH) ===
 if (isset($_GET['load_data'])) {
-    $query = "SELECT m.idmateri, m.kodeMapel, m.judul, m.deskripsi, m.filePath, m.linkVideo, m.createdAt,
-                     mp.namaMapel, jm.kelas
+    $query = "SELECT m.idmateri, m.kodeMapel, m.kelas, m.judul, m.deskripsi, m.filePath, m.linkVideo, m.createdAt,
+                     mp.namaMapel
               FROM materi m
               JOIN mapel mp ON m.kodeMapel = mp.kodeMapel
-              JOIN jadwalmapel jm ON m.kodeMapel = jm.kodeMapel AND m.NIP = jm.nipGuru
               WHERE m.NIP = '$nipGuru'
-              GROUP BY m.idmateri
               ORDER BY m.createdAt DESC";
     
     $result = mysqli_query($conn, $query);
@@ -371,6 +372,7 @@ document.getElementById("addRow").addEventListener("click", async function() {
     if (editIndex === -1) {
         formData.append("action", "add");
         formData.append("kodeMapel", kodeMapel);
+        formData.append("kelas", kelas); // 👈 TAMBAHAN
         formData.append("judul", judul);
         formData.append("deskripsi", deskripsi);
         formData.append("link_video", link);
@@ -412,6 +414,7 @@ document.getElementById("addRow").addEventListener("click", async function() {
         formData.append("action", "update");
         formData.append("idmateri", item.idmateri);
         formData.append("kodeMapel", kodeMapel);
+        formData.append("kelas", kelas); // 👈 TAMBAHAN
         formData.append("judul", judul);
         formData.append("deskripsi", deskripsi);
         formData.append("link_video", link);
