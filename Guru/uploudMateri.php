@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'add') {
         $idmateri = generateIdMateri($conn);
         $kodeMapel = mysqli_real_escape_string($conn, $_POST['kodeMapel']);
-        $kelas = mysqli_real_escape_string($conn, $_POST['kelas']); // 👈 TAMBAHAN
+        $kelas = mysqli_real_escape_string($conn, $_POST['kelas']);
         $judul = mysqli_real_escape_string($conn, $_POST['judul']);
         $deskripsi = mysqli_real_escape_string($conn, $_POST['deskripsi']);
         $linkVideo = mysqli_real_escape_string($conn, $_POST['link_video']);
@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $filePath = $uploadResult;
         }
 
-        // Insert ke database (TAMBAHKAN KELAS)
+        // Insert ke database
         $sql = "INSERT INTO materi (idmateri, kodeMapel, kelas, NIP, judul, deskripsi, filePath, linkVideo, createdAt)
                 VALUES ('$idmateri', '$kodeMapel', '$kelas', '$nipGuru', '$judul', '$deskripsi', " . 
                 ($filePath ? "'$filePath'" : "NULL") . ", " . 
@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode([
                 "status" => "success", 
                 "idmateri" => $idmateri,
-                "kelas" => $kelas, // 👈 TAMBAHAN
+                "kelas" => $kelas,
                 "filePath" => $filePath,
                 "createdAt" => $createdAt
             ]);
@@ -117,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'update') {
         $idmateri = mysqli_real_escape_string($conn, $_POST['idmateri']);
         $kodeMapel = mysqli_real_escape_string($conn, $_POST['kodeMapel']);
-        $kelas = mysqli_real_escape_string($conn, $_POST['kelas']); // 👈 TAMBAHAN
+        $kelas = mysqli_real_escape_string($conn, $_POST['kelas']);
         $judul = mysqli_real_escape_string($conn, $_POST['judul']);
         $deskripsi = mysqli_real_escape_string($conn, $_POST['deskripsi']);
         $linkVideo = mysqli_real_escape_string($conn, $_POST['link_video']);
@@ -144,7 +144,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $filePath = $uploadResult;
         }
 
-        // Update database (TAMBAHKAN KELAS)
+        // Update database
         $sql = "UPDATE materi 
                 SET kodeMapel='$kodeMapel', kelas='$kelas', NIP='$nipGuru', judul='$judul', deskripsi='$deskripsi',
                     filePath=" . ($filePath ? "'$filePath'" : "NULL") . ",
@@ -207,7 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// === LOAD DATA EXISTING (QUERY DIUBAH) ===
+// === LOAD DATA EXISTING ===
 if (isset($_GET['load_data'])) {
     $query = "SELECT m.idmateri, m.kodeMapel, m.kelas, m.judul, m.deskripsi, m.filePath, m.linkVideo, m.createdAt,
                      mp.namaMapel
@@ -296,32 +296,42 @@ while ($row = mysqli_fetch_assoc($result2)) $kelasList[] = $row;
     </div>
   </form>
 
-  <!-- Tabel ditampilkan hanya jika ada data -->
-  <table id="dataTable" style="display: none;">
-    <thead>
-      <tr>
-        <th>Kelas</th>
-        <th>Mapel</th>
-        <th>Judul</th>
-        <th>Deskripsi</th>
-        <th>Link Video</th>
-        <th>File PDF</th>
-        <th>Tanggal</th>
-        <th>Aksi</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <!-- Search Box -->
+  <div class="search-container">
+    <input type="text" id="searchMapel" placeholder="Cari Mata Pelajaran...">
+    <input type="text" id="searchKelas" placeholder="Cari Kelas...">
+  </div>
+
+  <!-- Header Tabel -->
+  <h3 id="tableHeader">Rekap Materi</h3>
+
+  <!-- Wrapper untuk tabel responsive -->
+  <div class="table-wrapper">
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th>Kelas</th>
+          <th>Mapel</th>
+          <th>Judul</th>
+          <th>Deskripsi</th>
+          <th>Link Video</th>
+          <th>File PDF</th>
+          <th>Tanggal</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 </div>
 
 <script>
-let dataList = []; // Hanya untuk data yang baru ditambah di session ini
+let dataList = [];
 let editIndex = -1;
 
-// JANGAN load data saat halaman pertama kali dibuka
-// Tabel hanya muncul setelah guru menambah materi baru
+// Load data saat halaman pertama kali dibuka
 window.addEventListener('DOMContentLoaded', () => {
-    // Kosongkan - tidak perlu load data existing
+    loadExistingData();
 });
 
 // Fungsi untuk load data yang sudah ada
@@ -345,9 +355,12 @@ async function loadExistingData() {
         renderTable();
     } catch (error) {
         console.error("Error loading data:", error);
-        // Jangan tampilkan tabel jika belum ada data
     }
 }
+
+// Event listener untuk search
+document.getElementById("searchMapel").addEventListener("input", renderTable);
+document.getElementById("searchKelas").addEventListener("input", renderTable);
 
 document.getElementById("addRow").addEventListener("click", async function() {
     let kelas = document.getElementById("kelas").value;
@@ -372,7 +385,7 @@ document.getElementById("addRow").addEventListener("click", async function() {
     if (editIndex === -1) {
         formData.append("action", "add");
         formData.append("kodeMapel", kodeMapel);
-        formData.append("kelas", kelas); // 👈 TAMBAHAN
+        formData.append("kelas", kelas);
         formData.append("judul", judul);
         formData.append("deskripsi", deskripsi);
         formData.append("link_video", link);
@@ -414,7 +427,7 @@ document.getElementById("addRow").addEventListener("click", async function() {
         formData.append("action", "update");
         formData.append("idmateri", item.idmateri);
         formData.append("kodeMapel", kodeMapel);
-        formData.append("kelas", kelas); // 👈 TAMBAHAN
+        formData.append("kelas", kelas);
         formData.append("judul", judul);
         formData.append("deskripsi", deskripsi);
         formData.append("link_video", link);
@@ -466,16 +479,29 @@ function renderTable() {
     const tbody = table.querySelector("tbody");
     tbody.innerHTML = "";
     
-    if (dataList.length === 0) {
-        // Sembunyikan tabel jika tidak ada data
-        table.style.display = "none";
+    // Ambil nilai search
+    const searchMapel = document.getElementById("searchMapel").value.toLowerCase();
+    const searchKelas = document.getElementById("searchKelas").value.toLowerCase();
+    
+    // Filter data berdasarkan search
+    const filteredData = dataList.filter(item => {
+        const matchMapel = item.namaMapel.toLowerCase().includes(searchMapel);
+        const matchKelas = item.kelas.toLowerCase().includes(searchKelas);
+        return matchMapel && matchKelas;
+    });
+    
+    // Jika tidak ada data setelah filter, tampilkan pesan
+    if (filteredData.length === 0) {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td colspan="8" style="text-align: center; padding: 20px; color: #999;">Tidak ada data materi</td>`;
+        tbody.appendChild(row);
         return;
     }
     
-    // Tampilkan tabel jika ada data
-    table.style.display = "table";
-    
-    dataList.forEach((item, index) => {
+    filteredData.forEach((item, index) => {
+        // Cari index asli di dataList
+        const originalIndex = dataList.indexOf(item);
+        
         const row = document.createElement("tr");
         
         // Format nama file untuk tampilan
@@ -500,8 +526,8 @@ function renderTable() {
             <td>${fileLink}</td>
             <td>${new Date(item.created_at).toLocaleString('id-ID')}</td>
             <td>
-                <button type="button" class="edit-btn" onclick="editRow(${index})">Edit</button>
-                <button type="button" class="delete-btn" onclick="deleteRow(${index})">Hapus</button>
+                <button type="button" class="edit-btn" onclick="editRow(${originalIndex})">Edit</button>
+                <button type="button" class="delete-btn" onclick="deleteRow(${originalIndex})">Hapus</button>
             </td>
         `;
         tbody.appendChild(row);
