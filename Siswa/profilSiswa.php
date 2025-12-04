@@ -1,7 +1,7 @@
 <?php
 include '../config/db.php';
 
-// ===== CEK LOGIN =====
+// CEK LOGIN
 if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'siswa') {
     header("Location: ../Auth/login.php");
     exit;
@@ -10,7 +10,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'siswa') {
 $idAkun = $_SESSION['user_id'];
 $nis = $_SESSION['nis'];
 
-// --- 1. Ambil Data Profil Siswa ---
+// Ambil Data Profil Siswa
 $data_profil = [
     'Nama' => 'Data tidak ditemukan',
     'NIS' => $nis,
