@@ -11,7 +11,7 @@ body {
 }
 
 .container {
-    max-width: 1800px;
+    max-width: 1500px;
     margin: 0 auto;
 }
 
@@ -36,6 +36,7 @@ h3 {
     grid-template-columns: 2fr 3fr;
     gap: 30px;
     margin-bottom: 40px;
+    max-width: 100%;
 }
 
 /* Kartu Umum */
