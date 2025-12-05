@@ -86,17 +86,12 @@ if ($kelasSiswa) {
             jm.kelas = ? 
             AND UNIX_TIMESTAMP(bp.waktuDitutup) >= UNIX_TIMESTAMP(NOW())
             AND ps.idPresensi IS NULL
-        WHERE 
-            jm.kelas = ? 
-            AND UNIX_TIMESTAMP(bp.waktuDitutup) >= UNIX_TIMESTAMP(NOW())
-            AND NOW() >= bp.waktuDimulai 
-            AND NOW() <= bp.waktuDitutup
         ORDER BY 
             bp.waktuDimulai ASC
         LIMIT 1
     ");
 
-    $queryPresensi->bind_param('s', $kelasSiswa);
+    $queryPresensi->bind_param('ss', $nisSiswa, $kelasSiswa);
     $queryPresensi->execute();
     $presensi = $queryPresensi->get_result()->fetch_assoc();
     $queryPresensi->close();
@@ -356,14 +351,6 @@ if ($nisSiswa) {
         <h1>Rekap Presensi</h1>
         <?php include "../Siswa/rekapPresensi.php"; ?>
     </section>
-
-    <div class="legend-row">
-        <span class="legend-item"><span class="legend-color hadir"></span> Hadir</span>
-        <span class="legend-item"><span class="legend-color alpa"></span> Alpa</span>
-        <span class="legend-item"><span class="legend-color sakit"></span> Sakit</span>
-        <span class="legend-item"><span class="legend-color izin"></span> Izin</span>
-        <span class="legend-item"><span class="legend-color tidak-ada"></span> Tidak Ada Presensi</span>
-    </div>
 </main>
 
 <!-- Modal Token Presensi -->

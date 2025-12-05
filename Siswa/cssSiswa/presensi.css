@@ -130,7 +130,8 @@ header {
     margin: 0 auto 30px;
 }
 
-.presensi-section {
+.presensi-section,
+.rekap-presensi-section {
     width: 90%;
     margin: 0 auto;
 }
@@ -357,48 +358,6 @@ header {
     align-items: center;
     padding: 20px;
 }
-
-/* LEGEND */
-.rekap-presensi-section + .legend-row {
-    margin-top: 20px; /* Menyesuaikan margin karena adanya REKAP PRESENSI */
-}
-
-.legend-row {
-    background: white;
-    border-radius: 12px;
-    padding: 15px 30px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    display: flex;
-    justify-content: space-around;
-    gap: 20px;
-    flex-wrap: wrap;
-    width: 90%;
-    max-width: 1200px;
-    margin: 20px auto 40px;
-    border: 1px solid #eee;
-}
-.legend-item {
-    display: flex;
-    align-items: center;
-    font-size: 0.9em;
-    color: #333;
-    font-weight: 500;
-}
-.legend-color {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    margin-right: 8px;
-    border: 1px solid rgba(0,0,0,0.1);
-}
-
-/* Warna Status */
-.hadir { background-color: #4CAF50; }
-.alpa { background-color: #F44336; }
-.sakit { background-color: #FFEB3B; }
-.izin { background-color: #2196F3; }
-.tidak-ada { background-color: #CCCCCC; }
-
 
 /* ===================================== */
 /* MODAL STYLES (DIPINDAH DARI INLINE) */
