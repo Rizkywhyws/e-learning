@@ -1,16 +1,6 @@
 <?php
 include '../config/db.php';
-<<<<<<< HEAD
-
-// CEK LOGIN
-if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'guru') {
-    header("Location: ../Auth/login.php");
-    exit;
-}
-=======
 session_start();
->>>>>>> 59bea8777e2f4293dd518cb5eb9cc89c2f679bd3
-
 $idAkun   = $_SESSION['user_id'];
 $nip = $_SESSION['nip'];
 
