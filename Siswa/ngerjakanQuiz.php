@@ -32,7 +32,7 @@ $NIS = $dataSiswa['NIS'];
 $namaSiswa = $dataSiswa['nama'];
 $kelasSiswa = $dataSiswa['kelas'];
 
-// Ambil jadwal pelajaran terdekat (dipertahankan)
+// Ambil jadwal pelajaran terdekat
 $hariIni = date('l');
 $hariIndo = [
     'Monday' => 'Senin', 'Tuesday' => 'Selasa', 'Wednesday' => 'Rabu',
@@ -41,11 +41,14 @@ $hariIndo = [
 ];
 $hari = $hariIndo[$hariIni] ?? $hariIni;
 
+$mapelSelanjutnya = "Tidak ada jadwal"; // Default jika tidak ada jadwal atau query gagal
+
 $queryJadwal = "SELECT m.namaMapel 
                 FROM jadwalmapel jm 
                 INNER JOIN mapel m ON jm.kodeMapel = m.kodeMapel 
                 WHERE jm.Kelas = ? AND jm.hari = ?
                 ORDER BY jm.jamMulai ASC LIMIT 1";
+
 $stmtJadwal = mysqli_prepare($conn, $queryJadwal);
 if ($stmtJadwal) {
     mysqli_stmt_bind_param($stmtJadwal, "ss", $kelasSiswa, $hari);
@@ -53,24 +56,26 @@ if ($stmtJadwal) {
     $resultJadwal = mysqli_stmt_get_result($stmtJadwal);
     if($resultJadwal && mysqli_num_rows($resultJadwal) > 0) {
         $mapelSelanjutnya = mysqli_fetch_assoc($resultJadwal)['namaMapel'];
-    } else {
-        $mapelSelanjutnya = "Tidak ada jadwal";
     }
     mysqli_stmt_close($stmtJadwal);
 } else {
-    $mapelSelanjutnya = "Tidak ada jadwal";
+    error_log("Prepare query jadwal gagal: " . mysqli_error($conn));
 }
 
 // =========================
-// TAMPILKAN SEMUA MAPEL (FIX UTAMA)
+// TAMPILKAN MAPEL BERDASARKAN JADWAL KELAS SISWA (FIX UTAMA)
 // =========================
-$queryMapel = "SELECT kodeMapel, namaMapel
-               FROM mapel
-               ORDER BY namaMapel ASC";
+// Query mapel yang ADA di jadwal kelas siswa yang login
+$queryMapel = "SELECT DISTINCT m.kodeMapel, m.namaMapel
+               FROM mapel m
+               INNER JOIN jadwalmapel jm ON m.kodeMapel = jm.kodeMapel
+               WHERE jm.Kelas = ?
+               ORDER BY m.namaMapel ASC";
 $stmtMapel = mysqli_prepare($conn, $queryMapel);
 if (!$stmtMapel) {
     die("Error prepare mapel: " . mysqli_error($conn));
 }
+mysqli_stmt_bind_param($stmtMapel, "s", $kelasSiswa);
 mysqli_stmt_execute($stmtMapel);
 $resultMapel = mysqli_stmt_get_result($stmtMapel);
 ?>
@@ -94,20 +99,20 @@ $resultMapel = mysqli_stmt_get_result($stmtMapel);
 <style>
     /* Tambahkan style khusus untuk popup detail quiz */
     .popup-content {
-        max-width: 500px; /* Atur lebar maksimal */
-        width: 90%; /* Atur lebar relatif untuk mobile */
-        border-radius: 12px; /* Sudut membulat */
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); /* Bayangan */
+        max-width: 500px;
+        width: 90%;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
         background: #fff;
-        overflow: hidden; /* Pastikan elemen tidak meluber */
+        overflow: hidden;
     }
     .popup-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding: 20px;
-        background-color: #f8fafc; /* Warna latar header */
-        border-bottom: 1px solid #e2e8f0; /* Garis batas bawah */
+        background-color: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
     }
     .popup-header h2 {
         margin: 0;
@@ -156,11 +161,11 @@ $resultMapel = mysqli_stmt_get_result($stmtMapel);
     .info-row {
         display: flex;
         justify-content: space-between;
-        gap: 15px; /* Jarak antar kolom */
+        gap: 15px;
         margin-bottom: 15px;
     }
     .info-row > div {
-        flex: 1; /* Agar kolom sama lebar */
+        flex: 1;
     }
     .info-row label {
         display: block;
@@ -202,11 +207,33 @@ $resultMapel = mysqli_stmt_get_result($stmtMapel);
     #btnKerjakan:hover {
         opacity: 0.9;
     }
+    
+    /* Style untuk pesan tidak ada jadwal */
+    .no-schedule-message {
+        text-align: center;
+        padding: 60px 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .no-schedule-message i {
+        font-size: 4rem;
+        color: #cbd5e1;
+        margin-bottom: 20px;
+    }
+    .no-schedule-message h3 {
+        color: #475569;
+        margin-bottom: 10px;
+    }
+    .no-schedule-message p {
+        color: #94a3b8;
+        font-size: 0.95rem;
+    }
 </style>
 </head>
 <body>
 
-<!-- ===== HEADER (DICOPY DARI DASHBOARD - JANGAN DIUBAH) ===== -->
+<!-- ===== HEADER ===== -->
 <div class="sticky-header">
   <header>
     <img src="../assets/logo-elearning.png" class="logo" alt="E-School">
@@ -270,16 +297,19 @@ $resultMapel = mysqli_stmt_get_result($stmtMapel);
 <!-- ===== WELCOME BOX ===== -->
 <div class="welcome-box">
     <h2>Halo! Selamat Datang, <?= htmlspecialchars($namaSiswa) ?></h2>
-    <p>Jadwal Pelajaran selanjutnya <b><?= htmlspecialchars($mapelSelanjutnya) ?></b></p>
+    <p>Kelas: <b><?= htmlspecialchars($kelasSiswa) ?></b> | Jadwal Pelajaran selanjutnya: <b><?= htmlspecialchars($mapelSelanjutnya) ?></b></p>
 </div>
 
 <!-- ===== SECTION MATA PELAJARAN ===== -->
 <section class="mapel-container">
-    <h3>Mata Pelajaran</h3>
+    <h3>Mata Pelajaran (Kelas <?= htmlspecialchars($kelasSiswa) ?>)</h3>
 
     <?php if(!$resultMapel || mysqli_num_rows($resultMapel) == 0): ?>
-        <div style="text-align: center; padding: 40px; background: white; border-radius: 12px;">
-            <p style="color: #999;">Tidak ada mata pelajaran.</p>
+        <div class="no-schedule-message">
+            <i class="fa-solid fa-calendar-xmark"></i>
+            <h3>Belum Ada Jadwal Mata Pelajaran</h3>
+            <p>Kelas <?= htmlspecialchars($kelasSiswa) ?> belum memiliki jadwal mata pelajaran.<br>
+            Silakan hubungi admin untuk informasi lebih lanjut.</p>
         </div>
     <?php else: ?>
 
@@ -377,7 +407,6 @@ $resultMapel = mysqli_stmt_get_result($stmtMapel);
                 <?php 
                     endwhile;
                 }
-                // bersihkan result set jika ada
                 if (isset($resultQuiz) && $resultQuiz) mysqli_free_result($resultQuiz);
                 ?>
             </div>
@@ -416,7 +445,6 @@ $resultMapel = mysqli_stmt_get_result($stmtMapel);
         </div>
       </div>
 
-      <!-- Hapus baris info-row untuk Durasi -->
       <div class="info-row">
         <div>
           <label>Jumlah Soal</label>
@@ -459,75 +487,41 @@ function showQuizButton(el, event, idQuiz, kodeMapel) {
     loadQuizDetail(idQuiz, kodeMapel);
 }
 
-function closePopup() {
-    document.querySelectorAll('.popup-overlay').forEach(p => p.style.display = 'none');
-}
-</script>
-<script>
-// ... (fungsi toggleQuiz tetap sama) ...
-function toggleQuiz(card) {
-    document.querySelectorAll('.mapel-card').forEach(c => {
-        if (c !== card) c.classList.remove('active');
-    });
-    card.classList.toggle('active');
-}
-
-function showQuizButton(el, event, idQuiz, kodeMapel) {
-    event.stopPropagation();
-    loadQuizDetail(idQuiz, kodeMapel);
-}
-
 function loadQuizDetail(idQuiz, kodeMapel) {
-    // ASUMSI: File ngerjakanQuiz.php ada di /Siswa/
-    // dan file getQuiz.php ada di /Siswa/backend/
-    
-    // **FIX PATH UTAMA:** Gunakan path relatif eksplisit yang dihitung dari direktori saat ini.
-    // Jika ngerjakanQuiz.php ada di /Siswa/, maka getQuiz.php ada di /Siswa/backend/getQuiz.php
     const relativePath = 'backend/getQuiz.php'; 
     const url = relativePath + '?idQuiz=' + encodeURIComponent(idQuiz);
-
-    // Hapus alert debug yang mengganggu (Opsional, tapi disarankan setelah PHP fix)
-    // alert('DEBUG: lihat console (F12) untuk raw response. Ringkasan: ...');
 
     console.log('--- DEBUG getQuiz request start ---');
     console.log('URL requested:', url);
     
-    fetch(url, { credentials: 'same-origin' }) // Menggunakan URL relatif yang diperbaiki
+    fetch(url, { credentials: 'same-origin' })
         .then(response => {
-            // FIX: Cek status HTTP
             if (!response.ok) {
-                // Jika server mengembalikan error (404, 500, dll)
                 return response.text().then(text => {
                     throw new Error(`Permintaan gagal dengan status HTTP ${response.status}. Pesan server: ${text.slice(0, 100)}...`);
                 });
             }
             
-            // Ambil text apa pun yang dikembalikan server untuk debugging
             return response.text().then(text => {
                 console.log('Response headers Content-Type:', response.headers.get('content-type'));
                 console.log('Raw response text:\n', text);
                 console.log('--- DEBUG getQuiz response end ---');
 
-                // Coba parse JSON
                 try {
                     const data = JSON.parse(text);
                     return data;
                 } catch (err) {
-                    // Jika gagal parse, ini adalah error JSON utama
                     throw new Error('Response bukan JSON valid (PHP mungkin menghasilkan output non-JSON): ' + err.message + '\nRaw response start:\n' + text.slice(0,1000));
                 }
             });
         })
         .then(data => {
-            // jika sampai sini, data adalah objek JSON
             if (data.success) {
-                // ... (Logika pembaruan DOM, tanpa durasi) ...
                 document.getElementById('quizJudul').textContent = data.judul;
                 document.getElementById('quizMapel').textContent = data.namaMapel;
                 document.getElementById('quizTanggal').textContent = data.tanggal;
                 document.getElementById('quizWaktuMulai').value = data.waktuMulai ?? '';
                 document.getElementById('quizWaktuSelesai').value = data.waktuSelesai ?? '';
-                // Hapus referensi ke data.durasi
                 document.getElementById('quizJumlahSoal').value = (data.jumlahSoal ?? 0) + ' soal';
                 document.getElementById('idQuizHidden').value = data.idQuiz;
                 
@@ -540,7 +534,7 @@ function loadQuizDetail(idQuiz, kodeMapel) {
                     statusLabel.style.backgroundColor = '#bbf7d0';
                     statusLabel.style.color = '#064e3b';
                     hasilSection.style.display = 'block';
-                    document.getElementById('quizNilai').value = (data.nilai ?? 'N/A') + ' / 100'; // Format nilai
+                    document.getElementById('quizNilai').value = (data.nilai ?? 'N/A') + ' / 100';
                     document.getElementById('quizWaktuPengerjaan').value = data.waktuPengerjaan ?? 'N/A';
                     btnKerjakan.textContent = 'LIHAT PEMBAHASAN';
                     btnKerjakan.style.backgroundColor = '#d1fae5';
@@ -557,27 +551,22 @@ function loadQuizDetail(idQuiz, kodeMapel) {
                 
                 document.getElementById('popupQuiz').style.display = 'flex';
             } else {
-                // Menampilkan pesan error dari PHP (jika PHP berhasil mereturn JSON error)
                 alert('Gagal memuat detail quiz: ' + (data.message || 'Unknown error') + '\n(Debug: ' + (data.debug || 'NO_DEBUG_CODE') + ')');
             }
         })
         .catch(error => {
-            // Tangkap error jaringan atau error parse JSON
             console.error('loadQuizDetail error:', error);
             alert('Terjadi kesalahan saat memuat quiz. (Cek path/server)\nDetail error:\n' + error.message);
         });
 }
 
-// ... (fungsi mulaiQuiz dan closePopup tetap sama) ...
 function mulaiQuiz() {
     const idQuiz = document.getElementById('idQuizHidden').value;
     const btnKerjakan = document.getElementById('btnKerjakan');
     
     if(btnKerjakan.textContent === 'LIHAT PEMBAHASAN') {
-        // Redirect ke halaman pembahasan
         window.location.href = 'pembahasanQuiz.php?idQuiz=' + encodeURIComponent(idQuiz);
     } else {
-        // Konfirmasi mulai quiz
         if(confirm('Apakah Anda yakin ingin memulai quiz ini? Timer akan mulai berjalan.')) {
             window.location.href = 'kerjakanQuiz.php?idQuiz=' + encodeURIComponent(idQuiz);
         }
