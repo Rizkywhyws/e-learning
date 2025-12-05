@@ -185,16 +185,22 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
                 // Query untuk mendapatkan materi dari mata pelajaran ini
                 $kodeMapel = $mapel['kodeMapel'];
                 
-
+                // PERBAIKAN: Tambahkan filter kelas
                 $queryMateri = "SELECT m.idMateri, m.judul, m.createdAt, m.deskripsi, m.filePath, m.linkVideo
                                 FROM materi m
-                                WHERE m.kodeMapel = '$kodeMapel'
+                                WHERE m.kodeMapel = '$kodeMapel' 
+                                AND m.kelas = '$kelasSiswa'
                                 ORDER BY m.createdAt DESC";
                 $resultMateri = mysqli_query($conn, $queryMateri);
                 
                 if (!$resultMateri) {
                     echo "<p style='color:red;'>Error query materi: " . mysqli_error($conn) . "</p>";
                     continue;
+                }
+                
+                // Cek jika tidak ada materi
+                if(mysqli_num_rows($resultMateri) == 0) {
+                    echo "<p style='color:#999; padding:10px; font-size:13px;'>Belum ada materi untuk kelas ini</p>";
                 }
                 
                 while($materi = mysqli_fetch_assoc($resultMateri)):
@@ -206,7 +212,8 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
                                             COUNT(t.idTugas) as total
                                         FROM tugas t 
                                         LEFT JOIN pengumpulantugas pt ON t.idTugas = pt.idTugas AND pt.NIS = '$NIS'
-                                        WHERE t.idMateri = '$idMateri'";
+                                        WHERE t.idMateri = '$idMateri' 
+                                        AND t.kelas = '$kelasSiswa'";
                     $resultTugasBelum = mysqli_query($conn, $queryTugasBelum);
                     
                     $statusWarna = 'biru';
@@ -223,7 +230,7 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
                     $tanggalMateri = date('d M Y', strtotime($materi['createdAt']));
                 ?>
                 <div class="materi <?= $statusWarna ?>" 
-                     onclick="toggleButton(this, event, '<?= $materi['idMateri'] ?>', '<?= $kodeMapel ?>')">
+                    onclick="toggleButton(this, event, '<?= $materi['idMateri'] ?>', '<?= $kodeMapel ?>')">
                     <span class="judul"><?= htmlspecialchars($materi['judul']) ?></span>
                     <span class="tgl-materi"><?= $tanggalMateri ?></span>
                 </div>
@@ -544,11 +551,12 @@ function submitTugas() {
                     <th>Mata Pelajaran</th>
 
                     <?php
-                    // Cari jumlah tugas paling banyak dari semua mapel
+                    // PERBAIKAN: Filter berdasarkan kelas siswa
                     $queryCount = "
                         SELECT m.kodeMapel, COUNT(t.idTugas) AS jumlahTugas
                         FROM materi m
-                        LEFT JOIN tugas t ON m.idMateri = t.idMateri
+                        LEFT JOIN tugas t ON m.idMateri = t.idMateri AND t.kelas = '$kelasSiswa'
+                        WHERE m.kelas = '$kelasSiswa'
                         GROUP BY m.kodeMapel
                     ";
                     $resultCount = mysqli_query($conn, $queryCount);
@@ -583,7 +591,7 @@ function submitTugas() {
                 while ($mapel = mysqli_fetch_assoc($resultNilai)):
                     $kodeMapel = $mapel['kodeMapel'];
 
-                    // Ambil semua tugas pada mapel tersebut
+                    // PERBAIKAN: Tambahkan filter kelas pada query tugas
                     $queryTugas = "
                         SELECT t.idTugas, t.judul, t.deadline, pt.nilai, pt.status
                         FROM materi m
@@ -591,6 +599,8 @@ function submitTugas() {
                         LEFT JOIN pengumpulantugas pt 
                                ON pt.idTugas = t.idTugas AND pt.NIS = '$NIS'
                         WHERE m.kodeMapel = '$kodeMapel'
+                        AND m.kelas = '$kelasSiswa'
+                        AND t.kelas = '$kelasSiswa'
                         ORDER BY m.createdAt ASC, t.createdAt ASC
                     ";
                     $resultTugas = mysqli_query($conn, $queryTugas);
