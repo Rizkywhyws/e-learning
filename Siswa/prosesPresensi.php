@@ -3,7 +3,7 @@ session_start();
 date_default_timezone_set('Asia/Jakarta');
 include '../config/db.php';
 
-// CEK LOGIN
+// ===== CEK LOGIN =====
 if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'siswa') {
     header("Location: ../Auth/login.php");
     exit;
@@ -14,7 +14,7 @@ $idAkun = $_SESSION['user_id'];
 $nisSiswa = null;
 $kelasSiswa = null;
 
-// AMBIL DATA SISWA
+// Ambil data siswa
 $querySiswa = $conn->prepare("SELECT NIS, kelas FROM datasiswa WHERE idAkun = ?");
 $querySiswa->bind_param('s', $idAkun);
 $querySiswa->execute();
@@ -26,7 +26,7 @@ if ($dataSiswa) {
     $kelasSiswa = $dataSiswa['kelas'];
 }
 
-// GENERATE IDPRESENSI
+// Helper: generate idPresensi unik
 function generateIdPresensi($conn, $idBuatPresensi) {
 
     for ($i = 0; $i < 20; $i++) {
@@ -55,10 +55,12 @@ function generateIdPresensi($conn, $idBuatPresensi) {
     throw new Exception("Gagal menghasilkan ID Presensi unik setelah 20 percobaan.");
 }
 
-// PROSES PRESENSI DENGAN TOKEN
+// ===== PROSES PRESENSI DENGAN TOKEN =====
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
-    // PROSES PRESENSI HADIR
+    // -------------------------
+    // 1) PROSES PRESENSI HADIR
+    // -------------------------
     if (isset($_POST['action']) && $_POST['action'] === 'do_presensi') {
         $idBuatPresensi = $_POST['idBuatPresensi'] ?? null;
         $nisForm = $_POST['nis'] ?? $nisSiswa;
@@ -174,7 +176,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         exit;
     }
 
-    // UPLOAD IZIN
+    // -------------------------
+    // 2) UPLOAD IZIN
+    // -------------------------
     if (isset($_POST['submit_izin'])) {
         $nisForm = $_POST['nis'] ?? $nisSiswa;
         $jenisIzin = $_POST['jenis_izin'] ?? null;

@@ -37,8 +37,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'tambah') {
   $opsi_d = $jawaban[3] ?? '';
   $opsi_e = $jawaban[4] ?? '';
 
+  // Konversi index ke huruf untuk pilihan ganda
   $jawabanPilgan = ($typeSoal == 'pilihan ganda') ? chr(65 + (int)$jawabanBenar) : '';
-  $jawabanMulti  = ($typeSoal == 'multi-select') ? $jawabanBenar : '';
+  
+  // Konversi index ke huruf untuk multi-select (0,1,2 → A,B,C)
+  $jawabanMulti = '';
+  if ($typeSoal == 'multi-select') {
+    $indexes = explode(',', $jawabanBenar);
+    $letters = array_map(function($idx) {
+      return chr(65 + (int)$idx);
+    }, $indexes);
+    $jawabanMulti = implode(',', $letters);
+  }
 
   mysqli_query($conn, "INSERT INTO soalquiz 
     (idSoal, idQuiz, pertanyaan, type, opsi_a, opsi_b, opsi_c, opsi_d, opsi_e, jawabanPilgan, jawabanMulti)
@@ -63,11 +73,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'update') {
   $opsi_d = $jawaban[3] ?? '';
   $opsi_e = $jawaban[4] ?? '';
 
-  $jawabanPilgan = ($typeSoal == 'pilihan ganda')
-      ? chr(65 + (int)$jawabanBenar)
-      : '';
+  // Konversi index ke huruf untuk pilihan ganda
+  $jawabanPilgan = ($typeSoal == 'pilihan ganda') ? chr(65 + (int)$jawabanBenar) : '';
 
-  $jawabanMulti  = ($typeSoal == 'multi-select') ? $jawabanBenar : '';
+  // Konversi index ke huruf untuk multi-select (0,1,2 → A,B,C)
+  $jawabanMulti = '';
+  if ($typeSoal == 'multi-select') {
+    $indexes = explode(',', $jawabanBenar);
+    $letters = array_map(function($idx) {
+      return chr(65 + (int)$idx);
+    }, $indexes);
+    $jawabanMulti = implode(',', $letters);
+  }
 
   mysqli_query($conn, "UPDATE soalquiz 
     SET pertanyaan='$pertanyaan', type='$typeSoal',
@@ -202,6 +219,11 @@ function tambahSoal() {
   if (quizType !== 'esai') {
     if (jawaban.some(j => !j)) return alert('Lengkapi semua opsi jawaban!');
     if (selectedAnswers.length === 0) return alert('Pilih minimal satu jawaban benar!');
+    
+    // Validasi khusus multi-select: harus lebih dari 1 jawaban
+    if (quizType === 'multi-select' && selectedAnswers.length < 2) {
+      return alert('Multi-Select harus memiliki minimal 2 jawaban benar!');
+    }
   }
 
   const data = new FormData();
@@ -238,12 +260,16 @@ function editSoal(soal) {
     ? soal.jawabanPilgan 
     : soal.jawabanMulti;
 
-  // Pilihan ganda (A/B/C → index)
+  // Konversi huruf ke index (A→0, B→1, C→2, dst)
   if (soal.type === 'pilihan ganda' && jawabanBenar) {
     selectedAnswers = [jawabanBenar.charCodeAt(0) - 65];
   } 
+  else if (soal.type === 'multi-select' && jawabanBenar) {
+    // Konversi A,B,C → 0,1,2
+    selectedAnswers = jawabanBenar.split(',').map(letter => letter.charCodeAt(0) - 65);
+  }
   else {
-    selectedAnswers = jawabanBenar ? jawabanBenar.split(',').map(n => parseInt(n)) : [];
+    selectedAnswers = [];
   }
 
   ['opsi_a','opsi_b','opsi_c','opsi_d','opsi_e'].forEach((k, i) => {

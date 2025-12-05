@@ -76,53 +76,54 @@ try {
                 $jawabanSiswaEscaped = mysqli_real_escape_string($conn, strtolower(trim($jawabanSiswa)));
 
                 if ($tipeSoal === 'pilgan' || $tipeSoal === 'pilihan ganda') {
-                    $kolomJawabanPilgan = $jawabanSiswaEscaped;
-                    $kolomJawabanMulti = null; // Kosongkan
+                        $kolomJawabanPilgan = mysqli_real_escape_string($conn, strtolower(trim($jawabanSiswa)));
+                        $kolomJawabanMulti = null;
 
-                    $jawabanBenarRaw = trim($dataSoal['jawabanPilgan']);
-                    $jawabanBenar = strtolower($jawabanBenarRaw);
+                        $jawabanBenarRaw = trim($dataSoal['jawabanPilgan']);
+                        $jawabanBenar = strtolower($jawabanBenarRaw); // Misal: 'A', 'B', dll.
 
-                    // Konversi jawaban siswa dari huruf ke angka
-                    $jawabanSiswaAngka = -1;
-                    switch (strtolower($jawabanSiswa)) {
-                        case 'a': $jawabanSiswaAngka = 0; break;
-                        case 'b': $jawabanSiswaAngka = 1; break;
-                        case 'c': $jawabanSiswaAngka = 2; break;
-                        case 'd': $jawabanSiswaAngka = 3; break;
-                        case 'e': $jawabanSiswaAngka = 4; break;
-                    }
-
-                    // Konversi jawaban benar ke integer
-                    $jawabanBenarInt = intval($jawabanBenar);
-
-                    // PERBAIKAN: Logika penilaian untuk pilihan ganda
-                    if ($jawabanSiswaAngka >= 0 && $jawabanSiswaAngka <= 4) {
-                        if ($jawabanSiswaAngka === $jawabanBenarInt) {
+                        // Bandingkan langsung sebagai string (huruf)
+                        if (strtolower($jawabanSiswa) === $jawabanBenar) {
                             $totalBenar++;
                             $nilaiSoal = 100;
                         } else {
                             $nilaiSoal = 0;
                         }
                     } else {
-                        $nilaiSoal = 0;
-                    }
-                } else {
-                    // Multi-select
-                    $kolomJawabanPilgan = null; // Kosongkan
-                    $kolomJawabanMulti = $jawabanSiswaEscaped;
+                        // Multi-select
+                        $kolomJawabanPilgan = null;
+                        $kolomJawabanMulti = mysqli_real_escape_string($conn, trim($jawabanSiswa));
 
-                    $jawabanBenarRaw = trim($dataSoal['jawabanMulti']);
-                    $jawabanBenar = strtolower($jawabanBenarRaw);
+                        $jawabanBenarRaw = trim($dataSoal['jawabanMulti']);
+                        $jawabanBenar = strtolower($jawabanBenarRaw);
 
-                    // PERBAIKAN: Logika penilaian untuk multi-select
-                    // Bandingkan string jawaban siswa langsung dengan jawaban benar
-                    if ($jawabanSiswa === $jawabanBenar) {
-                        $totalBenar++;
-                        $nilaiSoal = 100;
-                    } else {
-                        $nilaiSoal = 0;
+                        // Normalisasi: Hilangkan spasi, ubah ke lowercase, urutkan, lalu bandingkan
+                        $jawabanSiswaNormalized = strtolower(trim($jawabanSiswa));
+                        $jawabanBenarNormalized = strtolower(trim($jawabanBenarRaw));
+
+                        // Hilangkan spasi di sekitar koma
+                        $jawabanSiswaNormalized = preg_replace('/\s*,\s*/', ',', $jawabanSiswaNormalized);
+                        $jawabanBenarNormalized = preg_replace('/\s*,\s*/', ',', $jawabanBenarNormalized);
+
+                        // Pisah dan urutkan jawaban
+                        $jawabanSiswaArray = explode(',', $jawabanSiswaNormalized);
+                        $jawabanBenarArray = explode(',', $jawabanBenarNormalized);
+
+                        sort($jawabanSiswaArray);
+                        sort($jawabanBenarArray);
+
+                        // Gabung kembali
+                        $jawabanSiswaSorted = implode(',', $jawabanSiswaArray);
+                        $jawabanBenarSorted = implode(',', $jawabanBenarArray);
+
+                        // Bandingkan
+                        if ($jawabanSiswaSorted === $jawabanBenarSorted) {
+                            $totalBenar++;
+                            $nilaiSoal = 100;
+                        } else {
+                            $nilaiSoal = 0;
+                        }
                     }
-                }
 
                 $totalSoalPilgan++;
             }

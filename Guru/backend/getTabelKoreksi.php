@@ -11,14 +11,14 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'guru') {
 
 require_once "../../config/db.php";
 
-// Ambil idTugas
+// Ambil idTugas dan kelas dari parameter GET
 $idTugas = isset($_GET['idTugas']) ? mysqli_real_escape_string($conn, $_GET['idTugas']) : '';
+$kelas = isset($_GET['kelas']) ? mysqli_real_escape_string($conn, $_GET['kelas']) : ''; // 👈 TAMBAHKAN INI
 
-if (empty($idTugas)) {
-    echo "<div style='color:red; text-align:center; padding:20px;'>⚠️ ID Tugas tidak ditemukan</div>";
+if (empty($idTugas) || empty($kelas)) {
+    echo "<div style='color:red; text-align:center; padding:20px;'>⚠️ ID Tugas atau Kelas tidak ditemukan</div>";
     exit;
 }
-
 
 // ====== Ambil data tugas ======
 $qTugas = mysqli_query($conn, "SELECT * FROM tugas WHERE idTugas='$idTugas'");
@@ -28,18 +28,6 @@ if (!$tugas) {
     echo "<div style='color:red; text-align:center; padding:20px;'>⚠️ Data tugas tidak ditemukan</div>";
     exit;
 }
-
-
-// ====== Ambil kelas berdasarkan mapel guru ======
-$qKelas = mysqli_query($conn, "
-    SELECT DISTINCT kelas 
-    FROM jadwalmapel 
-    WHERE kodeMapel='{$tugas['kodeMapel']}'
-");
-
-$dKelas = mysqli_fetch_assoc($qKelas);
-$kelas = $dKelas ? $dKelas['kelas'] : '';
-
 
 // ====== Ambil semua siswa & status pengumpulan ======
 $q = mysqli_query($conn, "
@@ -56,10 +44,9 @@ $q = mysqli_query($conn, "
     FROM datasiswa s
     LEFT JOIN pengumpulantugas p 
         ON s.NIS = p.NIS AND p.idTugas = '$idTugas'
-    JOIN tugas t ON t.idTugas = '$idTugas'
     WHERE s.kelas = '$kelas'
+    ORDER BY s.nama ASC
 ");
-
 
 // ====== OUTPUT HTML ======
 echo "
@@ -78,7 +65,7 @@ echo "
         </div>
     </div>
 
-    <h3 style='margin-top: 30px; text-align:left;'>Daftar Pengumpulan Tugas</h3>
+    <h3 style='margin-top: 30px; text-align:left;'>Daftar Pengumpulan Tugas (Kelas: $kelas)</h3>
     <div class='table-container'>
         <table class='koreksi-table' id='tabelKoreksi'>
             <thead>
@@ -93,13 +80,9 @@ echo "
             <tbody>
 ";
 
-
 $no = 1;
 while ($r = mysqli_fetch_assoc($q)) {
-
-    // Gunakan absolute path dari root
     $file = $r['filePath'] ? "<a href='/elearning-app/{$r['filePath']}' target='_blank' class='file-link'>Lihat File</a>" : "-";
-
     $disabled = $r['status'] == 'Kosong' ? 'disabled' : '';
     $nilaiValue = $r['nilai'] ? $r['nilai'] : '';
 
@@ -122,7 +105,6 @@ while ($r = mysqli_fetch_assoc($q)) {
     $no++;
 }
 
-
 echo "
             </tbody>
         </table>
@@ -131,10 +113,8 @@ echo "
     <button type='button' class='save-btn' id='saveNilai'>💾 Simpan Nilai</button>
 </div>
 ";
-
 ?>
 
-<!-- Font Awesome untuk ikon search -->
 <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'>
 
 <script>
@@ -145,7 +125,6 @@ $('#saveNilai').click(function(){
     });
 });
 
-// 🔍 Fitur Search Nama
 $('#searchNama').on('keyup', function() {
     let keyword = $(this).val().toLowerCase();
     $('#tabelKoreksi tbody tr').filter(function() {
