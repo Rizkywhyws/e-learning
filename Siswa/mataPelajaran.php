@@ -120,10 +120,8 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
         </button>
       </div>
 
-    </div>
   </header>
 </div>
-
 <!-- ===== WELCOME BOX ===== -->
 <div class="welcome-box">
     <?php
@@ -167,7 +165,6 @@ $halaman = isset($_GET['page']) ? $_GET['page'] : '';
     <h2>Halo! Selamat Datang, <?= htmlspecialchars($namaSiswa) ?></h2>
     <p>Jadwal Pelajaran selanjutnya <?= htmlspecialchars($pelajaranSelanjutnya) ?></p>
 </div>
-
 
 <!-- ===== SECTION MATA PELAJARAN ===== -->
 <section class="mapel-container">

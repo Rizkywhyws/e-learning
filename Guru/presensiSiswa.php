@@ -271,6 +271,7 @@ $tanggalMinimum = date('Y-m-d');
 
 <body>
   <!-- tempat header logo -->
+   <div class="sticky-header">
   <header>
     <img src="../assets/logo-elearning.png" class="logo" alt="E-School">
   </header>
@@ -279,12 +280,12 @@ $tanggalMinimum = date('Y-m-d');
   <nav class="menu-row">
     <div class="dropdown">
       <button class="dropbtn">
-        <i class="fa-solid fa-database"></i> Data Master
+        <i class="fa-solid fa-user"></i> Profil
         <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
       </button>
       <div class="dropdown-content">
         <a href="dashboard.php"><i class="fa-solid fa-user-tie"></i> Dashboard</a>
-        <a href="#"><i class="fa-solid fa-user-graduate"></i> Profil Saya</a>
+        <a href="dashboard.php"><i class="fa-solid fa-user-graduate"></i> Profil Saya</a>
       </div>
     </div>
 
@@ -317,7 +318,7 @@ $tanggalMinimum = date('Y-m-d');
     <a href="../Auth/logout.php" onclick="return confirm('Yakin ingin logout?')"style="text-decoration:none; color:#2e7dff;"> Logout</a>
   </button>
   </nav>
-
+</div>
   <!-- welcome box -->
   <section class="welcome-box">
     <h2>Halo! Selamat Datang, <?= htmlspecialchars($namaGuru) ?></h2>
@@ -328,6 +329,7 @@ $tanggalMinimum = date('Y-m-d');
     <input type="text" placeholder="Search...">
     <button><i class="fa-solid fa-magnifying-glass"></i></button>
   </div>
+
 
   <!-- bagian tambah presensi -->
   <section id="presensi-siswa">

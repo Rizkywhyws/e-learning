@@ -115,8 +115,8 @@ if ($nipGuru) {
         <a href="../Auth/logout.php" onclick="return confirm('Yakin ingin logout?')"style="text-decoration:none; color:#2e7dff;"> Logout</a>
       </button>
   </div>
-  </div>
   </header>
+  </div>
 
   <!-- WELCOME -->
   <section class="welcome-box">
