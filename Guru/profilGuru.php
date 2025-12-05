@@ -1,10 +1,9 @@
 <?php
 include '../config/db.php';
-
 $idAkun   = $_SESSION['user_id'];
 $nip = $_SESSION['nip'];
 
-// --- 1. Ambil Data Profil Guru ---
+// Ambil Data Profil Guru
 $data_profil = [
     'Nama' => 'Data tidak ditemukan',
     'NIP' => $nip,
@@ -27,7 +26,7 @@ if ($result_profil && mysqli_num_rows($result_profil) > 0) {
     $data_profil['Alamat Email'] = $row_profil['email'] ?? '-';
 }
 
-// --- 2. Ambil Data Jadwal Mengajar ---
+// Ambil Data Jadwal Mengajar
 $jadwal_mengajar = [];
 
 // Query untuk mengambil jadwal mengajar berdasarkan NIP
@@ -40,8 +39,6 @@ if ($result_jadwal) {
         $kode_mapel = $row_jadwal['kodeMapel'];
         $nama_mapel = $kode_mapel; 
 
-        // Asumsi Tabel 'mapel' memiliki kolom 'kode' dan 'namaMapel'
-        // Jika tabel 'mapel' tidak ada, hapus bagian ini
         $query_mapel = "SELECT namaMapel FROM mapel WHERE kodeMapel = '$kode_mapel'";
         $result_mapel = mysqli_query($conn, $query_mapel);
         if ($result_mapel && mysqli_num_rows($result_mapel) > 0) {
@@ -49,7 +46,7 @@ if ($result_jadwal) {
             $nama_mapel = $row_mapel['namaMapel'];
         }
         
-        // Hitung Waktu Ajar
+        // HITUNG WAKTU NGAJAR
         $jam_mulai = strtotime($row_jadwal['jamMulai']);
         $durasi_menit = $row_jadwal['durasi'];
         $waktu_selesai = date('H:i', $jam_mulai + ($durasi_menit * 60));

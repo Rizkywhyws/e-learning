@@ -4,7 +4,7 @@ include '../config/db.php';
 $idAkun = $_SESSION['user_id'];
 $nis = $_SESSION['nis'];
 
-// --- 1. Ambil Data Profil Siswa ---
+// Ambil Data Profil Siswa
 $data_profil = [
     'Nama' => 'Data tidak ditemukan',
     'NIS' => $nis,
