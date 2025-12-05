@@ -276,19 +276,19 @@ $resultMapel = mysqli_stmt_get_result($stmtMapel);
 <!-- ===== SECTION MATA PELAJARAN ===== -->
 <section class="mapel-container">
     <h3>Mata Pelajaran</h3>
-    
+
     <?php if(!$resultMapel || mysqli_num_rows($resultMapel) == 0): ?>
         <div style="text-align: center; padding: 40px; background: white; border-radius: 12px;">
             <p style="color: #999;">Tidak ada mata pelajaran.</p>
         </div>
     <?php else: ?>
-    
+
     <div class="mapel-grid">
 
         <?php while($mapel = mysqli_fetch_assoc($resultMapel)): 
             $kodeMapel = $mapel['kodeMapel'];          
-            
-            // Cek apakah ada quiz yang belum dikerjakan untuk mapel ini
+
+            // Cek apakah ada quiz yang belum dikerjakan untuk mapel ini (untuk kelas siswa)
             $queryQuizBelum = "
                 SELECT COUNT(*) as jumlahQuizBelum
                 FROM quiz q
