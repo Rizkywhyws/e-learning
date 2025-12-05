@@ -577,6 +577,12 @@ header {
     margin-top: 5px;
 }
 
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: #f4f6fb;
+}
 
 /* RESPONSIVE */
 @media (max-width: 992px) {

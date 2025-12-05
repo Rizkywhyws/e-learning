@@ -190,6 +190,7 @@ if ($nisSiswa) {
 
 <body>
 
+<div class="sticky-header">
 <header>
     <img src="../assets/logo-elearning.png" class="logo" alt="E-School">
 </header>
@@ -230,7 +231,7 @@ if ($nisSiswa) {
       </button>
     </div>
 </div>
-
+</div>
 <section class="welcome-box">
     <h2>Halo! Selamat Datang, <?= htmlspecialchars($namaSiswa) ?></h2>
     <p>Jadwal mapel selanjutnya adalah <b><?= htmlspecialchars($namaMapel) ?></b></p>
@@ -246,6 +247,7 @@ if ($nisSiswa) {
     <input type="text" placeholder="Search...">
     <button><i class="fa-solid fa-magnifying-glass"></i></button>
 </div>
+
 
 <main class="content-container">
     <section class="presensi-section">

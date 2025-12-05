@@ -639,7 +639,12 @@ tbody tr:hover {
   font-size: 0.75rem;
 }
 
-
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: #f4f6fb;
+}
 
 /* ===== POPUP MATERI PEMBELAJARAN ===== */
 #popupMateri .popup-content {

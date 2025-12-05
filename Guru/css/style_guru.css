@@ -51,5 +51,10 @@
     box-shadow: 0 0 5px rgba(0,0,0,0.05);
 }
 
-
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: #f4f6fb;
+}
 
