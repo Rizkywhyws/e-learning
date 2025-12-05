@@ -454,7 +454,7 @@ if ($nisSiswa) {
         <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
       </button>
       <div class="dropdown-content">
-        <a href="../Siswa/profilSiswa.php"><i class="fa-solid fa-user"></i> Profil Saya</a>
+        <a href="#profil-saya"><i class="fa-solid fa-user"></i> Profil Saya</a>
       </div>
     </div>
 
@@ -738,6 +738,12 @@ if ($nisSiswa) {
       </form>
     </div>
   </div>
+  </section>
+      <section id = "profil-saya" class="profil-saya-section">
+        <title>Profil Saya</title>
+        <?php include "../Siswa/profilSiswa.php"; ?>
+    </section>
+
 
   <!-- SCRIPT KALENDER -->
   <script>

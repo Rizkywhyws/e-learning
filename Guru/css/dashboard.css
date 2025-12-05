@@ -446,6 +446,13 @@ header {
   border-right: none !important;
   border-bottom: none !important;
 }
+.profil-saya-section {
+    font-size: 1.8em;
+    margin-top: 22px;
+    margin-bottom: 20px;
+    font-size: 18px;
+    color: #333;
+}
 
 .sticky-header {
   position: sticky;

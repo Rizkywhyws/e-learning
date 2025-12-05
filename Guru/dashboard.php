@@ -91,7 +91,7 @@ if ($nipGuru) {
         <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
       </button>
       <div class="dropdown-content">
-        <a href="profilGuru.php"><i class="fa-solid fa-user-tie"></i> Profil Saya</a>
+        <a href="#profil-saya"><i class="fa-solid fa-user-tie"></i> Profil Saya</a>
       </div>
     </div>
 
@@ -256,6 +256,11 @@ if ($nipGuru) {
       </iframe>
     </div>
 </section>
+
+<section id = "profil-saya" class="profil-saya-section">
+        <title>Profil Saya</title>
+        <?php include "../Guru/profilGuru.php"; ?>
+    </section>
 
   <!-- SCRIPT DROPDOWN -->
   <script>
