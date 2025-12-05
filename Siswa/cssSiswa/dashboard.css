@@ -283,7 +283,13 @@ header {
 .table-scroll::-webkit-scrollbar-thumb:hover {
   background: #1d5fcf;
 }
-
+.profil-saya-section {
+    font-size: 1.8em;
+    margin-top: 22px;
+    margin-bottom: 20px;
+    font-size: 18px;
+    color: #333;
+}
 /* Pastikan header table tetap sticky saat scroll */
 .box.jadwal table thead {
   position: sticky;

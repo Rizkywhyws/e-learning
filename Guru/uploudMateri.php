@@ -73,12 +73,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // --- TAMBAH DATA ---
     if ($action === 'add') {
-        $idmateri = generateIdMateri($conn);
-        $kodeMapel = mysqli_real_escape_string($conn, $_POST['kodeMapel']);
-        $kelas = mysqli_real_escape_string($conn, $_POST['kelas']);
-        $judul = mysqli_real_escape_string($conn, $_POST['judul']);
-        $deskripsi = mysqli_real_escape_string($conn, $_POST['deskripsi']);
-        $linkVideo = mysqli_real_escape_string($conn, $_POST['link_video']);
+        // VALIDASI 1: Cek field wajib (mapel, kelas, judul, deskripsi)
+        $kodeMapel = mysqli_real_escape_string($conn, trim($_POST['kodeMapel'] ?? ''));
+        $kelas = mysqli_real_escape_string($conn, trim($_POST['kelas'] ?? ''));
+        $judul = mysqli_real_escape_string($conn, trim($_POST['judul'] ?? ''));
+        $deskripsi = mysqli_real_escape_string($conn, trim($_POST['deskripsi'] ?? ''));
+        
+        if (empty($kodeMapel) || empty($kelas) || empty($judul) || empty($deskripsi)) {
+            echo json_encode([
+                "status" => "error", 
+                "message" => "Mata Pelajaran, Kelas, Judul, dan Deskripsi harus diisi!"
+            ]);
+            exit;
+        }
+        
+        $linkVideo = mysqli_real_escape_string($conn, trim($_POST['link_video'] ?? ''));
         $createdAt = date('Y-m-d H:i:s');
         
         // Upload file PDF
@@ -92,6 +101,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $filePath = $uploadResult;
         }
+        
+        // VALIDASI 2: Minimal salah satu dari link video atau file PDF harus terisi
+        if (empty($linkVideo) && empty($filePath)) {
+            echo json_encode([
+                "status" => "error", 
+                "message" => "Minimal Link Video atau Upload File PDF harus diisi!"
+            ]);
+            exit;
+        }
+        
+        $idmateri = generateIdMateri($conn);
 
         // Insert ke database
         $sql = "INSERT INTO materi (idmateri, kodeMapel, kelas, NIP, judul, deskripsi, filePath, linkVideo, createdAt)
@@ -105,6 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 "idmateri" => $idmateri,
                 "kelas" => $kelas,
                 "filePath" => $filePath,
+                "linkVideo" => $linkVideo,
                 "createdAt" => $createdAt
             ]);
         } else {
@@ -115,12 +136,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // --- UPDATE DATA ---
     if ($action === 'update') {
+        // VALIDASI 1: Cek field wajib
         $idmateri = mysqli_real_escape_string($conn, $_POST['idmateri']);
-        $kodeMapel = mysqli_real_escape_string($conn, $_POST['kodeMapel']);
-        $kelas = mysqli_real_escape_string($conn, $_POST['kelas']);
-        $judul = mysqli_real_escape_string($conn, $_POST['judul']);
-        $deskripsi = mysqli_real_escape_string($conn, $_POST['deskripsi']);
-        $linkVideo = mysqli_real_escape_string($conn, $_POST['link_video']);
+        $kodeMapel = mysqli_real_escape_string($conn, trim($_POST['kodeMapel'] ?? ''));
+        $kelas = mysqli_real_escape_string($conn, trim($_POST['kelas'] ?? ''));
+        $judul = mysqli_real_escape_string($conn, trim($_POST['judul'] ?? ''));
+        $deskripsi = mysqli_real_escape_string($conn, trim($_POST['deskripsi'] ?? ''));
+        
+        if (empty($kodeMapel) || empty($kelas) || empty($judul) || empty($deskripsi)) {
+            echo json_encode([
+                "status" => "error", 
+                "message" => "Mata Pelajaran, Kelas, Judul, dan Deskripsi harus diisi!"
+            ]);
+            exit;
+        }
+        
+        $linkVideo = mysqli_real_escape_string($conn, trim($_POST['link_video'] ?? ''));
         
         // Ambil data lama untuk cek file lama
         $oldData = mysqli_query($conn, "SELECT filePath FROM materi WHERE idmateri='$idmateri' AND NIP='$nipGuru'");
@@ -143,6 +174,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $filePath = $uploadResult;
         }
+        
+        // VALIDASI 2: Minimal salah satu dari link video atau file PDF harus terisi
+        if (empty($linkVideo) && empty($filePath)) {
+            echo json_encode([
+                "status" => "error", 
+                "message" => "Minimal Link Video atau Upload File PDF harus diisi!"
+            ]);
+            exit;
+        }
 
         // Update database
         $sql = "UPDATE materi 
@@ -152,7 +192,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 WHERE idmateri='$idmateri' AND NIP='$nipGuru'";
 
         if (mysqli_query($conn, $sql)) {
-            echo json_encode(["status" => "success", "filePath" => $filePath]);
+            echo json_encode(["status" => "success", "filePath" => $filePath, "linkVideo" => $linkVideo]);
         } else {
             echo json_encode(["status" => "error", "message" => mysqli_error($conn)]);
         }
@@ -176,15 +216,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 unlink("../" . $dataRow['filePath']);
             }
             
-            // Update: set NULL untuk filePath dan linkVideo
+            // Update: set NULL untuk filePath, linkVideo, dan deskripsi
             $sql = "UPDATE materi
-                    SET filePath = NULL, linkVideo = NULL
+                    SET filePath = NULL, linkVideo = NULL, deskripsi = NULL
                     WHERE idmateri = '$idmateri' AND NIP='$nipGuru'";
 
             if (mysqli_query($conn, $sql)) {
                 echo json_encode([
                     "status" => "warning",
-                    "message" => "Materi dipakai di tugas → hanya file & video dihapus"
+                    "message" => "Materi dipakai di tugas → file, video, dan deskripsi dihapus"
                 ]);
             } else {
                 echo json_encode(["status" => "error", "message" => mysqli_error($conn)]);
@@ -209,11 +249,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // === LOAD DATA EXISTING ===
 if (isset($_GET['load_data'])) {
+    // HANYA LOAD MATERI YANG DESKRIPSINYA TIDAK NULL
     $query = "SELECT m.idmateri, m.kodeMapel, m.kelas, m.judul, m.deskripsi, m.filePath, m.linkVideo, m.createdAt,
                      mp.namaMapel
               FROM materi m
               JOIN mapel mp ON m.kodeMapel = mp.kodeMapel
-              WHERE m.NIP = '$nipGuru'
+              WHERE m.NIP = '$nipGuru' AND m.deskripsi IS NOT NULL
               ORDER BY m.createdAt DESC";
     
     $result = mysqli_query($conn, $query);
@@ -253,7 +294,7 @@ while ($row = mysqli_fetch_assoc($result2)) $kelasList[] = $row;
   <form id="materiForm">
     
     <!-- Pilih Mapel -->
-    <label for="mapel">Mata Pelajaran</label>
+    <label for="mapel">Mata Pelajaran <span style="color: red;">*</span></label>
     <select id="mapel" required>
       <option value="">-- Pilih Mata Pelajaran --</option>
       <?php foreach ($mapelList as $mapel): ?>
@@ -264,7 +305,7 @@ while ($row = mysqli_fetch_assoc($result2)) $kelasList[] = $row;
     </select>
 
     <!-- Pilih Kelas -->
-    <label for="kelas">Kelas</label>
+    <label for="kelas">Kelas <span style="color: red;">*</span></label>
     <select id="kelas" required>
       <option value="">-- Pilih Kelas --</option>
       <?php foreach ($kelasList as $kelas): ?>
@@ -275,19 +316,19 @@ while ($row = mysqli_fetch_assoc($result2)) $kelasList[] = $row;
     </select>
 
     <!-- Judul Materi -->
-    <label for="judul">Judul Materi</label>
+    <label for="judul">Judul Materi <span style="color: red;">*</span></label>
     <input type="text" id="judul" placeholder="Masukkan judul materi..." required>
 
     <!-- Deskripsi -->
-    <label for="deskripsi">Deskripsi</label>
+    <label for="deskripsi">Deskripsi <span style="color: red;">*</span></label>
     <textarea id="deskripsi" placeholder="Tuliskan deskripsi materi..." required></textarea>
 
     <!-- Link Video -->
-    <label for="link_video">Link Video</label>
+    <label for="link_video">Link Video <span style="color: #666; font-size: 12px;">(minimal isi salah satu)</span></label>
     <input type="url" id="link_video" placeholder="https://contoh.com/video">
 
     <!-- Upload File (PDF) -->
-    <label for="file_pdf">Upload File (PDF)</label>
+    <label for="file_pdf">Upload File (PDF) <span style="color: #666; font-size: 12px;">(minimal isi salah satu)</span></label>
     <input type="file" id="file_pdf" accept=".pdf">
 
     <div class="button-group">
@@ -363,18 +404,25 @@ document.getElementById("searchMapel").addEventListener("input", renderTable);
 document.getElementById("searchKelas").addEventListener("input", renderTable);
 
 document.getElementById("addRow").addEventListener("click", async function() {
-    let kelas = document.getElementById("kelas").value;
+    let kelas = document.getElementById("kelas").value.trim();
     let mapelSelect = document.getElementById("mapel");
-    let kodeMapel = mapelSelect.value;
+    let kodeMapel = mapelSelect.value.trim();
     let namaMapel = mapelSelect.options[mapelSelect.selectedIndex]?.text || "";
-    let judul = document.getElementById("judul").value;
-    let deskripsi = document.getElementById("deskripsi").value;
-    let link = document.getElementById("link_video").value;
+    let judul = document.getElementById("judul").value.trim();
+    let deskripsi = document.getElementById("deskripsi").value.trim();
+    let link = document.getElementById("link_video").value.trim();
     let fileInput = document.getElementById("file_pdf");
     let file = fileInput.files[0];
 
+    // VALIDASI 1: Field wajib
     if (!kelas || !kodeMapel || !judul || !deskripsi) {
-        alert("Lengkapi field Kelas, Mapel, Judul, dan Deskripsi terlebih dahulu!");
+        alert("Mata Pelajaran, Kelas, Judul, dan Deskripsi harus diisi!");
+        return;
+    }
+
+    // VALIDASI 2: Minimal salah satu dari link video atau file PDF
+    if (!link && !file) {
+        alert("Minimal Link Video atau Upload File PDF harus diisi!");
         return;
     }
 
@@ -408,7 +456,7 @@ document.getElementById("addRow").addEventListener("click", async function() {
                 namaMapel: namaMapel,
                 judul: judul,
                 deskripsi: deskripsi,
-                link_video: link,
+                link_video: result.linkVideo || '',
                 file_pdf: result.filePath || '',
                 created_at: result.createdAt
             };
@@ -448,7 +496,7 @@ document.getElementById("addRow").addEventListener("click", async function() {
             dataList[editIndex].namaMapel = namaMapel;
             dataList[editIndex].judul = judul;
             dataList[editIndex].deskripsi = deskripsi;
-            dataList[editIndex].link_video = link;
+            dataList[editIndex].link_video = result.linkVideo || '';
             
             if (result.filePath) {
                 dataList[editIndex].file_pdf = result.filePath;
@@ -569,9 +617,8 @@ async function deleteRow(index) {
         renderTable();
         alert("Berhasil hapus materi");
     } else if (result.status === "warning") {
-        // filePath + linkVideo jadi NULL
-        dataList[index].file_pdf = "";
-        dataList[index].link_video = "";
+        // Materi dipakai di tugas, maka dihapus dari tampilan
+        dataList.splice(index, 1);
         renderTable();
         alert(result.message);
     } else {

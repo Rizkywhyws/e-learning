@@ -16,7 +16,6 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'siswa') {
 $idAkun     = $_SESSION['user_id'];
 $namaSiswa  = $_SESSION['nama'];
 $email      = $_SESSION['email'];
-$namaMapel  = "(Tidak ada jadwal)";
 
 // Inisialisasi variabel siswa dan pesan status
 $nisSiswa = null;
@@ -134,25 +133,12 @@ if ($kelasSiswa) {
 }
 
 // Ambil jadwal selanjutnya untuk welcome box
-if ($kelasSiswa) {
-    $qNext = $conn->prepare("
-        SELECT bp.*, m.namaMapel
-        FROM buatpresensi bp
-        JOIN jadwalmapel jm ON bp.idJadwalMapel = jm.idJadwalMapel
-        JOIN mapel m ON jm.kodeMapel = m.kodeMapel
-        WHERE jm.kelas = ? 
-          AND bp.waktuDimulai >= NOW()
-        ORDER BY bp.waktuDibuat ASC
-        LIMIT 1
-    ");
-    $qNext->bind_param('s', $kelasSiswa);
-    $qNext->execute();
-    $next = $qNext->get_result()->fetch_assoc();
-    $qNext->close();
-
-    if ($next) {
-        $namaMapel = $next['namaMapel'];
-    }
+if ($presensi) {
+    // LANGSUNG pakai data dari query presensi yang sudah ada
+    $namaMapel = $presensi['namaMapel'];
+} else {
+    // Jika tidak ada presensi sama sekali
+    $namaMapel = "(Tidak ada jadwal)";
 }
 
 // AMBIL DATA KEHADIRAN SISWA UNTUK CHART
@@ -212,7 +198,7 @@ if ($nisSiswa) {
     <div class="dropdown">
         <button class="dropbtn"><i class="fa-solid fa-user"></i> Profil <i class="fa-solid fa-chevron-down dropdown-arrow"></i></button>
         <div class="dropdown-content">
-            <a href="#"><i class="fa-solid fa-users"></i> Profil Saya</a>
+            <a href="dashboard.php"><i class="fa-solid fa-users"></i> Profil Saya</a>
         </div>
     </div>
 
@@ -228,7 +214,7 @@ if ($nisSiswa) {
         <button class="dropbtn"><i class="fa-solid fa-school"></i> Pengelolaan Pembelajaran <i class="fa-solid fa-chevron-down dropdown-arrow"></i></button>
         <div class="dropdown-content">
             <a href="mataPelajaran.php"><i class="fa-solid fa-book-open"></i> Mapel</a>
-            <a href="#"><i class="fa-solid fa-pen-to-square"></i> Quiz</a>
+            <a href="ngerjakanQuiz.php"><i class="fa-solid fa-pen-to-square"></i> Quiz</a>
         </div>
     </div>
     <div class="dropdown">

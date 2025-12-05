@@ -1,6 +1,5 @@
 <?php
 include '../config/db.php';
-session_start();
 $idAkun   = $_SESSION['user_id'];
 $nip = $_SESSION['nip'];
 
