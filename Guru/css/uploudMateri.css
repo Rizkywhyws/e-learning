@@ -75,6 +75,12 @@ textarea {
 .button-group {
   text-align: center;
   margin: 25px 0 15px;
+<<<<<<< HEAD
+}
+
+button,
+.save-btn {
+=======
   display: flex;
   gap: 10px;
   justify-content: center;
@@ -83,6 +89,7 @@ textarea {
 button,
 .save-btn,
 .cancel-btn {
+>>>>>>> 59bea8777e2f4293dd518cb5eb9cc89c2f679bd3
   background: linear-gradient(135deg, #304c89);
   color: white;
   border: none;
@@ -93,11 +100,20 @@ button,
   transition: all 0.25s ease;
   box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
   font-size: 14px;
+<<<<<<< HEAD
+=======
   font-family: 'Poppins', sans-serif;
+>>>>>>> 59bea8777e2f4293dd518cb5eb9cc89c2f679bd3
 }
 
 button:hover,
 .save-btn:hover {
+<<<<<<< HEAD
+  background: linear-gradient(135deg, #304c89);
+  transform: scale(1.05);
+}
+
+=======
   background: linear-gradient(135deg, #1e3a5f);
   transform: scale(1.05);
 }
@@ -185,10 +201,24 @@ button:hover,
   scrollbar-color: #6fb3ff #f1f8ff;
 }
 
+>>>>>>> 59bea8777e2f4293dd518cb5eb9cc89c2f679bd3
 /* ====== TABLE ====== */
 table {
   width: 100%;
   border-collapse: collapse;
+<<<<<<< HEAD
+  margin-top: 20px;
+  font-size: 14px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+}
+
+th, td {
+  border: 1px solid #d4e7ff;
+  text-align: center;
+  padding: 10px;
+=======
   margin-top: 0;
   font-size: 14px;
   overflow: hidden;
@@ -217,12 +247,15 @@ th, td {
   text-align: left;
   padding: 12px 10px;
   vertical-align: top; /* PENTING: Agar konten dimulai dari atas */
+>>>>>>> 59bea8777e2f4293dd518cb5eb9cc89c2f679bd3
 }
 
 th {
   background-color: #e7f2ff;
   color: #004b85;
   font-weight: 600;
+<<<<<<< HEAD
+=======
   text-align: center;
 }
 
@@ -248,6 +281,7 @@ td {
 #dataTable td a:hover {
   color: #0056b3;
   text-decoration: none;
+>>>>>>> 59bea8777e2f4293dd518cb5eb9cc89c2f679bd3
 }
 
 tr:nth-child(even) {
@@ -261,12 +295,19 @@ tr:hover td {
 /* ====== ACTION BUTTONS IN TABLE ====== */
 td button {
   border: none;
+<<<<<<< HEAD
+  padding: 6px 12px;
+=======
   padding: 7px 12px;
+>>>>>>> 59bea8777e2f4293dd518cb5eb9cc89c2f679bd3
   border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
   font-size: 13px;
   transition: all 0.25s ease;
+<<<<<<< HEAD
+  box-shadow: none;
+=======
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   width: 100%; /* PENTING: Tombol full width di kolom */
   margin-bottom: 5px;
@@ -275,16 +316,25 @@ td button {
 
 td button:last-child {
   margin-bottom: 0;
+>>>>>>> 59bea8777e2f4293dd518cb5eb9cc89c2f679bd3
 }
 
 .edit-btn {
   background: linear-gradient(135deg, #007bff, #00bfff);
   color: white;
+<<<<<<< HEAD
+  margin-right: 5px;
+=======
+>>>>>>> 59bea8777e2f4293dd518cb5eb9cc89c2f679bd3
 }
 
 .edit-btn:hover {
   background: linear-gradient(135deg, #0056b3, #00aaff);
+<<<<<<< HEAD
+  transform: scale(1.05);
+=======
   transform: scale(1.03);
+>>>>>>> 59bea8777e2f4293dd518cb5eb9cc89c2f679bd3
 }
 
 .delete-btn {
@@ -294,6 +344,12 @@ td button:last-child {
 
 .delete-btn:hover {
   background: linear-gradient(135deg, #e60000, #ff3333);
+<<<<<<< HEAD
+  transform: scale(1.05);
+}
+
+/* ====== RESPONSIVE ====== */
+=======
   transform: scale(1.03);
 }
 
@@ -321,12 +377,21 @@ td button:last-child {
   }
 }
 
+>>>>>>> 59bea8777e2f4293dd518cb5eb9cc89c2f679bd3
 @media (max-width: 768px) {
   .form-container {
     width: 95%;
     padding: 20px;
   }
 
+<<<<<<< HEAD
+  table {
+    font-size: 12px;
+  }
+
+  th, td {
+    padding: 8px;
+=======
   .search-container {
     flex-direction: column;
     gap: 10px;
@@ -355,6 +420,7 @@ td button:last-child {
 
   th, td {
     padding: 8px 6px;
+>>>>>>> 59bea8777e2f4293dd518cb5eb9cc89c2f679bd3
   }
 
   button,
@@ -362,9 +428,12 @@ td button:last-child {
     padding: 7px 14px;
     font-size: 13px;
   }
+<<<<<<< HEAD
+=======
   
   td button {
     padding: 6px 10px;
     font-size: 12px;
   }
+>>>>>>> 59bea8777e2f4293dd518cb5eb9cc89c2f679bd3
 }

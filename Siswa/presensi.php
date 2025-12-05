@@ -11,6 +11,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'siswa') {
     exit;
 }
 
+
 // AMBIL DATA DARI SESSION
 $idAkun     = $_SESSION['user_id'];
 $namaSiswa  = $_SESSION['nama'];
@@ -33,6 +34,7 @@ if (isset($_SESSION['statusMsg'])) {
 }
 
 // ===== 1. AMBIL DATA LENGKAP SISWA (NIS, KELAS, JURUSAN) =====
+
 $querySiswa = $conn->prepare("
     SELECT NIS, kelas, jurusan 
     FROM datasiswa 
@@ -58,6 +60,7 @@ $statusPresensiSiswa = '-';
 $bisakahPresensi = false;
 
 if ($kelasSiswa) {
+
     // Query untuk mencari sesi presensi terdekat (aktif atau akan datang)
     $queryPresensi = $conn->prepare("
         SELECT 
@@ -76,12 +79,18 @@ if ($kelasSiswa) {
             mapel m ON jm.kodeMapel = m.kodeMapel
         JOIN
             dataguru dg ON bp.NIP = dg.NIP
+
+        LEFT JOIN
+            presensisiswa ps ON bp.idBuatPresensi = ps.idBuatPresensi AND ps.NIS = ?
+        WHERE 
+            jm.kelas = ? 
+            AND UNIX_TIMESTAMP(bp.waktuDitutup) >= UNIX_TIMESTAMP(NOW())
+            AND ps.idPresensi IS NULL
         WHERE 
             jm.kelas = ? 
             AND UNIX_TIMESTAMP(bp.waktuDitutup) >= UNIX_TIMESTAMP(NOW())
             AND NOW() >= bp.waktuDimulai 
             AND NOW() <= bp.waktuDitutup
-
         ORDER BY 
             bp.waktuDimulai ASC
         LIMIT 1
@@ -94,6 +103,7 @@ if ($kelasSiswa) {
     
     if ($presensi) {
         // Ambil timestamp dari database (lebih akurat)
+
         $now_unix = $presensi['now_unix'];
         $mulai_unix = $presensi['mulai_unix'];
         $tutup_unix = $presensi['tutup_unix'];
