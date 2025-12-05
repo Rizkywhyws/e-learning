@@ -91,7 +91,7 @@ if ($nipGuru) {
         <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
       </button>
       <div class="dropdown-content">
-        <a href="#"><i class="fa-solid fa-user-tie"></i> Profil Saya</a>
+        <a href="profilGuru.php"><i class="fa-solid fa-user-tie"></i> Profil Saya</a>
       </div>
     </div>
 

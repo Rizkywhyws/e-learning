@@ -38,7 +38,6 @@ if ($rowCek['jumlah'] == 0) {
 }
 
 // Ambil data soal dan jawaban siswa
-// Perhatikan: Nama kolom disesuaikan dengan struktur tabel yang diberikan
 $querySoal = "
     SELECT
         sq.idSoal,
@@ -50,9 +49,9 @@ $querySoal = "
         sq.opsi_d,
         sq.opsi_e,
         sq.jawabanPilgan AS jawabanBenarPG,
-        sq.jawabanMulti AS jawabanBenarMulti, -- <-- TAMBAHKAN ALIAS INI
-        jq.jawabanPilgan,   -- Jangan alias dulu
-        jq.jawabanMulti,    -- Jangan alias dulu
+        sq.jawabanMulti AS jawabanBenarMulti,
+        jq.jawabanPilgan,
+        jq.jawabanMulti,
         jq.jawabanEsai,
         jq.nilai
     FROM soalquiz sq
@@ -67,7 +66,7 @@ mysqli_stmt_execute($stmtSoal);
 $resultSoal = mysqli_stmt_get_result($stmtSoal);
 
 // Ambil informasi quiz (judul, dll) - opsional, untuk tampilan
-$judulQuiz = "Quiz $idQuiz"; // Default jika tidak ingin query tambahan
+$judulQuiz = "Quiz $idQuiz";
 $queryInfo = "SELECT judul FROM quiz WHERE idQuiz = ?";
 $stmtInfo = mysqli_prepare($conn, $queryInfo);
 mysqli_stmt_bind_param($stmtInfo, "s", $idQuiz);
@@ -89,27 +88,31 @@ while ($row = mysqli_fetch_assoc($resultSoal)) {
     $soalDanJawaban[] = $row;
     $totalSoal++;
 
-    // Normalisasi tipe soal
     $typeNormalized = strtolower(trim($row['type']));
 
     if ($typeNormalized === 'pilgan' || $typeNormalized === 'pilihan ganda') {
-        // Konversi jawaban siswa (huruf) ke angka
-        $jawabanSiswaAngka = null;
-        switch (strtolower($row['jawabanPilgan'])) {
-            case 'a': $jawabanSiswaAngka = 0; break;
-            case 'b': $jawabanSiswaAngka = 1; break;
-            case 'c': $jawabanSiswaAngka = 2; break;
-            case 'd': $jawabanSiswaAngka = 3; break;
-            default: $jawabanSiswaAngka = -1; // Tidak valid
-        }
+        // Bandingkan jawaban siswa (huruf) dengan jawaban benar (huruf)
+        $jawabanSiswa = strtoupper(trim($row['jawabanPilgan']));
+        $jawabanBenar = strtoupper(trim($row['jawabanBenarPG']));
 
-        // Bandingkan dengan jawaban benar (yang sudah dalam bentuk angka)
-        if ($jawabanSiswaAngka === intval($row['jawabanBenarPG'])) {
+        if ($jawabanSiswa === $jawabanBenar) {
             $benarPG++;
         }
     } elseif ($typeNormalized === 'multi-select' || $typeNormalized === 'multi pilihan') {
-        // Bandingkan jawaban siswa (string angka, misal: "0,1") dengan jawaban benar (dari kolom jawabanMulti)
-        if ($row['jawabanMulti'] === $row['jawabanBenarMulti']) { // <-- PERBAIKAN DI SINI
+        // Normalisasi untuk perbandingan
+        $jawabanSiswaNormalized = preg_replace('/\s*,\s*/', ',', strtolower(trim($row['jawabanMulti'] ?? '')));
+        $jawabanBenarNormalized = preg_replace('/\s*,\s*/', ',', strtolower(trim($row['jawabanBenarMulti'] ?? '')));
+
+        $jawabanSiswaArray = explode(',', $jawabanSiswaNormalized);
+        $jawabanBenarArray = explode(',', $jawabanBenarNormalized);
+
+        sort($jawabanSiswaArray);
+        sort($jawabanBenarArray);
+
+        $jawabanSiswaSorted = implode(',', $jawabanSiswaArray);
+        $jawabanBenarSorted = implode(',', $jawabanBenarArray);
+
+        if ($jawabanSiswaSorted === $jawabanBenarSorted) {
             $benarPG++;
         }
     }
@@ -118,7 +121,7 @@ while ($row = mysqli_fetch_assoc($resultSoal)) {
     }
 }
 
-// Hitung nilai total otomatis (hanya dari soal PG/Multi)
+// Hitung nilai total otomatis
 if ($totalSoal > 0) {
     $jumlahSoalPGMulti = array_filter($soalDanJawaban, function($s) {
         $typeNormalized = strtolower(trim($s['type']));
@@ -133,7 +136,7 @@ if ($totalSoal > 0) {
     }
 }
 
-// Ambil nilai dari tabel hasilquiz jika ada (opsional)
+// Ambil nilai dari tabel hasilquiz jika ada
 $queryHasil = "SELECT nilai FROM hasilquiz WHERE idQuiz = ? AND NIS = ? LIMIT 1";
 if (mysqli_query($conn, "SHOW TABLES LIKE 'hasilquiz'")->num_rows == 1) {
     $stmtHasil = mysqli_prepare($conn, $queryHasil);
@@ -141,7 +144,7 @@ if (mysqli_query($conn, "SHOW TABLES LIKE 'hasilquiz'")->num_rows == 1) {
     mysqli_stmt_execute($stmtHasil);
     $resultHasil = mysqli_stmt_get_result($stmtHasil);
     if ($rowHasil = mysqli_fetch_assoc($resultHasil)) {
-        $nilaiTotal = $rowHasil['nilai']; // Gunakan nilai dari tabel hasil jika ada
+        $nilaiTotal = $rowHasil['nilai'];
     }
 }
 
@@ -154,7 +157,7 @@ if (mysqli_query($conn, "SHOW TABLES LIKE 'hasilquiz'")->num_rows == 1) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pembahasan Quiz: <?= htmlspecialchars($judulQuiz) ?></title>
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css  ">
     <style>
         :root {
             --primary-color: #007bff;
@@ -326,7 +329,7 @@ if (mysqli_query($conn, "SHOW TABLES LIKE 'hasilquiz'")->num_rows == 1) {
             border-radius: 5px;
             padding: 10px;
             margin-top: 5px;
-            white-space: pre-wrap; /* Menjaga format baris baru */
+            white-space: pre-wrap;
         }
 
         .info-soal {
@@ -380,35 +383,21 @@ if (mysqli_query($conn, "SHOW TABLES LIKE 'hasilquiz'")->num_rows == 1) {
                             <span class="jawaban-siswa"><?= strtoupper(htmlspecialchars($item['jawabanPilgan'])) ?></span>
                         </div>
 
-                        <!-- Konversi jawaban benar dari angka ke huruf untuk ditampilkan -->
                         <?php
-                        $hurufBenar = '';
-                        // Logika standar: 0 -> A, 1 -> B, 2 -> C, 3 -> D
-                        switch (intval($item['jawabanBenarPG'])) {
-                            case 0: $hurufBenar = 'A'; break;
-                            case 1: $hurufBenar = 'B'; break;
-                            case 2: $hurufBenar = 'C'; break;
-                            case 3: $hurufBenar = 'D'; break;
-                            default: $hurufBenar = 'Tidak Diketahui';
-                        }
+                        // Ambil jawaban benar dari database (harusnya dalam format huruf: A, B, C, D)
+                        $hurufBenar = $item['jawabanBenarPG'] ?? 'Tidak Diketahui';
                         ?>
                         <div class="jawaban-benar-box">
                             <i class="fas fa-check-circle"></i> <strong>Jawaban Benar:</strong>
-                            <span class="jawaban-benar"><?= htmlspecialchars($hurufBenar) ?></span>
+                            <span class="jawaban-benar"><?= htmlspecialchars(strtoupper($hurufBenar)) ?></span>
                         </div>
 
                         <?php
-                        // Konversi jawaban siswa ke angka untuk pengecekan
-                        $jawabanSiswaAngka = null;
-                        switch (strtolower($item['jawabanPilgan'])) {
-                            case 'a': $jawabanSiswaAngka = 0; break;
-                            case 'b': $jawabanSiswaAngka = 1; break;
-                            case 'c': $jawabanSiswaAngka = 2; break;
-                            case 'd': $jawabanSiswaAngka = 3; break;
-                            default: $jawabanSiswaAngka = -1;
-                        }
+                        // Bandingkan jawaban siswa (huruf) dengan jawaban benar (huruf) secara langsung
+                        $jawabanSiswa = strtoupper(trim($item['jawabanPilgan']));
+                        $jawabanBenar = strtoupper(trim($hurufBenar));
                         ?>
-                        <?php if ($jawabanSiswaAngka === intval($item['jawabanBenarPG'])): ?>
+                        <?php if ($jawabanSiswa === $jawabanBenar): ?>
                             <div class="status-benar">
                                 <i class="fas fa-check-circle"></i> Benar
                             </div>
@@ -427,52 +416,74 @@ if (mysqli_query($conn, "SHOW TABLES LIKE 'hasilquiz'")->num_rows == 1) {
                             <?php if ($item['opsi_e']): ?><div class="pilihan">E. <?= htmlspecialchars($item['opsi_e']) ?></div><?php endif; ?>
                         </div>
 
+                        <!-- Jawaban Siswa -->
                         <div class="jawaban-anda-box">
                             <i class="fas fa-user"></i> <strong>Jawaban Anda:</strong>
                             <span class="jawaban-siswa">
                                 <?php
-                                $hurufJawaban = '';
-                                if (!empty($item['jawabanMulti'])) {
-                                    $angkaArray = explode(',', $item['jawabanMulti']);
-                                    $hurufArray = [];
-                                    foreach ($angkaArray as $angka) {
-                                        switch (intval($angka)) {
-                                            case 0: $hurufArray[] = 'A'; break;
-                                            case 1: $hurufArray[] = 'B'; break;
-                                            case 2: $hurufArray[] = 'C'; break;
-                                            case 3: $hurufArray[] = 'D'; break;
-                                            case 4: $hurufArray[] = 'E'; break;
-                                            default: $hurufArray[] = '?';
-                                        }
-                                    }
-                                    $hurufJawaban = implode(', ', $hurufArray);
+                                $jawabanSiswaRaw = $item['jawabanMulti'] ?? '';
+                                if (empty($jawabanSiswaRaw)) {
+                                    echo 'Tidak Dijawab';
                                 } else {
-                                    $hurufJawaban = 'Tidak Dijawab';
+                                    // Normalisasi: hapus spasi, ubah ke lowercase, split
+                                    $jawabanSiswaNormalized = preg_replace('/\s*,\s*/', ',', strtolower(trim($jawabanSiswaRaw)));
+                                    $jawabanSiswaArray = explode(',', $jawabanSiswaNormalized);
+
+                                    // Jika elemen pertama adalah huruf (a,b,c,d,e), maka tampilkan huruf
+                                    if (isset($jawabanSiswaArray[0]) && in_array($jawabanSiswaArray[0], ['a','b','c','d','e'])) {
+                                        // Sudah huruf, tinggal uppercase
+                                        $hurufJawaban = implode(', ', array_map('strtoupper', $jawabanSiswaArray));
+                                    } else {
+                                        // Jika angka (0,1,2,3,4), konversi ke huruf
+                                        $hurufArray = [];
+                                        foreach ($jawabanSiswaArray as $angka) {
+                                            switch (intval($angka)) {
+                                                case 0: $hurufArray[] = 'A'; break;
+                                                case 1: $hurufArray[] = 'B'; break;
+                                                case 2: $hurufArray[] = 'C'; break;
+                                                case 3: $hurufArray[] = 'D'; break;
+                                                case 4: $hurufArray[] = 'E'; break;
+                                                default: $hurufArray[] = '?';
+                                            }
+                                        }
+                                        $hurufJawaban = implode(', ', $hurufArray);
+                                    }
+
+                                    echo htmlspecialchars($hurufJawaban);
                                 }
-                                echo htmlspecialchars($hurufJawaban);
                                 ?>
                             </span>
                         </div>
 
-                        <!-- Konversi jawaban benar dari angka ke huruf -->
+                        <!-- Jawaban Benar -->
                         <?php
-                        $hurufBenar = '';
-                        if (!empty($item['jawabanBenarMulti'])) {
-                            $angkaArray = explode(',', $item['jawabanBenarMulti']);
-                            $hurufArray = [];
-                            foreach ($angkaArray as $angka) {
-                                switch (intval($angka)) {
-                                    case 0: $hurufArray[] = 'A'; break;
-                                    case 1: $hurufArray[] = 'B'; break;
-                                    case 2: $hurufArray[] = 'C'; break;
-                                    case 3: $hurufArray[] = 'D'; break;
-                                    case 4: $hurufArray[] = 'E'; break;
-                                    default: $hurufArray[] = '?';
-                                }
-                            }
-                            $hurufBenar = implode(', ', $hurufArray);
-                        } else {
+                        $jawabanBenarRaw = $item['jawabanBenarMulti'] ?? '';
+                        if (empty($jawabanBenarRaw)) {
                             $hurufBenar = 'Tidak Diketahui';
+                        } else {
+                            // Normalisasi: hapus spasi, ubah ke lowercase, split
+                            $jawabanBenarNormalized = preg_replace('/\s*,\s*/', ',', strtolower(trim($jawabanBenarRaw)));
+                            $jawabanBenarArray = explode(',', $jawabanBenarNormalized);
+
+                            // Jika elemen pertama adalah huruf (a,b,c,d,e), maka tampilkan huruf
+                            if (isset($jawabanBenarArray[0]) && in_array($jawabanBenarArray[0], ['a','b','c','d','e'])) {
+                                // Sudah huruf, tinggal uppercase
+                                $hurufBenar = implode(', ', array_map('strtoupper', $jawabanBenarArray));
+                            } else {
+                                // Jika angka (0,1,2,3,4), konversi ke huruf
+                                $hurufArray = [];
+                                foreach ($jawabanBenarArray as $angka) {
+                                    switch (intval($angka)) {
+                                        case 0: $hurufArray[] = 'A'; break;
+                                        case 1: $hurufArray[] = 'B'; break;
+                                        case 2: $hurufArray[] = 'C'; break;
+                                        case 3: $hurufArray[] = 'D'; break;
+                                        case 4: $hurufArray[] = 'E'; break;
+                                        default: $hurufArray[] = '?';
+                                    }
+                                }
+                                $hurufBenar = implode(', ', $hurufArray);
+                            }
                         }
                         ?>
                         <div class="jawaban-benar-box">
@@ -480,15 +491,28 @@ if (mysqli_query($conn, "SHOW TABLES LIKE 'hasilquiz'")->num_rows == 1) {
                             <span class="jawaban-benar"><?= htmlspecialchars($hurufBenar) ?></span>
                         </div>
 
-                        <?php if ($item['jawabanMulti'] === $item['jawabanBenarMulti']): ?>
-                            <div class="status-benar">
-                                <i class="fas fa-check-circle"></i> Benar
-                            </div>
-                        <?php else: ?>
-                            <div class="status-salah">
-                                <i class="fas fa-times-circle"></i> Salah
-                            </div>
-                        <?php endif; ?>
+                        <!-- Status Benar/Salah -->
+                        <?php
+                        // Normalisasi untuk perbandingan
+                        $jawabanSiswaNormalized = preg_replace('/\s*,\s*/', ',', strtolower(trim($item['jawabanMulti'] ?? '')));
+                        $jawabanBenarNormalized = preg_replace('/\s*,\s*/', ',', strtolower(trim($item['jawabanBenarMulti'] ?? '')));
+
+                        // Pisah, urutkan, gabung
+                        $jawabanSiswaArray = explode(',', $jawabanSiswaNormalized);
+                        $jawabanBenarArray = explode(',', $jawabanBenarNormalized);
+
+                        sort($jawabanSiswaArray);
+                        sort($jawabanBenarArray);
+
+                        $jawabanSiswaSorted = implode(',', $jawabanSiswaArray);
+                        $jawabanBenarSorted = implode(',', $jawabanBenarArray);
+
+                        if ($jawabanSiswaSorted === $jawabanBenarSorted) {
+                            echo '<div class="status-benar"><i class="fas fa-check-circle"></i> Benar</div>';
+                        } else {
+                            echo '<div class="status-salah"><i class="fas fa-times-circle"></i> Salah</div>';
+                        }
+                        ?>
 
                     <?php elseif ($item['type'] === 'esai'): ?>
                         <div class="jawaban-anda-box">

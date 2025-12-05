@@ -37,8 +37,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'tambah') {
   $opsi_d = $jawaban[3] ?? '';
   $opsi_e = $jawaban[4] ?? '';
 
+  // Konversi index ke huruf untuk pilihan ganda
   $jawabanPilgan = ($typeSoal == 'pilihan ganda') ? chr(65 + (int)$jawabanBenar) : '';
-  $jawabanMulti  = ($typeSoal == 'multi-select') ? $jawabanBenar : '';
+  
+  // Konversi index ke huruf untuk multi-select (0,1,2 → A,B,C)
+  $jawabanMulti = '';
+  if ($typeSoal == 'multi-select') {
+    $indexes = explode(',', $jawabanBenar);
+    $letters = array_map(function($idx) {
+      return chr(65 + (int)$idx);
+    }, $indexes);
+    $jawabanMulti = implode(',', $letters);
+  }
 
   mysqli_query($conn, "INSERT INTO soalquiz 
     (idSoal, idQuiz, pertanyaan, type, opsi_a, opsi_b, opsi_c, opsi_d, opsi_e, jawabanPilgan, jawabanMulti)
@@ -63,11 +73,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'update') {
   $opsi_d = $jawaban[3] ?? '';
   $opsi_e = $jawaban[4] ?? '';
 
-  $jawabanPilgan = ($typeSoal == 'pilihan ganda')
-      ? chr(65 + (int)$jawabanBenar)
-      : '';
+  // Konversi index ke huruf untuk pilihan ganda
+  $jawabanPilgan = ($typeSoal == 'pilihan ganda') ? chr(65 + (int)$jawabanBenar) : '';
 
-  $jawabanMulti  = ($typeSoal == 'multi-select') ? $jawabanBenar : '';
+  // Konversi index ke huruf untuk multi-select (0,1,2 → A,B,C)
+  $jawabanMulti = '';
+  if ($typeSoal == 'multi-select') {
+    $indexes = explode(',', $jawabanBenar);
+    $letters = array_map(function($idx) {
+      return chr(65 + (int)$idx);
+    }, $indexes);
+    $jawabanMulti = implode(',', $letters);
+  }
 
   mysqli_query($conn, "UPDATE soalquiz 
     SET pertanyaan='$pertanyaan', type='$typeSoal',
@@ -98,40 +115,6 @@ $daftarSoal = getSoal($conn, $idQuiz);
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Buat Soal - <?= $typeDisplay[$type] ?? ucfirst($type) ?></title>
 <link rel="stylesheet" href="css/buatSoal.css">
-<style>
-.soal-item {background:#f8f8f8; padding:10px; margin-bottom:10px; border-radius:10px;}
-.soal-item ul {margin-left:20px;}
-button.hapus {background:red; color:white; border:none; padding:4px 10px; border-radius:5px; cursor:pointer;}
-button.edit {background:orange; color:white; border:none; padding:4px 10px; border-radius:5px; cursor:pointer; margin-right:5px;}
-button:hover {opacity:0.85;}
-
-.right-side { position: relative; }
-
-.btn-selesai-container {
-  text-align: center;
-  margin-top: 30px;
-  padding: 20px 0;
-}
-
-.btn-selesai {
-  padding: 14px 40px;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  transition: all 0.3s;
-  background: linear-gradient(135deg, #4CAF50, #45a049);
-  color: white;
-}
-
-.btn-selesai:hover {
-  background: linear-gradient(135deg, #45a049, #3d8b40);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(76, 175, 80, 0.4);
-}
-</style>
 </head>
 <body>
 <div class="main-container">
@@ -236,6 +219,11 @@ function tambahSoal() {
   if (quizType !== 'esai') {
     if (jawaban.some(j => !j)) return alert('Lengkapi semua opsi jawaban!');
     if (selectedAnswers.length === 0) return alert('Pilih minimal satu jawaban benar!');
+    
+    // Validasi khusus multi-select: harus lebih dari 1 jawaban
+    if (quizType === 'multi-select' && selectedAnswers.length < 2) {
+      return alert('Multi-Select harus memiliki minimal 2 jawaban benar!');
+    }
   }
 
   const data = new FormData();
@@ -272,12 +260,16 @@ function editSoal(soal) {
     ? soal.jawabanPilgan 
     : soal.jawabanMulti;
 
-  // Pilihan ganda (A/B/C → index)
+  // Konversi huruf ke index (A→0, B→1, C→2, dst)
   if (soal.type === 'pilihan ganda' && jawabanBenar) {
     selectedAnswers = [jawabanBenar.charCodeAt(0) - 65];
   } 
+  else if (soal.type === 'multi-select' && jawabanBenar) {
+    // Konversi A,B,C → 0,1,2
+    selectedAnswers = jawabanBenar.split(',').map(letter => letter.charCodeAt(0) - 65);
+  }
   else {
-    selectedAnswers = jawabanBenar ? jawabanBenar.split(',').map(n => parseInt(n)) : [];
+    selectedAnswers = [];
   }
 
   ['opsi_a','opsi_b','opsi_c','opsi_d','opsi_e'].forEach((k, i) => {

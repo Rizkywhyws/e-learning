@@ -10,7 +10,6 @@ if (!isset($_SESSION['nip']) || $_SESSION['role'] !== 'guru') {
 
 $nipGuru = $_SESSION['nip']; // Ambil NIP guru dari session
 
-
 // ========================
 // PROSES SIMPAN QUIZ
 // ========================
@@ -31,8 +30,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   // Generate ID quiz otomatis
   $idQuiz = "QZ" . rand(1000, 9999);
 
-  $query = "INSERT INTO quiz (idQuiz, kodeMapel, NIP, judul, deskripsi, waktuMulai, waktuSelesai, kelas)
-            VALUES ('$idQuiz', '$kodeMapel', '$nipGuru', '$judul', '$deskripsi', '$waktuMulai', '$waktuSelesai', '$kelas')";
+  // Simpan quiz dengan kolom type
+  $query = "INSERT INTO quiz (idQuiz, kodeMapel, NIP, judul, deskripsi, waktuMulai, waktuSelesai, kelas, type)
+            VALUES ('$idQuiz', '$kodeMapel', '$nipGuru', '$judul', '$deskripsi', '$waktuMulai', '$waktuSelesai', '$kelas', '$tipeQuiz')";
 
   if ($conn->query($query)) {
     echo "<script>
@@ -122,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="type-options">
         <button type="button" onclick="pilihTipeQuiz('pilihan ganda')" class="save-btn">📘 Pilihan Ganda</button>
         <button type="button" onclick="pilihTipeQuiz('multi-select')" class="save-btn">📝 Multiselect</button>
-        <button type="button" onclick="pilihTipeQuiz('esai')" class="save-btn">✏ Esai</button>
+        <button type="button" onclick="pilihTipeQuiz('esai')" class="save-btn">✏️ Esai</button>
       </div>
     </div>
 
@@ -135,20 +135,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   const quizForm = document.getElementById("quizForm");
   const tipeQuizHidden = document.getElementById("tipeQuizHidden");
 
-  // Set minimal waktu = sekarang
+  // Set minimal waktu = sekarang (tanpa detik, bulatkan ke menit sebelumnya)
   function setMinDateTime() {
     const now = new Date();
+    // Bulatkan ke menit sebelumnya agar menit sekarang bisa dipilih
+    now.setSeconds(0);
+    now.setMilliseconds(0);
+    
     const tzOffset = now.getTimezoneOffset() * 60000;
     const localISO = new Date(now - tzOffset).toISOString().slice(0, 16);
-
+    
     waktuMulaiInput.min = localISO;
     waktuSelesaiInput.min = localISO;
   }
 
   setMinDateTime();
+  // Update setiap 30 detik
+  setInterval(setMinDateTime, 30000);
 
   function pilihTipeQuiz(tipe) {
-
     if (!quizForm.checkValidity()) {
       quizForm.reportValidity();
       return;
@@ -157,7 +162,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     const mulai = new Date(waktuMulaiInput.value);
     const selesai = new Date(waktuSelesaiInput.value);
     const now = new Date();
+    
+    // Set detik ke 0 untuk perbandingan yang adil (karena input tidak punya detik)
+    now.setSeconds(0);
+    now.setMilliseconds(0);
+    mulai.setSeconds(0);
+    mulai.setMilliseconds(0);
 
+    // Waktu mulai boleh = waktu sekarang (menit ini)
     if (mulai.getTime() < now.getTime()) {
       alert("Waktu mulai tidak boleh di masa lalu!");
       return;
@@ -175,8 +187,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   waktuMulaiInput.addEventListener("change", () => {
     const mulai = new Date(waktuMulaiInput.value);
     const now = new Date();
+    
+    now.setSeconds(0);
+    now.setMilliseconds(0);
+    mulai.setSeconds(0);
+    mulai.setMilliseconds(0);
 
-    if (mulai < now) {
+    if (mulai.getTime() < now.getTime()) {
       alert("Waktu mulai tidak boleh di masa lalu!");
       waktuMulaiInput.value = "";
       return;
@@ -199,7 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       return;
     }
 
-    if (selesai <= mulai) {
+    if (selesai.getTime() <= mulai.getTime()) {
       alert("Waktu selesai harus setelah waktu mulai!");
       waktuSelesaiInput.value = "";
     }

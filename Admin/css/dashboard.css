@@ -83,12 +83,20 @@ header {
   font-size: 14px;
   font-weight: 600;
   color: #2e7dff;
-  padding: 8px 12px;
   cursor: pointer;
   border-radius: 30px;
   display: flex;
   align-items: center;
   gap: 6px;
+  padding: 10px 30px 10px;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.15);
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .dropbtn:hover {
@@ -238,7 +246,81 @@ main {
   font-size: 25px;
   font-weight: 700;
 }
+/* ===================================
+   TOMBOL KATEGORI & FILTER KELAS
+====================================*/
 
+/* Kontainer untuk tombol kategori dan filter kelas */
+.filter-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 15px auto 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 90%;
+}
+
+/* Tombol Kategori (Guru, Siswa, Mapel, Jadwal) */
+.category-btn {
+  background: transparent;
+  border: 2px solid #2e7dff;
+  color: #2e7dff;
+  padding: 6px 14px;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.category-btn:hover {
+  background: rgba(46, 125, 255, 0.1);
+}
+
+.category-btn.active {
+  background: #2e7dff;
+  color: white;
+  padding: 6px 14px; /* Pastikan padding sama */
+}
+
+/* Filter Kelas Dropdown */
+.class-filter {
+  position: relative;
+  display: inline-block;
+}
+
+.class-filter select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding: 8px 14px;
+  border: 2px solid #2e7dff;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2e7dff;
+  background: white;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.class-filter select:hover {
+  background: rgba(46, 125, 255, 0.1);
+}
+
+/* Gaya untuk panah dropdown (opsional, jika ingin custom) */
+.class-filter::after {
+  content: '▼';
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #2e7dff;
+  font-size: 12px;
+}
 /* ===================================
    CARD COLORS
 ====================================*/
@@ -270,6 +352,8 @@ main {
   border-radius: 10px;
   overflow: hidden;
   border: 3px solid #2e7dff;
+  max-width: 90%; /* Lebar maksimal tabel */
+  margin: 0 auto; /* Center tabel di dalam container */
 }
 
 .data-table thead {

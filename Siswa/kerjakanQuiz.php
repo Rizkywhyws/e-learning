@@ -672,17 +672,13 @@ function updateMultiAnswer(checkbox) {
     
     let selectedValues = [];
     checkboxes.forEach(cb => {
-        // Konversi huruf ke angka: a=0, b=1, c=2, d=3, e=4
-        const letterToNumber = { 'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4 };
-        const number = letterToNumber[cb.value];
-        if (number !== undefined) {
-            selectedValues.push(number);
-        }
+        // Simpan nilai huruf langsung (a, b, c, d, e)
+        selectedValues.push(cb.value.toLowerCase());
     });
     
-    // Urutkan dan gabungkan dengan koma
-    selectedValues.sort((a, b) => a - b); // Urutkan angka
-    const answerString = selectedValues.join(','); // Misal: "0,1" atau "1,2,3"
+    // Urutkan huruf dan gabungkan dengan koma
+    selectedValues.sort(); // Urutkan huruf: ['a', 'c'] menjadi ['a', 'c']
+    const answerString = selectedValues.join(','); // Misal: "a,c" atau "a,b,c"
     
     // Update hidden input
     const hiddenInput = document.getElementById('multi-' + idSoal);
@@ -736,6 +732,5 @@ window.onload = function() {
     updateProgress();
 }
 </script>
-
 </body>
 </html>

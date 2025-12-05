@@ -8,7 +8,7 @@ body {
 
 /* ====== FORM CONTAINER ====== */
 .form-container {
-  max-width: 600px;
+  max-width: 900px;
   background: #ffffff;
   padding: 25px 30px 35px;
   margin: 0 auto 60px auto;
@@ -75,10 +75,14 @@ textarea {
 .button-group {
   text-align: center;
   margin: 25px 0 15px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
 }
 
 button,
-.save-btn {
+.save-btn,
+.cancel-btn {
   background: linear-gradient(135deg, #304c89);
   color: white;
   border: none;
@@ -89,35 +93,161 @@ button,
   transition: all 0.25s ease;
   box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
   font-size: 14px;
+  font-family: 'Poppins', sans-serif;
 }
 
 button:hover,
 .save-btn:hover {
-  background: linear-gradient(135deg, #304c89);
+  background: linear-gradient(135deg, #1e3a5f);
   transform: scale(1.05);
+}
+
+.cancel-btn {
+  background: linear-gradient(135deg, #ff4d4d, #ff6b6b);
+}
+
+.cancel-btn:hover {
+  background: linear-gradient(135deg, #e60000, #ff3333);
+  transform: scale(1.05);
+}
+
+/* ====== SEARCH CONTAINER ====== */
+.search-container {
+  display: flex;
+  gap: 15px;
+  margin-top: 30px;
+  margin-bottom: 15px;
+}
+
+.search-container input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1.8px solid #6fb3ff;
+  background-color: #f1f8ff;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #004b85;
+  transition: all 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+  margin-top: 0;
+}
+
+.search-container input:focus {
+  outline: none;
+  border-color: #1e70c1;
+  background-color: #ffffff;
+  box-shadow: 0 0 8px rgba(30, 112, 193, 0.3);
+}
+
+/* ====== TABLE HEADER ====== */
+#tableHeader {
+  margin-top: 20px;
+  margin-bottom: 15px;
+  color: #004b85;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+/* ====== TABLE WRAPPER (PENTING UNTUK RESPONSIVE) ====== */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 10px;
+  border-radius: 10px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+  max-height: 600px; /* Batasi tinggi untuk 6 data + header */
+  overflow-y: auto; /* Scroll vertikal */
+}
+
+/* Custom Scrollbar untuk Table Wrapper */
+.table-wrapper::-webkit-scrollbar {
+  height: 8px;
+  width: 8px; /* Tambahan untuk scroll vertikal */
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+  background: #f1f8ff;
+  border-radius: 10px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: #6fb3ff;
+  border-radius: 10px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #1e70c1;
+}
+
+/* Scrollbar untuk Firefox */
+.table-wrapper {
+  scrollbar-width: thin;
+  scrollbar-color: #6fb3ff #f1f8ff;
 }
 
 /* ====== TABLE ====== */
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 20px;
+  margin-top: 0;
   font-size: 14px;
-  border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+  table-layout: fixed; /* PENTING: Agar kolom tidak melebar */
 }
+
+/* Sticky Header agar header tetap terlihat saat scroll */
+#dataTable thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* ====== LEBAR KOLOM TETAP ====== */
+#dataTable th:nth-child(1) { width: 7%; }   /* Kelas */
+#dataTable th:nth-child(2) { width: 11%; }  /* Mapel */
+#dataTable th:nth-child(3) { width: 13%; }  /* Judul */
+#dataTable th:nth-child(4) { width: 18%; }  /* Deskripsi */
+#dataTable th:nth-child(5) { width: 13%; }  /* Link Video */
+#dataTable th:nth-child(6) { width: 13%; }  /* File PDF */
+#dataTable th:nth-child(7) { width: 13%; }  /* Tanggal */
+#dataTable th:nth-child(8) { width: 12%; }  /* Aksi */
 
 th, td {
   border: 1px solid #d4e7ff;
-  text-align: center;
-  padding: 10px;
+  text-align: left;
+  padding: 12px 10px;
+  vertical-align: top; /* PENTING: Agar konten dimulai dari atas */
 }
 
 th {
   background-color: #e7f2ff;
   color: #004b85;
   font-weight: 600;
+  text-align: center;
+}
+
+/* ====== WORD WRAP UNTUK KONTEN PANJANG ====== */
+td {
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.6;
+}
+
+/* ====== LINK DI TABEL ====== */
+#dataTable td a {
+  display: inline-block;
+  max-width: 100%;
+  word-wrap: break-word;
+  word-break: break-all; /* PENTING: Potong link panjang */
+  color: #007bff;
+  text-decoration: underline;
+  line-height: 1.5;
+}
+
+#dataTable td a:hover {
+  color: #0056b3;
+  text-decoration: none;
 }
 
 tr:nth-child(even) {
@@ -131,24 +261,30 @@ tr:hover td {
 /* ====== ACTION BUTTONS IN TABLE ====== */
 td button {
   border: none;
-  padding: 6px 12px;
+  padding: 7px 12px;
   border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
   font-size: 13px;
   transition: all 0.25s ease;
-  box-shadow: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  width: 100%; /* PENTING: Tombol full width di kolom */
+  margin-bottom: 5px;
+  font-family: 'Poppins', sans-serif;
+}
+
+td button:last-child {
+  margin-bottom: 0;
 }
 
 .edit-btn {
   background: linear-gradient(135deg, #007bff, #00bfff);
   color: white;
-  margin-right: 5px;
 }
 
 .edit-btn:hover {
   background: linear-gradient(135deg, #0056b3, #00aaff);
-  transform: scale(1.05);
+  transform: scale(1.03);
 }
 
 .delete-btn {
@@ -158,27 +294,77 @@ td button {
 
 .delete-btn:hover {
   background: linear-gradient(135deg, #e60000, #ff3333);
-  transform: scale(1.05);
+  transform: scale(1.03);
+}
+
+/* ====== PESAN KOSONG ====== */
+#dataTable tbody tr td[colspan="8"] {
+  text-align: center;
+  padding: 30px;
+  color: #999;
+  font-style: italic;
+  background-color: #f8fbff;
 }
 
 /* ====== RESPONSIVE ====== */
+@media (max-width: 1024px) {
+  .form-container {
+    max-width: 95%;
+  }
+  
+  table {
+    font-size: 11px;
+  }
+  
+  th, td {
+    padding: 8px 6px;
+  }
+}
+
 @media (max-width: 768px) {
   .form-container {
     width: 95%;
     padding: 20px;
   }
 
+  .search-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .search-container input {
+    width: 100%;
+  }
+
+  .button-group {
+    flex-direction: column;
+  }
+
+  .button-group button {
+    width: 100%;
+  }
+
+  .table-wrapper {
+    max-height: 500px; /* Lebih kecil di mobile */
+  }
+
   table {
     font-size: 12px;
+    min-width: 850px; /* Agar tabel bisa di-scroll horizontal */
   }
 
   th, td {
-    padding: 8px;
+    padding: 8px 6px;
   }
 
   button,
   .save-btn {
     padding: 7px 14px;
     font-size: 13px;
+  }
+  
+  td button {
+    padding: 6px 10px;
+    font-size: 12px;
   }
 }
