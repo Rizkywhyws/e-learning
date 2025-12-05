@@ -612,7 +612,7 @@ tbody tr:hover {
 
 /* ===== FIX Z-INDEX POPUP ===== */
 .sticky-header {
-  position: relative;
+  position: sticky;
   z-index: 10; /* header tetap di atas elemen biasa */
 }
 
