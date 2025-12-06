@@ -285,11 +285,6 @@ if ($nisSiswa) {
     </div>
 <?php endif; ?>
 
-<div class="search-bar">
-    <input type="text" placeholder="Search...">
-    <button><i class="fa-solid fa-magnifying-glass"></i></button>
-</div>
-
 
 <main class="content-container">
     <section class="presensi-section">
