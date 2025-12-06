@@ -1,4 +1,5 @@
 /* Import font Poppins */
+/* file : Guru/css/buatQuiz.css */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
 
 /* ====== HEADER (jika dipakai) ====== */
@@ -27,7 +28,7 @@ body {
 
 /* ====== FORM CONTAINER ====== */
 .form-container {
-  max-width: 1400px;
+  max-width: 700px;
   background: #ffffff;
   padding: 25px 30px 35px;
   margin: 0 auto 30px auto;

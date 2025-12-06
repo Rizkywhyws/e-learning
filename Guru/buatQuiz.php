@@ -1,4 +1,5 @@
 <?php
+//file: Guru/buatQuiz.php
 include_once("../config/db.php");
 
 // Cek apakah guru sudah login
@@ -160,7 +161,7 @@ $filterKelas = isset($_GET['kelas']) ? mysqli_real_escape_string($conn, $_GET['k
 $queryQuiz = "SELECT q.*, m.namaMapel,
               DATE_FORMAT(q.waktuMulai, '%d/%m/%Y %H:%i') as waktuMulaiFormat,
               DATE_FORMAT(q.waktuSelesai, '%d/%m/%Y %H:%i') as waktuSelesaiFormat,
-              (SELECT COUNT(DISTINCT NIS) FROM jawabanquiz WHERE idQuiz = q.idQuiz) as jumlahSiswaKerjakan,
+              (SELECT COUNT(DISTINCT NIS) FROM hasilquiz WHERE idQuiz = q.idQuiz) as jumlahSiswaKerjakan,
               (SELECT COUNT(*) FROM datasiswa WHERE kelas = q.kelas) as totalSiswaKelas
               FROM quiz q
               JOIN mapel m ON q.kodeMapel = m.kodeMapel
@@ -193,6 +194,7 @@ $resultKelas = mysqli_query($conn, $queryKelas);
 
 <link rel="stylesheet" href="css/buatQuiz.css?v=<?php echo time(); ?>">
 <link rel="stylesheet" href="css/rekapQuiz.css?v=<?php echo time(); ?>">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <!-- FORM BUAT/EDIT QUIZ -->
 <div class="form-container">
@@ -459,10 +461,10 @@ $resultKelas = mysqli_query($conn, $queryKelas);
           </td>
           <td>
             <div class="action-buttons">
-              <a href="?page=lihatNilaiQuiz&idQuiz=<?php echo $quiz['idQuiz']; ?>" 
-                 class="btn-nilai" title="Lihat Nilai">
+              <button onclick="openNilaiModal('<?php echo $quiz['idQuiz']; ?>')" 
+                      class="btn-nilai" title="Lihat Nilai">
                 <i class="fa-solid fa-chart-bar"></i> Nilai
-              </a>
+              </button>
               <a href="?page=buatQuiz&edit=<?php echo $quiz['idQuiz']; ?>" 
                  class="btn-edit" title="Edit Quiz">
                 <i class="fa-solid fa-pen-to-square"></i>
@@ -484,6 +486,22 @@ $resultKelas = mysqli_query($conn, $queryKelas);
       <p>Belum ada quiz yang dibuat</p>
     </div>
     <?php endif; ?>
+  </div>
+</div>
+
+<!-- MODAL NILAI -->
+<div id="nilaiModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-chart-line"></i> Daftar Nilai Quiz</h3>
+      <span class="close-modal" onclick="closeNilaiModal()">&times;</span>
+    </div>
+    <div class="modal-body" id="modalBodyContent">
+      <div class="loading">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        <p>Memuat data nilai...</p>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -598,6 +616,60 @@ function resetFilter() {
 function hapusQuiz(idQuiz, judul) {
   if (confirm("Apakah Anda yakin ingin menghapus quiz \"" + judul + "\"?\n\nSemua soal, jawaban, dan nilai siswa akan terhapus!")) {
     window.location.href = '?page=buatQuiz&action=delete&idQuiz=' + encodeURIComponent(idQuiz);
+  }
+}
+
+// ==================== MODAL NILAI ====================
+function openNilaiModal(idQuiz) {
+  const modal = document.getElementById('nilaiModal');
+  const modalBody = document.getElementById('modalBodyContent');
+  
+  // Tampilkan modal
+  modal.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  
+  // Reset konten dengan loading
+  modalBody.innerHTML = `
+    <div class="loading">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      <p>Memuat data nilai...</p>
+    </div>
+  `;
+  
+  // Load data via AJAX
+  fetch('lihatNilaiQuiz.php?idQuiz=' + idQuiz + '&ajax=1')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.text();
+    })
+    .then(data => {
+      modalBody.innerHTML = data;
+    })
+    .catch(error => {
+      modalBody.innerHTML = `
+        <div class="error">
+          <i class="fa-solid fa-exclamation-circle"></i>
+          <p>Terjadi kesalahan saat memuat data.</p>
+          <p style="font-size: 0.9em; color: #666;">` + error.message + `</p>
+        </div>
+      `;
+      console.error('Error:', error);
+    });
+}
+
+function closeNilaiModal() {
+  const modal = document.getElementById('nilaiModal');
+  modal.style.display = 'none';
+  document.body.style.overflow = 'auto';
+}
+
+// Tutup modal jika user klik di luar modal
+window.onclick = function(event) {
+  const modal = document.getElementById('nilaiModal');
+  if (event.target == modal) {
+    closeNilaiModal();
   }
 }
 </script>
