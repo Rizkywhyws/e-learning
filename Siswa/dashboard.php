@@ -719,7 +719,7 @@ if ($nisSiswa) {
         title="Statistik Pembelajaran Saya"
         width="100%" 
         height="500" 
-        src="YOUR_POWER_BI_EMBED_URL_HERE" 
+        src="https://app.powerbi.com/view?r=eyJrIjoiMzI5ZmJiYTQtZWE3OS00MTM0LTg2Y2QtOGJiNjljMjc0YmM4IiwidCI6ImE2OWUxOWU4LWYwYTQtNGU3Ny1iZmY2LTk1NjRjODgxOWIxNCJ9" 
         frameborder="0" 
         allowFullScreen="true">
       </iframe>
