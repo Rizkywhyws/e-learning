@@ -50,9 +50,51 @@ if ($dataSiswa) {
     $jurusanSiswa = $dataSiswa['jurusan']; 
 }
 
-// -----------------------------
-// PERBAIKAN: Ambil presensi terdekat (baik aktif maupun belum aktif)
-// -----------------------------
+if ($nisSiswa && $kelasSiswa) {
+    // Cari semua presensi yang sudah ditutup tapi siswa belum absen
+    $queryAlfa = $conn->prepare("
+        SELECT bp.idBuatPresensi
+        FROM buatpresensi bp
+        JOIN jadwalmapel jm ON bp.idJadwalMapel = jm.idJadwalMapel
+        LEFT JOIN presensisiswa ps ON bp.idBuatPresensi = ps.idBuatPresensi AND ps.NIS = ?
+        WHERE jm.kelas = ?
+        AND bp.waktuDitutup < NOW()
+        AND ps.idPresensi IS NULL
+    ");
+    
+    $queryAlfa->bind_param('ss', $nisSiswa, $kelasSiswa);
+    $queryAlfa->execute();
+    $resultAlfa = $queryAlfa->get_result();
+    
+    while ($rowAlfa = $resultAlfa->fetch_assoc()) {
+        $idBP = $rowAlfa['idBuatPresensi'];
+        
+        // Generate ID presensi unik
+        $rand6 = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $newIdPresensi = $idBP . "-" . $rand6;
+        
+        // Cek apakah ID sudah ada (untuk menghindari duplikasi)
+        $cekId = $conn->prepare("SELECT 1 FROM presensisiswa WHERE idPresensi = ? LIMIT 1");
+        $cekId->bind_param('s', $newIdPresensi);
+        $cekId->execute();
+        $cekId->store_result();
+        
+        if ($cekId->num_rows === 0) {
+            // Insert status Alfa
+            $insAlfa = $conn->prepare("
+                INSERT INTO presensisiswa (idPresensi, idBuatPresensi, NIS, status, waktuPresensi)
+                VALUES (?, ?, ?, 'Alfa', NOW())
+            ");
+            $insAlfa->bind_param('sss', $newIdPresensi, $idBP, $nisSiswa);
+            $insAlfa->execute();
+            $insAlfa->close();
+        }
+        $cekId->close();
+    }
+    $queryAlfa->close();
+}
+
+// Ambil presensi terdekat (baik aktif maupun belum aktif)
 $presensi = null;
 $presensiAktif = false;
 $statusPresensiSiswa = '-';
@@ -147,7 +189,7 @@ $dataKehadiran = [
     'terlambat' => 0,
     'sakit' => 0,
     'izin' => 0,
-    'alpa' => 0
+    'alfa' => 0
 ];
 
 if ($nisSiswa) {
@@ -432,22 +474,20 @@ if ($nisSiswa) {
 </div>
 
 <script>
-// ========================================
 // CHART.JS - DATA KEHADIRAN
-// ========================================
 const dataKehadiran = {
     hadir: <?= $dataKehadiran['hadir'] ?>,
     terlambat: <?= $dataKehadiran['terlambat'] ?>,
     sakit: <?= $dataKehadiran['sakit'] ?>,
     izin: <?= $dataKehadiran['izin'] ?>,
-    alpa: <?= $dataKehadiran['alpa'] ?>
+    alfa: <?= $dataKehadiran['alfa'] ?>
 };
 
 const ctx = document.getElementById('kehadiranChart').getContext('2d');
 const kehadiranChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
-        labels: ['Hadir', 'Terlambat', 'Sakit', 'Izin', 'Alpa'],
+        labels: ['Hadir', 'Terlambat', 'Sakit', 'Izin', 'Alfa'],
         datasets: [{
             label: 'Jumlah',
             data: [
@@ -455,14 +495,14 @@ const kehadiranChart = new Chart(ctx, {
                 dataKehadiran.terlambat,
                 dataKehadiran.sakit,
                 dataKehadiran.izin,
-                dataKehadiran.alpa
+                dataKehadiran.alfa
             ],
             backgroundColor: [
                 '#4CAF50',  // Hadir - Hijau
                 '#FF9800',  // Terlambat - Orange
                 '#2196F3',  // Sakit - Biru
                 '#9C27B0',  // Izin - Ungu
-                '#F44336'   // Alpa - Merah
+                '#F44336'   // Alfa - Merah
             ],
             borderColor: '#fff',
             borderWidth: 2
@@ -498,9 +538,7 @@ const kehadiranChart = new Chart(ctx, {
     }
 });
 
-// ========================================
 // FUNGSI MODAL
-// ========================================
 function openModalToken() {
     document.getElementById('tokenModal').style.display = 'flex';
     document.getElementById('tokenInput').focus();
@@ -514,9 +552,7 @@ function closeModalUpload() {
     document.getElementById('uploadModal').style.display = 'none';
 }
 
-// ========================================
 // FUNGSI JAVASCRIPT UNTUK MODAL dan Dropdown
-// ========================================
 document.addEventListener('DOMContentLoaded', function() {
     const uploadModal = document.getElementById('uploadModal');
     const tokenModal = document.getElementById('tokenModal');
