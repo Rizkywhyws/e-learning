@@ -1,7 +1,4 @@
 <?php
-// cron_kirim_notifikasi_presensi.php
-// Jalankan: php cron_kirim_notifikasi_presensi.php
-
 date_default_timezone_set('Asia/Jakarta');
 
 require __DIR__ . '/vendor/autoload.php';
@@ -11,7 +8,7 @@ use Google\Client;
 use Google\Service\Gmail;
 use Google\Service\Gmail\Message;
 
-// ----- helper: dapatkan Gmail service -----
+// dapatkan Gmail service
 function getGmailService() {
     $client = new Client();
     $client->setApplicationName('Presensi E-Learning');
@@ -38,7 +35,7 @@ function getGmailService() {
     return new Gmail($client);
 }
 
-// ----- helper: kirim email via Gmail API -----
+// kirim email via Gmail API
 function sendGmailRaw($service, $fromEmail, $toEmail, $subject, $htmlBody) {
     $rawMessageString = "From: <$fromEmail>\r\n";
     $rawMessageString .= "To: <$toEmail>\r\n";
@@ -54,14 +51,14 @@ function sendGmailRaw($service, $fromEmail, $toEmail, $subject, $htmlBody) {
     return $service->users_messages->send('me', $msg);
 }
 
-// ----- helper: catat email agar tidak dikirim dua kali -----
+// catat email agar tidak dikirim dua kali
 // tabel sederhana email_log: (jika belum ada, kita buat)
 function ensureEmailLogTable($conn) {
     $sql = "CREATE TABLE IF NOT EXISTS email_log (
         id INT AUTO_INCREMENT PRIMARY KEY,
         idBuatPresensi VARCHAR(100) NULL,
         NIS VARCHAR(100) NULL,
-        type VARCHAR(50) NOT NULL,    -- 'reminder','telat','alpa'
+        type VARCHAR(50) NOT NULL,    -- 'reminder','telat','alfa'
         sent_at DATETIME NOT NULL,
         UNIQUE KEY uniq_log (idBuatPresensi, NIS, type)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
@@ -86,7 +83,7 @@ function insertLog($conn, $idBuat, $NIS, $type) {
     $stmt->close();
 }
 
-// ----- mulai skrip utama -----
+// mulai skrip utama
 try {
     $gmail = getGmailService();
 } catch (Exception $e) {
@@ -94,7 +91,6 @@ try {
     exit(1);
 }
 
-// Ganti dengan email yang kamu pakai untuk OAuth (From)
 $EMAIL_FROM = 'eschool.smk4@gmail.com';
 
 // pastikan tabel email_log ada
@@ -102,7 +98,6 @@ ensureEmailLogTable($conn);
 
 // Ambil semua buatpresensi yang relevan:
 // Kita ambil yang waktuDimulai IS NOT NULL (sudah dibuat), dan waktuDitutup IS NOT NULL (ada batas).
-// Kamu bisa mengubah kriteria WHERE sesuai kebutuhan (mis. aktif=1)
 $now = time();
 $sqlBP = "SELECT b.idBuatPresensi, b.idJadwalMapel, b.waktuDimulai, b.waktuDitutup, b.toleransiWaktu, j.kelas, j.kodeMapel
           FROM buatpresensi b
@@ -144,18 +139,18 @@ while ($bp = mysqli_fetch_assoc($resBP)) {
 
             if ($wTutup !== null && $now > $wTutup) {
                 // melewati waktuDitutup -> kirim ALFA (jika belum pernah dikirim)
-                if (!hasSentLog($conn, $idBuat, $NIS, 'alpa')) {
-                    $subject = "Pemberitahuan: Status Presensi Anda ALPA";
+                if (!hasSentLog($conn, $idBuat, $NIS, 'alfa')) {
+                    $subject = "Pemberitahuan: Status Presensi Anda ALFA";
                     $body = "<p>Halo <b>$nama</b>,</p>"
-                          . "<p>Presensi untuk mata pelajaran <b>$kodeMapel</b> (ID: $idBuat) telah ditutup dan kami mencatat Anda <b>ALPA</b>.</p>"
+                          . "<p>Presensi untuk mata pelajaran <b>$kodeMapel</b> (ID: $idBuat) telah ditutup dan kami mencatat Anda <b>ALFA</b>.</p>"
                           . "<p>Jika ada kesalahan, hubungi guru atau admin.</p>";
 
                     try {
                         sendGmailRaw($gmail, $EMAIL_FROM, $email, $subject, $body);
-                        insertLog($conn, $idBuat, $NIS, 'alpa');
-                        echo "ALPA dikirim ke $NIS ($email)" . PHP_EOL;
+                        insertLog($conn, $idBuat, $NIS, 'alfa');
+                        echo "ALFA dikirim ke $NIS ($email)" . PHP_EOL;
                     } catch (Exception $e) {
-                        echo "Gagal kirim ALPA ke $email: " . $e->getMessage() . PHP_EOL;
+                        echo "Gagal kirim ALFA ke $email: " . $e->getMessage() . PHP_EOL;
                     }
                 }
             } elseif ($now > $deadline) {
