@@ -1,316 +1,596 @@
 <?php
-// ========================
-// HANDLE AJAX REQUEST UNTUK MODAL LIHAT NILAI
-// ========================
-if (isset($_GET['view']) && $_GET['view'] === 'modalNilai' && isset($_GET['idQuiz'])) {
-    $idQuiz = mysqli_real_escape_string($conn, $_GET['idQuiz']);
+//file: Guru/rekapQuiz.php
+session_start();
 
-    // Get quiz info
-    $queryQuiz = "SELECT q.*, m.namaMapel,
-                  DATE_FORMAT(q.waktuMulai, '%d/%m/%Y %H:%i') as waktuMulaiFormat,
-                  DATE_FORMAT(q.waktuSelesai, '%d/%m/%Y %H:%i') as waktuSelesaiFormat
-                  FROM quiz q
-                  JOIN mapel m ON q.kodeMapel = m.kodeMapel
-                  WHERE q.idQuiz = '$idQuiz' AND q.NIP = '$nipGuru'";
-    $quizInfo = mysqli_fetch_assoc(mysqli_query($conn, $queryQuiz));
+// Proteksi Login & Role
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || $_SESSION['role'] !== 'guru') {
+    header('Location: ../Auth/login.php');
+    exit;
+}
 
-    if (!$quizInfo) {
-        echo "<p style='text-align:center; padding:40px; color:#dc3545;'>Quiz tidak ditemukan atau bukan milik Anda!</p>";
-        exit;
-    }
+include '../config/db.php';
 
-    // Get all students in the class
-    $querySiswa = "SELECT NIS, nama FROM datasiswa WHERE kelas = '{$quizInfo['kelas']}' ORDER BY nama ASC";
-    $resultSiswa = mysqli_query($conn, $querySiswa);
+$nipGuru = isset($_SESSION['nip']) ? $_SESSION['nip'] : '';
 
-    $dataNilai = [];
-    while ($siswa = mysqli_fetch_assoc($resultSiswa)) {
-        $nis = $siswa['NIS'];
-        
-        // Check if student has submitted
-        $queryHasil = "SELECT h.nilai, DATE_FORMAT(h.tanggalSubmit, '%d/%m/%Y %H:%i') as tanggalSubmit
-                       FROM hasilquiz h
-                       WHERE h.idQuiz = '$idQuiz' AND h.NIS = '$nis'";
-        $hasilResult = mysqli_query($conn, $queryHasil);
-        
-        if ($hasilResult && mysqli_num_rows($hasilResult) > 0) {
-            $hasil = mysqli_fetch_assoc($hasilResult);
-            $dataNilai[] = [
-                'nis' => $nis,
-                'nama' => $siswa['nama'],
-                'kelas' => $quizInfo['kelas'],
-                'nilai' => $hasil['nilai'],
-                'tanggalSubmit' => $hasil['tanggalSubmit'],
-                'status' => 'Sudah'
-            ];
-        } else {
-            $dataNilai[] = [
-                'nis' => $nis,
-                'nama' => $siswa['nama'],
-                'kelas' => $quizInfo['kelas'],
-                'nilai' => '-',
-                'tanggalSubmit' => '-',
-                'status' => 'Belum'
-            ];
+// Query untuk mendapatkan daftar quiz
+$queryQuiz = "SELECT q.*, m.namaMapel,
+              DATE_FORMAT(q.waktuMulai, '%d/%m/%Y %H:%i') as waktuMulaiFormat,
+              DATE_FORMAT(q.waktuSelesai, '%d/%m/%Y %H:%i') as waktuSelesaiFormat,
+              (SELECT COUNT(*) FROM hasilquiz h WHERE h.idQuiz = q.idQuiz) as jumlahSubmit
+              FROM quiz q
+              JOIN mapel m ON q.kodeMapel = m.kodeMapel
+              WHERE q.NIP = '$nipGuru'
+              ORDER BY q.waktuMulai DESC";
+$resultQuiz = mysqli_query($conn, $queryQuiz);
+?>
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rekap Quiz</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-    }
 
-    // Calculate statistics
-    $totalSiswa = count($dataNilai);
-    $sudahMengerjakan = count(array_filter($dataNilai, function($item) { return $item['status'] === 'Sudah'; }));
-    $belumMengerjakan = $totalSiswa - $sudahMengerjakan;
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
 
-    // Calculate average
-    $nilaiValid = array_filter(array_column($dataNilai, 'nilai'), function($val) { return $val !== '-'; });
-    $rataRata = count($nilaiValid) > 0 ? round(array_sum($nilaiValid) / count($nilaiValid), 2) : 0;
-    $nilaiTertinggi = count($nilaiValid) > 0 ? max($nilaiValid) : 0;
-    $nilaiTerendah = count($nilaiValid) > 0 ? min($nilaiValid) : 0;
-    ?>
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
 
-    <!-- Quiz Info Card -->
-    <div class="quiz-info-card">
-        <div class="quiz-info-header">
-            <h3><i class="fa-solid fa-clipboard-question"></i> Informasi Quiz</h3>
-        </div>
-        <div class="quiz-info-body">
-            <div class="info-grid">
-                <div class="info-item">
-                    <span class="label">Judul:</span>
-                    <span class="value"><?php echo htmlspecialchars($quizInfo['judul']); ?></span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Mata Pelajaran:</span>
-                    <span class="value"><?php echo htmlspecialchars($quizInfo['namaMapel']); ?></span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Kelas:</span>
-                    <span class="value"><?php echo $quizInfo['kelas']; ?></span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Tipe Quiz:</span>
-                    <span class="value">
-                        <?php 
-                        if ($quizInfo['type'] === 'pilihan ganda') echo '📘 Pilihan Ganda';
-                        else if ($quizInfo['type'] === 'multi-select') echo '📝 Multi-Select';
-                        else if ($quizInfo['type'] === 'esai') echo '✏️ Esai';
-                        ?>
-                    </span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Deadline:</span>
-                    <span class="value"><?php echo $quizInfo['waktuSelesaiFormat']; ?></span>
-                </div>
-            </div>
-        </div>
-    </div>
+        h2 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 28px;
+        }
 
-    <!-- Statistics Cards -->
-    <div class="stats-row">
-        <div class="stat-card stat-primary">
-            <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
-            <div class="stat-content">
-                <div class="stat-label">Total Siswa</div>
-                <div class="stat-value"><?php echo $totalSiswa; ?></div>
-            </div>
-        </div>
+        .quiz-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
 
-        <div class="stat-card stat-success">
-            <div class="stat-icon"><i class="fa-solid fa-check-circle"></i></div>
-            <div class="stat-content">
-                <div class="stat-label">Sudah Mengerjakan</div>
-                <div class="stat-value"><?php echo $sudahMengerjakan; ?></div>
-            </div>
-        </div>
+        .quiz-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 20px;
+            color: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
 
-        <div class="stat-card stat-warning">
-            <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
-            <div class="stat-content">
-                <div class="stat-label">Belum Mengerjakan</div>
-                <div class="stat-value"><?php echo $belumMengerjakan; ?></div>
-            </div>
-        </div>
+        .quiz-card:hover {
+            transform: translateY(-5px);
+        }
 
-        <div class="stat-card stat-info">
-            <div class="stat-icon"><i class="fa-solid fa-chart-line"></i></div>
-            <div class="stat-content">
-                <div class="stat-label">Rata-rata Nilai</div>
-                <div class="stat-value"><?php echo $rataRata; ?></div>
-            </div>
-        </div>
-    </div>
+        .quiz-header {
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
 
-    <!-- Search & Filter -->
-    <div class="search-section">
-        <div class="search-box">
-            <i class="fa-solid fa-search"></i>
-            <input type="text" id="modalSearchInput" placeholder="Cari nama siswa..." onkeyup="searchSiswaModal()">
-        </div>
+        .quiz-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .quiz-mapel {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .quiz-info {
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .quiz-info i {
+            margin-right: 8px;
+            width: 20px;
+        }
+
+        .quiz-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-nilai {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-nilai:hover {
+            background: #45a049;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 2% auto;
+            padding: 0;
+            border-radius: 15px;
+            width: 95%;
+            max-width: 1400px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .close {
+            color: white;
+            font-size: 35px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .close:hover {
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 30px;
+            max-height: calc(90vh - 80px);
+            overflow-y: auto;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: #667eea;
+        }
+
+        .loading i {
+            font-size: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Styles untuk konten modal dari lihatNilaiQuiz.php */
+        .quiz-info-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .quiz-info-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+        }
+
+        .quiz-info-header h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .quiz-info-body {
+            padding: 20px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .info-item .label {
+            font-size: 12px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .info-item .value {
+            font-size: 14px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .stat-primary .stat-icon { background: #e3f2fd; color: #2196F3; }
+        .stat-success .stat-icon { background: #e8f5e9; color: #4CAF50; }
+        .stat-warning .stat-icon { background: #fff3e0; color: #FF9800; }
+        .stat-info .stat-icon { background: #e1f5fe; color: #00BCD4; }
+
+        .stat-content {
+            flex: 1;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .search-section {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .filter-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-status label {
+            font-size: 14px;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .filter-status select {
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-status select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .nilai-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .nilai-table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .nilai-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .nilai-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+
+        .nilai-table tbody tr:hover {
+            background-color: #f8f9ff;
+        }
+
+        .nilai-badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            display: inline-block;
+        }
+
+        .nilai-tinggi { background: #e8f5e9; color: #2e7d32; }
+        .nilai-sedang { background: #fff3e0; color: #f57c00; }
+        .nilai-rendah { background: #ffebee; color: #c62828; }
+        .nilai-kosong { background: #f5f5f5; color: #999; }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            display: inline-block;
+        }
+
+        .badge-success { background: #e8f5e9; color: #2e7d32; }
+        .badge-warning { background: #fff3e0; color: #f57c00; }
+
+        .btn-detail {
+            background: #2196F3;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .btn-detail:hover {
+            background: #1976D2;
+        }
+
+        .btn-disabled {
+            background: #e0e0e0;
+            color: #999;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: not-allowed;
+            display: inline-block;
+        }
+
+        .action-footer {
+            margin-top: 20px;
+            text-align: right;
+        }
+
+        .btn-export {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-export:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2><i class="fa-solid fa-chart-bar"></i> Rekap Quiz</h2>
         
-        <div class="filter-status">
-            <label>Filter Status:</label>
-            <select id="modalFilterStatus" onchange="filterByStatusModal()">
-                <option value="all">Semua Siswa</option>
-                <option value="sudah">Sudah Mengerjakan</option>
-                <option value="belum">Belum Mengerjakan</option>
-            </select>
+        <div class="quiz-grid">
+            <?php while($quiz = mysqli_fetch_assoc($resultQuiz)): ?>
+            <div class="quiz-card">
+                <div class="quiz-header">
+                    <div class="quiz-title"><?php echo htmlspecialchars($quiz['judul']); ?></div>
+                    <div class="quiz-mapel"><?php echo htmlspecialchars($quiz['namaMapel']); ?></div>
+                </div>
+                
+                <div class="quiz-info">
+                    <div><i class="fa-solid fa-users"></i> Kelas: <?php echo $quiz['kelas']; ?></div>
+                    <div><i class="fa-solid fa-book"></i> Tipe: <?php echo ucwords($quiz['type']); ?></div>
+                    <div><i class="fa-solid fa-calendar"></i> Deadline: <?php echo $quiz['waktuSelesaiFormat']; ?></div>
+                    <div><i class="fa-solid fa-check-circle"></i> Submit: <?php echo $quiz['jumlahSubmit']; ?> siswa</div>
+                </div>
+                
+                <div class="quiz-actions">
+                    <button class="btn btn-nilai" onclick="openNilaiModal('<?php echo $quiz['idQuiz']; ?>')">
+                        <i class="fa-solid fa-eye"></i> Lihat Nilai
+                    </button>
+                </div>
+            </div>
+            <?php endwhile; ?>
         </div>
     </div>
 
-    <!-- Table Nilai -->
-    <div class="table-container">
-        <table class="nilai-table">
-            <thead>
-                <tr>
-                    <th style="width: 50px;">No</th>
-                    <th>NIS</th>
-                    <th>Nama Siswa</th>
-                    <th>Kelas</th>
-                    <th>Nilai</th>
-                    <th>Tanggal Submit</th>
-                    <th>Status</th>
-                    <th style="width: 100px;">Aksi</th>
-                </tr>
-            </thead>
-            <tbody id="modalNilaiTableBody">
-                <?php 
-                $no = 1;
-                foreach ($dataNilai as $data): 
-                    $statusClass = $data['status'] === 'Sudah' ? 'badge-success' : 'badge-warning';
-                    $statusIcon = $data['status'] === 'Sudah' ? '✓' : '⏳';
-                    
-                    $nilaiClass = '';
-                    if ($data['nilai'] !== '-') {
-                        if ($data['nilai'] >= 80) $nilaiClass = 'nilai-tinggi';
-                        else if ($data['nilai'] >= 60) $nilaiClass = 'nilai-sedang';
-                        else $nilaiClass = 'nilai-rendah';
-                    }
-                ?>
-                <tr data-status="<?php echo strtolower($data['status']); ?>" data-nama="<?php echo strtolower($data['nama']); ?>">
-                    <td style="text-align: center; font-weight: 600;"><?php echo $no++; ?></td>
-                    <td><?php echo $data['nis']; ?></td>
-                    <td><strong><?php echo htmlspecialchars($data['nama']); ?></strong></td>
-                    <td><?php echo $data['kelas']; ?></td>
-                    <td>
-                        <?php if ($data['nilai'] !== '-'): ?>
-                            <span class="nilai-badge <?php echo $nilaiClass; ?>"><?php echo $data['nilai']; ?></span>
-                        <?php else: ?>
-                            <span class="nilai-badge nilai-kosong">-</span>
-                        <?php endif; ?>
-                    </td>
-                    <td><?php echo $data['tanggalSubmit']; ?></td>
-                    <td>
-                        <span class="status-badge <?php echo $statusClass; ?>">
-                            <?php echo $statusIcon . ' ' . $data['status']; ?>
-                        </span>
-                    </td>
-                    <td>
-                        <?php if ($data['status'] === 'Sudah'): ?>
-                            <a href="javascript:void(0);" 
-                               onclick="window.open('detailHasilQuiz.php?quiz=<?php echo $idQuiz; ?>&nis=<?php echo $data['nis']; ?>', '_blank'); return false;"
-                               class="btn-detail" 
-                               title="Lihat Detail">
-                                <i class="fa-solid fa-eye"></i>
-                            </a>
-                        <?php else: ?>
-                            <span class="btn-disabled" title="Belum mengerjakan">
-                                <i class="fa-solid fa-eye-slash"></i>
-                            </span>
-                        <?php endif; ?>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Export Button -->
-    <div class="action-footer">
-        <button onclick="exportCSVModal()" class="btn-export">
-            <i class="fa-solid fa-download"></i> Export ke CSV
-        </button>
+    <!-- Modal untuk menampilkan nilai -->
+    <div id="nilaiModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-chart-line"></i> Daftar Nilai Quiz</h3>
+                <span class="close" onclick="closeNilaiModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="modalBodyContent">
+                <div class="loading">
+                    <i class="fa-solid fa-spinner"></i>
+                    <p>Memuat data...</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-    // Functions untuk Modal
-    function searchSiswaModal() {
-        const input = document.getElementById('modalSearchInput').value.toLowerCase();
-        const rows = document.querySelectorAll('#modalNilaiTableBody tr');
-        
-        rows.forEach(row => {
-            const nama = row.getAttribute('data-nama');
-            if (nama.includes(input)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-        
-        updateRowNumbersModal();
-    }
-
-    function filterByStatusModal() {
-        const filter = document.getElementById('modalFilterStatus').value;
-        const rows = document.querySelectorAll('#modalNilaiTableBody tr');
-        
-        rows.forEach(row => {
-            const status = row.getAttribute('data-status');
+        // Fungsi untuk membuka modal dan load data nilai
+        function openNilaiModal(idQuiz) {
+            const modal = document.getElementById('nilaiModal');
+            const modalBody = document.getElementById('modalBodyContent');
             
-            if (filter === 'all' || filter === status) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-        
-        updateRowNumbersModal();
-    }
+            // Tampilkan modal
+            modal.style.display = 'block';
+            
+            // Reset konten dengan loading
+            modalBody.innerHTML = `
+                <div class="loading">
+                    <i class="fa-solid fa-spinner"></i>
+                    <p>Memuat data...</p>
+                </div>
+            `;
+            
+            // Load data via AJAX
+            fetch(`lihatNilaiQuiz.php?idQuiz=${idQuiz}&ajax=1`)
+                .then(response => response.text())
+                .then(data => {
+                    modalBody.innerHTML = data;
+                })
+                .catch(error => {
+                    modalBody.innerHTML = `
+                        <div style="text-align:center; padding:40px; color:#dc3545;">
+                            <i class="fa-solid fa-exclamation-circle" style="font-size:48px;"></i>
+                            <p>Terjadi kesalahan saat memuat data.</p>
+                        </div>
+                    `;
+                    console.error('Error:', error);
+                });
+        }
 
-    function updateRowNumbersModal() {
-        const rows = document.querySelectorAll('#modalNilaiTableBody tr');
-        let visibleNo = 1;
-        
-        rows.forEach(row => {
-            if (row.style.display !== 'none') {
-                row.querySelector('td:first-child').textContent = visibleNo++;
-            }
-        });
-    }
+        // Fungsi untuk menutup modal
+        function closeNilaiModal() {
+            const modal = document.getElementById('nilaiModal');
+            modal.style.display = 'none';
+        }
 
-    function exportCSVModal() {
-        let csv = 'No,NIS,Nama,Kelas,Nilai,Tanggal Submit,Status\n';
-        
-        const rows = document.querySelectorAll('#modalNilaiTableBody tr');
-        let no = 1;
-        
-        rows.forEach(row => {
-            if (row.style.display !== 'none') {
-                const cells = row.querySelectorAll('td');
-                const rowData = [
-                    no++,
-                    cells[1].textContent.trim(),
-                    cells[2].textContent.trim(),
-                    cells[3].textContent.trim(),
-                    cells[4].textContent.trim(),
-                    cells[5].textContent.trim(),
-                    cells[6].textContent.trim().replace(/[✓⏳]/g, '').trim()
-                ];
-                csv += rowData.join(',') + '\n';
+        // Tutup modal jika user klik di luar modal
+        window.onclick = function(event) {
+            const modal = document.getElementById('nilaiModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Tutup modal dengan tombol ESC
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeNilaiModal();
             }
         });
-        
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', 'nilai_quiz_<?php echo $idQuiz; ?>.csv');
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
     </script>
-
-    <?php
-    exit; // Penting: Hentikan eksekusi setelah menampilkan konten AJAX
-}
-?>
+</body>
+</html>
