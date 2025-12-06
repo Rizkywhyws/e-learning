@@ -27,10 +27,10 @@ body {
 
 /* ====== FORM CONTAINER ====== */
 .form-container {
-  max-width: 600px;
+  max-width: 1400px;
   background: #ffffff;
   padding: 25px 30px 35px;
-  margin: 0 auto 60px auto;
+  margin: 0 auto 30px auto;
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0, 102, 204, 0.15);
   animation: fadeIn 0.5s ease;
@@ -64,8 +64,8 @@ textarea {
   width: 100%;
   padding: 10px 12px;
   border-radius: 10px;
-  border: 1.8px solid #6fb3ff; /* biru lembut */
-  background-color: #f1f8ff; /* biru muda */
+  border: 1.8px solid #6fb3ff;
+  background-color: #f1f8ff;
   margin-top: 8px;
   box-sizing: border-box;
   font-size: 14px;
@@ -122,21 +122,150 @@ textarea {
   transform: scale(1.05);
 }
 
-/* ====== SAVE BUTTON UTAMA (kalau dipakai di bawah) ====== */
-.save-btn-main {
-  display: block;
-  background: linear-gradient(135deg, #007bff, #00bfff);
-  color: white;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 600;
-  margin: 25px auto 0;
-  transition: 0.3s;
+/* ====== TABEL QUIZ ====== */
+.quiz-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 102, 204, 0.1);
 }
 
-.save-btn-main:hover {
+.quiz-table thead {
+  background: linear-gradient(135deg, #007bff, #00bfff);
+  color: white;
+}
+
+.quiz-table th {
+  padding: 15px 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.quiz-table tbody tr {
+  border-bottom: 1px solid #e3f2fd;
+  transition: background-color 0.2s ease;
+}
+
+.quiz-table tbody tr:hover {
+  background-color: #f1f8ff;
+}
+
+.quiz-table td {
+  padding: 12px;
+  font-size: 14px;
+  color: #333;
+}
+
+/* ====== TYPE BADGES ====== */
+.type-badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 15px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-pilgan {
+  background: linear-gradient(135deg, #007bff, #00bfff);
+  color: white;
+}
+
+.badge-multi {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+}
+
+.badge-esai {
+  background: linear-gradient(135deg, #ffc107, #ffb300);
+  color: white;
+}
+
+/* ====== ACTION BUTTONS IN TABLE ====== */
+.action-buttons {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.btn-nilai,
+.btn-edit,
+.btn-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  color: white;
+  font-family: 'Poppins', sans-serif;
+}
+
+.btn-nilai {
+  background: linear-gradient(135deg, #007bff, #00bfff);
+}
+
+.btn-nilai:hover {
   background: linear-gradient(135deg, #0056b3, #00aaff);
   transform: scale(1.05);
+}
+
+.btn-edit {
+  background: linear-gradient(135deg, #ffc107, #ffb300);
+}
+
+.btn-edit:hover {
+  background: linear-gradient(135deg, #e0a800, #ff9800);
+  transform: scale(1.05);
+}
+
+.btn-delete {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.btn-delete:hover {
+  background: linear-gradient(135deg, #c82333, #bd2130);
+  transform: scale(1.05);
+}
+
+/* ====== RESPONSIVE ====== */
+@media (max-width: 768px) {
+  .form-container {
+    padding: 20px 15px;
+    max-width: 95%;
+  }
+
+  .type-options {
+    flex-direction: column;
+  }
+
+  .type-options .save-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .quiz-table {
+    font-size: 12px;
+  }
+
+  .quiz-table th,
+  .quiz-table td {
+    padding: 8px 6px;
+  }
+
+  .btn-edit,
+  .btn-view,
+  .btn-delete {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
 }
