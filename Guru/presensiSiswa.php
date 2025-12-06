@@ -325,11 +325,6 @@ $tanggalMinimum = date('Y-m-d');
     <p>Jadwal mengajar selanjutnya ada di kelas <b><?= htmlspecialchars($kelasMengajar) ?></b></p>
   </section>
 
-  <div class="search-bar">
-    <input type="text" placeholder="Search...">
-    <button><i class="fa-solid fa-magnifying-glass"></i></button>
-  </div>
-
 
   <!-- bagian tambah presensi -->
   <section id="presensi-siswa">
